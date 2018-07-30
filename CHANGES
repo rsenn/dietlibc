@@ -1,3 +1,66 @@
+0.31:
+  getopt_long and getopt_long_only now refuse ambiguous abbreviations
+  fix printf %u/%x on 64-bit platforms
+  fix fd leak in if_nameindex (Florian Westphal)
+  fix printf %g (well, get closer)
+  fix sparc64 longjmp (Rene Rebe)
+  add dn_skipname
+  add pthread prototypes that are needed to compile libgcc when
+    compiling a cross compiler gcc
+  fix ftw64
+  fixes for some corner cases from Ilja van Sprundel:
+    - tempnam
+    - strsignal
+    - strftime
+    - sunrpc code
+  faster qsort
+  support %j in printf (Gernot Tenchio)
+  do omit the frame pointer on x86_64
+  fix pthread_cond_timedwait (Gernot Tenchio)
+  fix getcwd, ftw, ftw64, dirname (Ilja van Sprundel)
+    Some fd leaks in error conditions.
+  fix stackguard to be .quad instead of .long (cause subtle memory
+    corruption, which in most cases caused DNS lookups to fail on 64-bit
+    platforms)
+  fix dynamic build
+  do the magic required for -fstack-protector in gcc 4.1.1 to actually
+    work (which includes setting up thread local storage), so far on
+    i386 and amd64
+  add ctime_r (for c-icap, Gernot Tenchio)
+  fix strptime return value (Gernot Tenchio)
+  fix R_386_32, R_ARM_ABS32, R_X86_64_64 in libdl (Gernot Tenchio)
+  Olaf: Added DT_GNU_HASH symbol resolver.
+  fix security bug in librpc.  You know, librpc, that stinking Sun code
+    full of problems?  Just adding that code was a bad mistake, I think.
+    I tried auditing it, but I nearly got a brain tumor when I opened
+    those files.  Thanks to Ilja van Sprundel for finding this bug (with
+    Google codesearch, no less! :-) )
+  accept mDNS packets with set recursion desired bit
+  add const to cfgetispeed and cfgetospeed arguments
+  fix off-by-one in getdelim (reported by Ilja van Sprundel)
+  prevent integer overflows in printf (return -1, like Solaris)
+  fix putenv (Nikola Vladov)
+  use time_t in struct stat for the time values
+  support LLMNR in dnsd (no idea if it works, apparently only Vista
+    supports it)
+  fix ftell (Jens Laas)
+  fix getaddrinfo (return more than just the first IP) (Gernot Tenchio)
+  make sure to declare __dietlibc__ during compilation of the lib
+    itself, so we can have more portable code in the libc code behind
+    #ifndef __dietlibc__ (see ftw64 for an example)
+  fix off-by-one in iconv
+  add missing brackets in dn_skipname
+  strptime also fills in tm_wday and tm_yday (Gernot Tenchio)
+  x86-64 getpriority has bias 20 (Rene Rebe)
+  fix typo in fstatfs64 (Gernot Tenchio)
+  fix infinite loop in getaddrinfo (Nikola Vladov)
+  don't include sys/stat.h in stdio.h and unistd.h (Gernot Tenchio)
+  work around gcc optimizing away our int overflow check in printf
+  some work on printf
+  fix some compiler warnings
+  support long device major and minor
+  add WANT_FREE_OVERWRITE in dietfeatures.h (see comment there)
+
 0.30:
   put exception handling frames in read-only section on AMD64 and S/390
   make sys/stat.h ILP64 compatible
@@ -51,7 +114,7 @@
   fix unlockpt (Gernot Tenchio)
   Olaf: fixing putenv for the situation that environ is NULL
     (situation after a clearenv)
-  HP-PA fixes (Micah Anderson, Hubert Poetzl)
+  HP-PA fixes (Micah Anderson, Herbert Poetzl)
   syscall() for ppc/64
   make __kernel_size_t more like the real thing (Rene Rebe)
   fix __exec_shell (execv and execvp) (Gernot Tenchio)

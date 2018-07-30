@@ -186,6 +186,8 @@ SAFE_CFLAGS=$(CFLAGS)
 SAFER_CFLAGS=$(CFLAGS)
 endif
 
+CC+=-D__dietlibc__
+
 $(OBJDIR)/crypt.o: libcrypt/crypt.c
 	$(CROSS)$(CC) $(INC) $(SAFER_CFLAGS) -c $< -o $@
 
@@ -226,9 +228,6 @@ $(OBJDIR)/libm.a: $(LIBMATHOBJ)
 	$(CROSS)ar cru $@ $(LIBMATHOBJ)
 
 LD_UNSET = env -u LD_RUN_PATH
-
-$(OBJDIR)/libdietc.so: $(OBJDIR)/dietlibc.a
-	$(LD_UNSET) $(CROSS)ld -whole-archive -shared -o $@ $^
 
 dyn: dyn_lib
 
@@ -512,3 +511,6 @@ $(OBJDIR)/fcntl64.o: dietfeatures.h
 
 # WANT_SSP
 $(OBJDIR)/stackgap.o: dietfeatures.h
+
+# WANT_MALLOC_ZERO
+$(OBJDIR)/strndup.o: dietfeatures.h

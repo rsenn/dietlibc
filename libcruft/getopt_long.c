@@ -36,33 +36,46 @@ again:
     char* arg=argv[optind]+2;
     char* max=strchr(arg,'=');
     const struct option* o;
+    const struct option* match=0;
     if (!max) max=arg+strlen(arg);
     for (o=longopts; o->name; ++o) {
-      if (!strncmp(o->name,arg,(size_t)(max-arg))) {	/* match */
-	if (longindex) *longindex=o-longopts;
-	if (o->has_arg>0) {
-	  if (*max=='=')
-	    optarg=max+1;
-	  else {
-	    optarg=argv[optind+1];
-	    if (!optarg && o->has_arg==1) {	/* no argument there */
-	      if (*optstring==':') return ':';
-	      write(2,"argument required: `",20);
-	      write(2,arg,(size_t)(max-arg));
-	      write(2,"'.\n",3);
-	      ++optind;
-	      return '?';
-	    }
-	    ++optind;
-	  }
+      size_t tlen=max-arg;
+      if (!strncmp(o->name,arg,tlen)) {	/* match */
+	if (strlen(o->name)==tlen) {
+	  match=o;	/* perfect match, not just prefix */
+	  break;
 	}
-	++optind;
-	if (o->flag)
-	  *(o->flag)=o->val;
+	if (!match)
+	  match=o;
 	else
-	  return o->val;
-	return 0;
+	  /* Another imperfect match. */
+	  match=(struct option*)-1;
       }
+    }
+    if (match!=(struct option*)-1 && (o=match)) {
+      if (longindex) *longindex=o-longopts;
+      if (o->has_arg>0) {
+	if (*max=='=')
+	  optarg=max+1;
+	else {
+	  optarg=argv[optind+1];
+	  if (!optarg && o->has_arg==1) {	/* no argument there */
+	    if (*optstring==':') return ':';
+	    write(2,"argument required: `",20);
+	    write(2,arg,(size_t)(max-arg));
+	    write(2,"'.\n",3);
+	    ++optind;
+	    return '?';
+	  }
+	  ++optind;
+	}
+      }
+      ++optind;
+      if (o->flag)
+	*(o->flag)=o->val;
+      else
+	return o->val;
+      return 0;
     }
     if (*optstring==':') return ':';
     write(2,"invalid option `",16);
