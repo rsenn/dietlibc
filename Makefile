@@ -95,7 +95,7 @@ endif
 endif
 endif
 
-PIE=-fpie -fvisibility=hidden -D__PIE__=1
+PIE=-fpie -fvisibility=hidden
 
 # ARCH=$(MYARCH)
 
@@ -288,9 +288,6 @@ dyn_lib: $(PICODIR) $(PICODIR)/libc.so $(PICODIR)/dstart.o \
 $(PICODIR)/%.o: %.S $(ARCH)/syscalls.h | $(PICODIR)
 	$(CCC) $(INC) $(CCFLAGS) $(EXTRACFLAGS) -fPIC -D__DYN_LIB $(ASM_CFLAGS) -c $< -o $@
 
-#$(PICODIR)/start-pie.o: start.S | $(OBJDIR)
-#	$(CCC) $(INC) $(CCFLAGS) $(EXTRACFLAGS) -fPIC -D__DYN_LIB -c $< $(ASM_CFLAGS) -fpie -o $@
-
 $(PICODIR)/pthread_%.o: libpthread/pthread_%.c | $(PICODIR)
 	$(CCC) $(INC) $(CCFLAGS) $(EXTRACFLAGS) -fPIC -D__DYN_LIB -c $< -o $@
 	$(STRIP) -x -R .comment -R .note $@
@@ -310,14 +307,7 @@ DYN_LIBC_PIC = $(LIBOBJ) $(LIBSTDIOOBJ) $(LIBUGLYOBJ) \
 $(LIBCRUFTOBJ) $(LIBCRYPTOBJ) $(LIBSHELLOBJ) $(LIBREGEXOBJ)
 
 DYN_LIBC_OBJ = $(PICODIR)/dyn_syscalls.o $(PICODIR)/errlist.o \
-	$(filter-out %-pie.o,$(patsubst $(OBJDIR)/%.o,$(PICODIR)/%.o,$(DYN_LIBC_PIC))) \
-	$(PICODIR)/getrandom.o \
-	$(PICODIR)/__eventfd.o \
-	$(PICODIR)/__eventfd2.o \
-	$(PICODIR)/__signalfd4.o \
-	$(PICODIR)/__tls_get_new.o
-
-
+	$(patsubst $(OBJDIR)/%.o,$(PICODIR)/%.o,$(DYN_LIBC_PIC))
 
 DYN_PTHREAD_OBJS = $(patsubst $(OBJDIR)/%.o,$(PICODIR)/%.o,$(LIBPTHREAD_OBJS))
 
