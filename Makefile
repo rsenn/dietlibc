@@ -95,7 +95,7 @@ endif
 endif
 endif
 
-PIE=-fpie
+PIE=-fpie -D__PIE__=1
 
 # ARCH=$(MYARCH)
 
@@ -129,6 +129,7 @@ INC=-I. -isystem include
 VPATH=lib:libstdio:libugly:libcruft:libcrypt:libshell:liblatin1:libcompat:libdl:librpc:libregex:libm:profiling
 
 SYSCALLOBJ=$(patsubst syscalls.s/%.S,$(OBJDIR)/%.o,$(sort $(wildcard syscalls.s/*.S)))
+
 
 LIBOBJ=$(patsubst lib/%.c,$(OBJDIR)/%.o,$(sort $(wildcard lib/*.c)))
 LIBUGLYOBJ=$(patsubst libugly/%.c,$(OBJDIR)/%.o,$(sort $(wildcard libugly/*.c)))
@@ -288,6 +289,9 @@ dyn_lib: $(PICODIR) $(PICODIR)/libc.so $(PICODIR)/dstart.o \
 $(PICODIR)/%.o: %.S $(ARCH)/syscalls.h | $(PICODIR)
 	$(CCC) $(INC) $(CCFLAGS) $(EXTRACFLAGS) -fPIC -D__DYN_LIB $(ASM_CFLAGS) -c $< -o $@
 
+#$(PICODIR)/start-pie.o: start.S | $(OBJDIR)
+#	$(CCC) $(INC) $(CCFLAGS) $(EXTRACFLAGS) -fPIC -D__DYN_LIB -c $< $(ASM_CFLAGS) -fpie -o $@
+
 $(PICODIR)/pthread_%.o: libpthread/pthread_%.c | $(PICODIR)
 	$(CCC) $(INC) $(CCFLAGS) $(EXTRACFLAGS) -fPIC -D__DYN_LIB -c $< -o $@
 	$(STRIP) -x -R .comment -R .note $@
@@ -307,7 +311,14 @@ DYN_LIBC_PIC = $(LIBOBJ) $(LIBSTDIOOBJ) $(LIBUGLYOBJ) \
 $(LIBCRUFTOBJ) $(LIBCRYPTOBJ) $(LIBSHELLOBJ) $(LIBREGEXOBJ)
 
 DYN_LIBC_OBJ = $(PICODIR)/dyn_syscalls.o $(PICODIR)/errlist.o \
-	$(patsubst $(OBJDIR)/%.o,$(PICODIR)/%.o,$(DYN_LIBC_PIC))
+	$(filter-out %-pie.o,$(patsubst $(OBJDIR)/%.o,$(PICODIR)/%.o,$(DYN_LIBC_PIC))) \
+	$(PICODIR)/getrandom.o \
+	$(PICODIR)/__eventfd.o \
+	$(PICODIR)/__eventfd2.o \
+	$(PICODIR)/__signalfd4.o \
+	$(PICODIR)/__tls_get_new.o
+
+
 
 DYN_PTHREAD_OBJS = $(patsubst $(OBJDIR)/%.o,$(PICODIR)/%.o,$(LIBPTHREAD_OBJS))
 
@@ -325,7 +336,7 @@ $(PICODIR)/libpthread.so: $(DYN_PTHREAD_OBJS) dietfeatures.h $(PICODIR)/libc.so
 
 $(PICODIR)/libdl.so: libdl/_dl_main.c dietfeatures.h $(PICODIR)/libc.so
 	$(LD_UNSET) $(CCC) -D__OD_CLEAN_ROOM -DNODIETREF -fPIC -nostdlib -shared -Bsymbolic -Wl,-Bsymbolic \
-		-o $@ $(SAFE_CFLAGS) $(INC) libdl/_dl_main.c -Wl,-soname=libdl.so
+		-o $@ $(SAFE_CFLAGS) $(INC) $< -Wl,-soname=libdl.so
 
 $(OBJDIR)/pthread_create.o $(PICODIR)/pthread_create.o: dietfeatures.h
 $(OBJDIR)/pthread_internal.o $(PICODIR)/pthread_internal.o: dietfeatures.h
@@ -394,11 +405,11 @@ $(OBJDIR)/exports: $(OBJDIR)/dietlibc.a
 	nm -g $(OBJDIR)/dietlibc.a | grep '\<T\>' | awk '{ print $$3 }' | sort -u > $(OBJDIR)/exports
 
 .PHONY: t t1
-t:
-	$(CCC) -g $(CFLAGS) -fno-builtin -nostdlib -isystem include -o t t.c $(OBJDIR)/start.o $(OBJDIR)/dyn_start.o $(OBJDIR)/dietlibc.a -lgcc $(OBJDIR)/dyn_stop.o -Wl,-Map,mapfile
+t: t.c
+	$(CCC) -g $(CFLAGS) -fno-builtin -nostdlib -isystem include -o $@ $< $(OBJDIR)/start.o $(OBJDIR)/dyn_start.o $(OBJDIR)/dietlibc.a -lgcc $(OBJDIR)/dyn_stop.o -Wl,-Map,mapfile
 
-t1:
-	$(CCC) -g -o t1 t.c
+t1: t.c
+	$(CCC) -g -o $@ $<
 
 install-bin: $(OBJDIR)/start.o $(OBJDIR)/dietlibc.a $(OBJDIR)/librpc.a $(OBJDIR)/liblatin1.a $(OBJDIR)/libcompat.a $(OBJDIR)/elftrunc $(OBJDIR)/diet-i $(OBJDIR)/stackgap-g.o
 	$(INSTALL) -d $(DESTDIR)$(ILIBDIR) $(DESTDIR)$(MAN1DIR) $(DESTDIR)$(BINDIR)
@@ -676,4 +687,4 @@ include/errno_definition.h: dietfeatures.h
 	if grep -q '^#define WANT_TLS' $<; then echo "extern __thread int errno;"; else echo "extern int errno;"; fi > $@
 
 ldso: ldso.c
-	gcc -nostdlib -shared -g -DIN_LDSO -Iinclude.ldso -I. -isystem include x86_64/start.S -o ldso ldso.c -fPIC x86_64/dyn_syscalls.S lib/errno_location.c -D__thread=
+	gcc -nostdlib -shared -g -DIN_LDSO -Iinclude.ldso -I. -isystem include x86_64/start.S -o ldso $< -fPIC x86_64/dyn_syscalls.S lib/errno_location.c -D__thread=

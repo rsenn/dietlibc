@@ -22,7 +22,7 @@ setcontext:
   leaq 296(%rdi),%rsi
   xorl %edx,%edx
   movl $2,%edi
-  call sigprocmask
+  call sigprocmask@PLT
   mov %rbx,%rdi
   test %rax,%rax
   jc .Lexit

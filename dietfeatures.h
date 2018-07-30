@@ -116,7 +116,7 @@
  * check for valgrind, and if detected, turn off optimized SIMD string
  * routines that cause false positives in valgrind.  This enlarges and
  * slightly slows down your code! */
-#define WANT_VALGRIND_SUPPORT
+/* #define WANT_VALGRIND_SUPPORT */
 
 /* do you want that malloc(0) return a pointer to a "zero-length" object
  * that is realloc-able; means realloc(..,size) gives a NEW object (like a

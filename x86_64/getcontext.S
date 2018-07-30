@@ -1,6 +1,7 @@
 #include "syscalls.h"
 
 .text
+//.extern sigprocmask
 .global getcontext
 #ifdef __PIE__
 .hidden getcontext
@@ -46,5 +47,5 @@ getcontext:
   leaq 296(%rdi),%rdx
   xorl %esi,%esi
   xorl %edi,%edi
-  jmp sigprocmask
+  jmp sigprocmask@PLT
 .size getcontext, .-getcontext

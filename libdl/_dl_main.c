@@ -207,7 +207,7 @@ asm(".text \n"
 /* restore stack */
 "	movq	%rbp, %rsp \n"
 /* get fini pointer */
-"	movq	fini_entry(%rip), %rdx \n"
+"	movq	fini_entry@PLT(%rip), %rdx \n"
 /* clear callee-save-register like kernel */
 "	xorq	%rbp,%rbp \n"
 /* jump to program entry point */
