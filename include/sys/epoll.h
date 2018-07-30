@@ -20,7 +20,7 @@ enum EPOLL_EVENTS {
 	EPOLLOUT = 0x004,
 #define EPOLLOUT EPOLLOUT
 
-#ifdef __USE_XOPEN
+#ifdef _XOPEN_SOURCE
 	EPOLLRDNORM = 0x040,
 #define EPOLLRDNORM EPOLLRDNORM
 	EPOLLRDBAND = 0x080,
@@ -31,7 +31,7 @@ enum EPOLL_EVENTS {
 #define EPOLLWRBAND EPOLLWRBAND
 #endif /* #ifdef __USE_XOPEN */
 
-#ifdef __USE_GNU
+#ifdef _GNU_SOURCE
 	EPOLLMSG = 0x400,
 #define EPOLLMSG EPOLLMSG
 #endif /* #ifdef __USE_GNU */
@@ -55,7 +55,11 @@ typedef union epoll_data {
 struct epoll_event {
   uint32_t events;
   epoll_data_t data;
-};
+}
+#ifdef __x86_64__
+__attribute__((packed))
+#endif
+;
 
 int epoll_create(int size) __THROW;
 int epoll_ctl(int epfd, int op, int fd, struct epoll_event* event) __THROW;

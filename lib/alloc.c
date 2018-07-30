@@ -153,10 +153,10 @@ static void* _alloc_libc_malloc(size_t size) {
 #ifdef WANT_MALLOC_ZERO
   if (!size) return BLOCK_RET(zeromem);
 #else
-  if (!size) goto retzero;
+  if (!size) goto err_out;
 #endif
   size+=sizeof(__alloc_t);
-  if (size<sizeof(__alloc_t)) goto retzero;
+  if (size<sizeof(__alloc_t)) goto err_out;
   if (size<=__MAX_SMALL_SIZE) {
     need=GET_SIZE(size);
     ptr=__small_malloc(need);
@@ -170,13 +170,13 @@ static void* _alloc_libc_malloc(size_t size) {
   return BLOCK_RET(ptr);
 err_out:
   (*__errno_location())=ENOMEM;
-retzero:
   return 0;
 }
 void* __libc_malloc(size_t size) __attribute__((alias("_alloc_libc_malloc")));
 void* malloc(size_t size) __attribute__((weak,alias("_alloc_libc_malloc")));
+void* calloc(size_t nmemb, size_t _size) __attribute__((weak));
 
-void *calloc(size_t nmemb, size_t _size) {
+void* calloc(size_t nmemb, size_t _size) {
   register size_t size=_size*nmemb;
   if (nmemb && size/nmemb!=_size) {
     (*__errno_location())=ENOMEM;
@@ -224,6 +224,7 @@ retzero:
     }
     else { /* size==0 */
       _alloc_libc_free(ptr);
+      ptr = NULL;
     }
   }
   else { /* ptr==0 */

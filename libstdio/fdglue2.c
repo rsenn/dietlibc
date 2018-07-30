@@ -4,7 +4,9 @@
 #include <errno.h>
 #include "dietstdio.h"
 #include <stdlib.h>
+#ifdef WANT_THREAD_SAFE
 #include <pthread.h>
+#endif
 
 extern int __stdio_atexit;
 
@@ -43,3 +45,5 @@ err_out:
   tmp->ungotten=0;
   return tmp;
 }
+
+FILE* __stdio_init_file_nothreads(int fd,int closeonerror,int mode) __attribute__((alias("__stdio_init_file")));

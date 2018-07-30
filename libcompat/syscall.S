@@ -1,5 +1,11 @@
 #include "dietfeatures.h"
 
+#if defined(__i386__) && defined(__DYN_LIB)
+#include "i386/PIC.h"
+#undef WANT_THREADSAFE
+#define WANT_THREADSAFE
+#endif
+
 .text
 .globl syscall
 #ifdef __arm__
@@ -27,9 +33,14 @@ syscall:
 	jbe .Lret
 	negl %eax
 #ifdef WANT_THREADSAFE
-	movl %eax, %ebx
+	movl %eax, %edx
+#ifdef __DYN_LIB
+	PIC_INIT
+	call __errno_location@PLT
+#else
 	call __errno_location
-	movl %ebx, (%eax)
+#endif
+	movl %edx, (%eax)
 	xorl %eax, %eax
 	decl %eax
 #else

@@ -256,7 +256,7 @@ $(SYSCALLOBJ): syscalls.h
 $(OBJDIR)/elftrunc: $(OBJDIR)/diet contrib/elftrunc.c
 	bin-$(MYARCH)/diet $(CROSS)$(CC) $(CFLAGS) -o $@ contrib/elftrunc.c
 
-VERSION=dietlibc-$(shell head -1 CHANGES|sed 's/://')
+VERSION=dietlibc-$(shell head -n 1 CHANGES|sed 's/://')
 CURNAME=$(notdir $(shell pwd))
 
 $(OBJDIR)/diet: $(OBJDIR)/start.o $(OBJDIR)/dyn_start.o diet.c $(OBJDIR)/dietlibc.a $(OBJDIR)/dyn_stop.o
@@ -419,6 +419,9 @@ $(OBJDIR)/seteuid.o: dietfeatures.h
 # these depend on dietfeatures.h for WANT_FULL_POSIX_COMPAT
 $(OBJDIR)/strncpy.o: dietfeatures.h
 $(OBJDIR)/strxfrm.o: dietfeatures.h
+
+$(OBJDIR)/stat.o $(OBJDIR)/fstat.o $(OBJDIR)/lstat.o: include/sys/stat.h
+$(OBJDIR)/stat64.o $(OBJDIR)/fstat64.o $(OBJDIR)/lstat64.o: include/sys/stat.h
 
 # these depend on dietfeatures.h for WANT_INET_ADDR_DNS
 $(OBJDIR)/gethostbyname_r.o: dietfeatures.h

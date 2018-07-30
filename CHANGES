@@ -1,3 +1,36 @@
+0.25:
+  fix sprintf
+  head -1  ->  head -n 1
+  handle negative precision and -0 (Jens Låås)
+  susv3 renamed IFNAMSIZ to IF_NAMESIZE
+  make diet accept "gcc-3.3.2" and "diet -v -Os gcc" (Yuri Kozlov)
+  make libcompat syscall position independent (Peter S. Mazinger)
+  fix missing pthread stdio external (Gernot Tenchio)
+  Port parts of glibc test suite (Florian Westphal)
+    Now we need more manpower to fix the bugs it uncovers ;-)
+  add linux/if_ether.h and net/ethernet.h for sniffers
+  faster string routines and a small fix for alloc (Thomas Ogrisegg)
+  remove C++ comments from header files
+  add ftrylockfile
+  C99 fixes and a new printf test from Enrico Scholz
+  epoll_event needs to be packed on x86_64 (pointed out by Indan Zupancic)
+  work around make dependency problem breaking mipsel by creating kludge
+    mipsel/syscalls.h (Samium Gromoff)
+  Fix i386 unified syscall -EMEDIUMTYPE handling (Juergen Sawinski via
+    Clifford Wolf)
+  vsnprintf: fix output when output does not fit (Enrico Scholz)
+  new dirname with test suite entry (Yuri Kozlov)
+  fnmatch: add [:charclass:], fix negation (Michael J. Pomraning)
+  make calloc a weak symbol (Martin Pohlack)
+  make NULL C++ friendly (Martin Pohlack)
+  new realpath (Thomas Ogrisegg)
+  fix stupid glibcism in sys/epoll.h
+  add pause for Alpha (Kurt Garloff)
+  ptrace fix (Dallachiesa Michele)
+  ptread.h cleanups (Martin Pohlack)
+  fix execvp and execlp (Younès)
+  fix time() for sparc64
+
 0.24:
   work around incompatible Linux select() modifying the timeout in
     librpc (Patch was sent from Mike Waychison from Sun)
@@ -400,7 +433,7 @@
   add readdir64 and automatic mapping if _FILE_OFFSET_BITS == 64
   make diet not include the linker safeguard stuff when preprocessing
   Olaf: port to S/390!
-  me: fix vfork (it was put into dietlibc.a twice)
+  fix vfork (it was put into dietlibc.a twice)
   res_query did not initialize last
   diet (not diet-dyn, of course) now adds -static to the gcc command line
   fixed fflush on input streams (tic from ncurses exposed this)
@@ -485,7 +518,7 @@
     a little over 300 bytes on x86.
   Guillaume Cottenceau just wrote me that strncat should be even more
     broken than it already is: it should append n bytes AND THEN \0!
-    I wonder how many programmers have produces off-by-one errors here...
+    I wonder how many programmers have produced off-by-one errors here...
   Fix regexec offset return.  autoconf now believes that diet libc has
     POSIX regular expressions.
   Fix fnmatch (a/b/* matched a/b/c/d even if FNM_PATHNAME was set)

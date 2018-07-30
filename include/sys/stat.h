@@ -64,6 +64,59 @@ __extension__	long long	st_size;
 
 __extension__	unsigned long long	st_ino;
 };
+#elif defined(__sparc__) && defined(__arch64__)
+
+struct stat {
+	unsigned int  st_dev;
+	unsigned long   st_ino;
+	unsigned int  st_mode;
+	short   st_nlink;
+	unsigned int   st_uid;
+	unsigned int   st_gid;
+	unsigned int  st_rdev;
+	long   st_size;
+	time_t  st_atime;
+	time_t  st_mtime;
+	time_t  st_ctime;
+	long   st_blksize;
+	long   st_blocks;
+	unsigned long  __unused4[2];
+};
+
+struct stat64 {
+	unsigned long long	st_dev;
+
+	unsigned long long	st_ino;
+
+	unsigned int	st_mode;
+	unsigned int	st_nlink;
+
+	unsigned int	st_uid;
+	unsigned int	st_gid;
+
+	unsigned long long	st_rdev;
+
+	unsigned char	__pad3[8];
+
+	long long	st_size;
+	unsigned int	st_blksize;
+
+	unsigned char	__pad4[8];
+	unsigned int	st_blocks;
+
+	unsigned int	st_atime;
+	unsigned int	st_atime_nsec;
+
+	unsigned int	st_mtime;
+	unsigned int	st_mtime_nsec;
+
+	unsigned int	st_ctime;
+	unsigned int	st_ctime_nsec;
+
+	unsigned int	__unused4;
+	unsigned int	__unused5;
+};
+
 #elif defined(__sparc__)
 struct stat {
 	unsigned short	st_dev;
@@ -243,7 +296,6 @@ struct stat {
 
 /* This matches struct stat64 in glibc2.1.
  */
-//#if !defined(__powerpc64__)
 struct stat64 {
 __extension__	unsigned long long st_dev; 	/* Device.  */
 __extension__	unsigned long long st_ino;	/* File serial number.  */
@@ -266,7 +318,6 @@ __extension__	long long st_blocks;		/* Number 512-byte blocks allocated. */
 	unsigned long int __unused4;
 	unsigned long int __unused5;
 };
-//#endif
 #elif defined(__arm__)
 struct stat {
 	unsigned short	st_dev;
