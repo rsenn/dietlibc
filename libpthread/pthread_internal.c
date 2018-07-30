@@ -21,7 +21,7 @@
 #include <stdio.h>
 #endif
 
-#ifdef WANT_TLS
+#if defined(WANT_TLS) || defined(WANT_SSP)
 #include <sys/tls.h>
 #endif
 
@@ -123,6 +123,8 @@ _pthread_descr __thread_self(void) {
   asm("mov %0 = r13" : "=r"(cur) );	/* r13 (tp) is used as thread pointer */
 #elif defined(__x86_64__)
   asm("mov %%fs:(16),%0" : "=r"(cur));
+#elif defined(__aarch64__)
+  asm("mrs %0, tpidr_el0" : "=r"(cur));
 #elif defined(__i386__)
   if (__likely(__modern_linux==1))
     asm("mov %%gs:(8),%0" : "=r"(cur));
@@ -153,11 +155,13 @@ static void kill_all_threads(int sig,int main2) {
 }
 
 
+#ifndef WANT_TLS
 /* thread errno location */
 int *__errno_location() {
   _pthread_descr td=__thread_self();
   return &(td->errno);
 }
+#endif
 
 /* exit a thread */
 static void __pthread_exit(void*retval) {
@@ -283,7 +287,7 @@ static void pthread_handle_sigrestart(int sig) {
 /* cancel signal */
 static void pthread_handle_sigcancel(int sig,siginfo_t*info,void*arg) {
   _pthread_descr this=__thread_self();
-  if (0) { sig=0; arg=0; }
+  (void)sig; (void)arg;
 #ifdef DEBUG
   printf("pthread_handle_sigcancel(%d): sigcancel %d\n",sig,this->pid);
 #endif
@@ -349,6 +353,8 @@ static inline _pthread_descr __thread_set_register(void*arg) {
   asm volatile ("sar %%a0,%0" : : "d"(arg) );
 #elif defined(__ia64__)
   asm volatile ("mov r13 = %0" : : "r"(arg) );
+#elif defined(__aarch64__)
+  asm volatile ("msr tpidr_el0, %0" : : "r"(arg) );
 #endif
   return (_pthread_descr)arg;
 }
@@ -385,6 +391,8 @@ static void* __managed_start(void*arg) {
   memcpy(me,__tdataptr,__tdatasize);
   memset(((char*)me)+__tdatasize,0,__tmemsize-__tdatasize);
   me=(tcbhead_t*)(((char*)me) + __tmemsize);
+#else
+  );
 #endif
   __setup_tls(me);
   me->multiple_threads=1;
@@ -519,7 +527,7 @@ static void*__manager_thread(void*arg) {
   struct pollfd pfd;
   _pthread_descr td;
   int n,status;
-  if (0) arg=0;
+  (void)arg;
   pfd.fd=mgr_recv_fd;
   pfd.events=POLLIN;
 

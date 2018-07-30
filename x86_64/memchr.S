@@ -1,13 +1,16 @@
 #include "dietfeatures.h"
 .text
 .global memchr
+#ifdef __PIE__
+.hidden memchr
+#endif
 .type memchr,@function
 memchr:	/* rdi=ptr, esi=ch, rdx=len */
 #ifdef WANT_VALGRIND_SUPPORT
-#ifdef __DYN_LIB
+#ifdef __PIC__
   movq	__valgrind@GOTPCREL(%rip), %rax
-  movq	(%rax), %rax
-  test	%rax, %rax
+  movl	(%rax), %eax
+  test	%eax, %eax
 #else
   xor %eax,%eax
   or (__valgrind),%eax
@@ -67,3 +70,4 @@ memchr:	/* rdi=ptr, esi=ch, rdx=len */
 #endif
 .Lhere:
 .size memchr,.Lhere-memchr
+	.section	.note.GNU-stack,"",@progbits

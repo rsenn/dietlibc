@@ -158,6 +158,9 @@ struct in_addr *addrs;
 int sock;						/* any valid socket will do */
 char *buf;						/* why allocxate more when we can use existing... */
 {
+  (void)addrs;
+  (void)sock;
+  (void)buf;
 #ifdef __linux__
 	struct sockaddr_in addr;
 
@@ -257,6 +260,8 @@ resultproc_t eachresult;		/* call with each result obtained */
 	struct rpc_msg msg;
 	struct timeval t;
 	char outbuf[MAX_BROADCAST_SIZE], inbuf[UDPMSGSIZE];
+
+	memset(addrs,0,sizeof(addrs));
 
 	/*
 	 * initialization: create a socket, a broadcast address, and

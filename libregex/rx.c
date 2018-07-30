@@ -179,14 +179,15 @@ static int matchatom(void*__restrict__ x,const unsigned char*__restrict__ s,int 
 #ifdef DEBUG
     printf("matching atom LINESTART against \"%.20s\"\n",s);
 #endif
-    if (ofs==0 && (eflags&REG_NOTBOL)==0) {
-      goto match;
-    }
+    if ((eflags&REG_NOTBOL)==0)
+      if (ofs==0 || ((preg->cflags&REG_NEWLINE) && s[-1]=='\n'))
+	goto match;
     break;
   case LINEEND:
 #ifdef DEBUG
     printf("matching atom LINEEND against \"%.20s\"\n",s);
 #endif
+    if ((preg->cflags&REG_NEWLINE) && *s=='\n') goto match;
     if ((*s && *s!='\n') || (eflags&REG_NOTEOL)) break;
     goto match;
   case WORDSTART:
@@ -267,6 +268,7 @@ openbracket:
     tmp=parseregex(&a->u.r,s+1,rx);
     if (closebracket(tmp,rx))
       return tmp+1+((rx->cflags&REG_EXTENDED)==0);
+    /* fall through */
   case ')':
     if ((rx->cflags&REG_EXTENDED)==0) goto handle_char;
     /* fall through */
@@ -403,6 +405,7 @@ static const char* parsepiece(struct piece*__restrict__ p,const char*__restrict_
       if (*tmp!='}') return s;
       ++tmp;
     }
+    /* fall through */
   default:
     return tmp;
   }
@@ -429,6 +432,12 @@ static int matchbranch(void*__restrict__ x,const char*__restrict__ s,int ofs,str
 }
 
 static int matchempty(void*__restrict__ x,const char*__restrict__ s,int ofs,struct __regex_t*__restrict__ preg,int plus,int eflags) {
+  (void)x;
+  (void)s;
+  (void)ofs;
+  (void)preg;
+  (void)plus;
+  (void)eflags;
   return 0;
 }
 
@@ -450,10 +459,10 @@ static const char* parsebranch(struct branch*__restrict__ b,const char*__restric
     }
 //    printf("b->p from %p to ",b->p);
     {
-      struct piece* tmp;
-      if (!(tmp=realloc(b->p,++b->num*sizeof(p)))) return s;
-//      printf("piece realloc: %p -> %p (%d*%d)\n",b->p,tmp,b->num,sizeof(p));
-      b->p=tmp;
+      struct piece* t;
+      if (!(t=realloc(b->p,++b->num*sizeof(p)))) return s;
+//      printf("piece realloc: %p -> %p (%d*%d)\n",b->p,t,b->num,sizeof(p));
+      b->p=t;
     }
 //    printf("%p (size %d)\n",b->p,b->num*sizeof(p));
     b->p[b->num-1]=p;
@@ -490,7 +499,6 @@ static const char* parseregex(struct regex*__restrict__ r,const char*__restrict_
   const char *tmp;
   r->m=matchregex;
   r->num=0; r->b=0; r->pieces=0;
-  p->brackets=0;
   b.next=0;
   if (*s==')' || !*s) {
     r->m=matchempty;
@@ -501,10 +509,13 @@ static const char* parseregex(struct regex*__restrict__ r,const char*__restrict_
     if (tmp==s && !closebracket(s,p)) return s;
 //    printf("r->b from %p to ",r->b);
     {
-      struct branch* tmp;
-      if (!(tmp=realloc(r->b,++r->num*sizeof(b)))) return s;
-//      printf("branch realloc: %p -> %p (%d*%d)\n",r->b,tmp,r->num,sizeof(b));
-      r->b=tmp;
+      struct branch* t;
+      if (!(t=realloc(r->b,++r->num*sizeof(b)))) {
+	free(b.p);
+	return s;
+      }
+//      printf("branch realloc: %p -> %p (%d*%d)\n",r->b,t,r->num,sizeof(b));
+      r->b=t;
     }
 //    printf("%p (size %d)\n",r->b,r->num*sizeof(b));
     r->b[r->num-1]=b;
@@ -565,6 +576,7 @@ static void regex_putnext(struct regex*__restrict__ r,void*__restrict__ next) {
 int regcomp(regex_t*__restrict__ preg, const char*__restrict__ regex, int cflags) {
   const char* t;
   preg->cflags=cflags;
+  preg->brackets=0;
   t=parseregex(&preg->r,regex,preg);
   if (t==regex && *regex!=0) return -1;
   regex_putnext(&preg->r,0);
@@ -581,10 +593,19 @@ int regexec(const regex_t*__restrict__ preg, const char*__restrict__ string, siz
   printf("alloca(%d)\n",sizeof(regmatch_t)*(preg->brackets+3));
 #endif
   ((regex_t*)preg)->l=alloca(sizeof(regmatch_t)*(preg->brackets+3));
+  int earlyabort=(preg->cflags&REG_NEWLINE)==0;
+  if (earlyabort) {
+    int i;
+    for (i=0; i<preg->r.num; ++i)
+      if (preg->r.b[i].p->a.type!=LINESTART) {
+	earlyabort=0;
+	break;
+      }
+  }
   while (1) {
     matched=preg->r.m((void*)&preg->r,string,string-orig,(regex_t*)preg,0,eflags);
 //    printf("ebp on stack = %x\n",stack[1]);
-    if (matched>=0) {
+    if (__unlikely(matched>=0)) {
       matched=preg->r.m((void*)&preg->r,string,string-orig,(regex_t*)preg,0,eflags);
       preg->l[0].rm_so=string-orig;
       preg->l[0].rm_eo=string-orig+matched;
@@ -592,7 +613,12 @@ int regexec(const regex_t*__restrict__ preg, const char*__restrict__ string, siz
       return 0;
     }
     if (!*string) break;
-    ++string; eflags|=REG_NOTBOL;
+    ++string;
+    eflags|=REG_NOTBOL;
+    /* we are no longer at the beginning of the line, so if our regex
+     * starts with ^, we can skip trying to run it on the rest of the
+     * line */
+    if (earlyabort) break;
   }
   return REG_NOMATCH;
 }
@@ -618,6 +644,8 @@ void regfree(regex_t* preg) {
 }
 
 size_t regerror(int errcode, const regex_t*__restrict__ preg, char*__restrict__ errbuf, size_t errbuf_size) {
+  (void)preg;
+  (void)errcode;
   strncpy(errbuf,"invalid regular expression (sorry)",errbuf_size);
   return strlen(errbuf);
 }

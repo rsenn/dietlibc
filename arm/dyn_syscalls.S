@@ -3,16 +3,18 @@
  * Olaf Dreesen
  */
 
+#include "arm-features.h"
+
 #include "../syscalls.s/environ.S"
 #include "../syscalls.s/errno.S"
 
 #include <dietfeatures.h>
 #include "syscalls.h"
 
-.text
-__unified_syscall4:
+
+FUNC_START	__unified_syscall4
 	ldmfd	sp!, {r4, r5, r6}
-__unified_syscall:
+FUNC_START	__unified_syscall
 	cmn	r0, #4096
 	movcc	pc, lr
 	rsb	r1, r0, #0
@@ -25,7 +27,9 @@ __unified_syscall:
 
 	mvn	r0, #0
 #include "dietuglyweaks.h"
-	mov	pc, lr
+	RET
+FUNC_END	__unified_syscall
+FUNC_END	__unified_syscall4
 
 /* ok now include all syscalls.s (*.S) and sysdep *.S */
 #include "mmap.S"
@@ -104,7 +108,6 @@ __unified_syscall:
 #include "../syscalls.s/n_sigprocmask.S"
 #include "../syscalls.s/n_sigsuspend.S"
 #include "../syscalls.s/nanosleep.S"
-#include "../syscalls.s/nice.S"
 #include "../syscalls.s/open.S"
 #include "../syscalls.s/pause.S"
 #include "../syscalls.s/personality.S"
@@ -280,9 +283,11 @@ __unified_syscall:
 #include "../syscalls.s/fgetxattr.S"
 
 /* other asm-files w.o. changes ... */
-__exit:
+FUNC_START	__exit
 	swi	$__NR_exit
 	eor	pc,lr,lr
+FUNC_END	__exit
+
 #define _exit __exit
 #include "clone.S"
 #undef _exit

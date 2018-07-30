@@ -3,6 +3,15 @@
 
 /* feel free to comment some of these out to reduce code size */
 
+/* On i386, BSD socket syscalls have traditionally been implemented via
+ * a multiplexing syscall called "socketcall". But somewhere in the 3.x
+ * cycle, Linux got real syscalls for socket(), accept() etc, and now
+ * it would make sense to use those syscalls instead, if only to make
+ * seccomp sandboxes more platform agnostic. However, if you plan on
+ * running your program on an ancient kernel, you need the socketcall
+ * version instead. */
+#define WANT_I386_SOCKETCALL
+
 #define WANT_FLOATING_POINT_IN_PRINTF
 #define WANT_FLOATING_POINT_IN_SCANF
 #define WANT_CHARACTER_CLASSES_IN_SCANF
@@ -29,7 +38,7 @@
 #define WANT_TLS
 
 /* make the startcode, etc. dynamic aware ({con,de}structors) */
-/* #define WANT_DYNAMIC */
+// #define WANT_DYNAMIC
 
 /* GDB support in the dynamic linker */
 #define WANT_LD_SO_GDB_SUPPORT
@@ -37,8 +46,8 @@
 /* do you want smaller or faster string routines? */
 #define WANT_FASTER_STRING_ROUTINES
 
-/* define this to have strncpy zero-fill and not just zero-terminate the
- * string */
+/* define this to have strncpy and stpncpy zero-fill and not just
+ * zero-terminate the destination string */
 /* #define WANT_FULL_POSIX_COMPAT */
 
 /* on i386, Linux has an alternate syscall method since 2002/12/16 */
@@ -79,6 +88,12 @@
 
 /* do you want crypt(3) to use MD5 if the salt starts with "$1$"? */
 #define WANT_CRYPT_MD5
+
+/* do you want crypt(3) to use SHA256 if the salt starts with "$5$? */
+#define WANT_CRYPT_SHA256
+
+/* do you want crypt(3) to use SHA512 if the salt starts with "$6$? */
+#define WANT_CRYPT_SHA512
 
 /* do you want diet to include a safeguard dependency to make linking
  * against glibc fail?  This may fail with older binutils. */
@@ -125,6 +140,12 @@
  * `main' can not be found. */
 /* #define WANT_STACKGAP */
 
+/* For SSP initialization, dietlibc usually uses randomness given by the
+ * kernel in the ELF auxvec. Some very old kernels do not pass this, and
+ * for them dietlibc will open /dev/urandom to get randomness. Undef
+ * this if you don't need that bloat. */
+// #define WANT_URANDOM_SSP
+
 /* #define this if you want GNU bloat like program_invocation_short_name
  * and program_invocation_name to be there.  This functionality is not
  * portable and adds useless bloat to libc.  Help stomp out code
@@ -153,6 +174,7 @@
 
 #if defined(WANT_SSP) || defined(WANT_STACKGAP) || defined(WANT_TLS)
 #define CALL_IN_STARTCODE stackgap
+#define CALL_IN_STARTCODE_PIE stackgap_pie
 #else
 #define CALL_IN_STARTCODE main
 #endif
@@ -161,22 +183,19 @@
 #define WANT_SMALL_STRING_ROUTINES
 #endif
 
-#ifdef WANT_THREAD_SAFE
-#ifndef __ASSEMBLER__
-#define errno (*__errno_location())
-#define _REENTRANT
-#endif
-#endif
-
 #ifdef __DYN_LIB
 /* with shared libraries you MUST have a dynamic aware startcode */
 #ifndef WANT_DYNAMIC
 #define WANT_DYNAMIC
 #endif
-/* saveguard crashes with shared objects ... */
+/* safeguard crashes with shared objects ... */
 #ifdef WANT_SAFEGUARD
 #undef WANT_SAFEGUARD
 #endif
+#endif
+
+#if defined(__x86_64__) && defined(__ILP32__)
+#undef WANT_LARGEFILE_BACKCOMPAT
 #endif
 
 #endif

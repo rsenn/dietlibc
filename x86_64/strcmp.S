@@ -3,6 +3,10 @@
 .type	strcmp,@function
 .weak	strcoll
 .type	strcoll,@function
+#ifdef __PIE__
+.hidden strcmp
+.hidden strcoll
+#endif
 
 strcoll:
 strcmp:
@@ -25,3 +29,6 @@ strcmp:
 	sbb %eax,%eax
 	or $1,%eax
 	ret
+.Lhere:
+.size strcmp,.Lhere-strcmp
+	.section	.note.GNU-stack,"",@progbits

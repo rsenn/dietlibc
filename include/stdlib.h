@@ -14,6 +14,9 @@ void *malloc(size_t size)  __THROW __attribute_malloc__;
 void free(void *ptr) __THROW;
 void *realloc(void *ptr, size_t size) __THROW __attribute_malloc__;
 
+/* useful OpenBSD extension: */
+void* reallocarray(void* ptr, size_t nmemb, size_t size) __THROW __attribute_malloc__ __attribute_alloc2__(2,3);
+
 char *getenv(const char *name) __THROW __pure;
 int putenv(const char *string) __THROW;
 int setenv(const char *name, const char *value, int overwrite) __THROW;
@@ -29,7 +32,7 @@ long int strtol(const char *nptr, char **endptr, int base) __THROW;
 unsigned long int strtoul(const char *nptr, char **endptr, int base) __THROW;
 
 extern int __ltostr(char *s, unsigned int size, unsigned long i, unsigned int base, int UpCase) __THROW;
-extern int __dtostr(double d,char *buf,unsigned int maxlen,unsigned int prec,unsigned int prec2,int g) __THROW;
+extern int __dtostr(double d,char *buf,unsigned int maxlen,unsigned int prec,unsigned int prec2,int flags) __THROW;
 
 #if !defined(__STRICT_ANSI__) || __STDC_VERSION__ + 0 >= 199900L
 __extension__ long long int strtoll(const char *nptr, char **endptr, int base) __THROW;
@@ -43,7 +46,7 @@ double atof(const char *nptr) __THROW;
 __extension__ long long int atoll(const char *nptr);
 
 void exit(int status) __THROW __attribute__((__noreturn__));
-void abort(void) __THROW;
+void abort(void) __THROW __attribute__((__noreturn__));
 
 extern int rand(void) __THROW;
 extern int rand_r(unsigned int *seed) __THROW;
@@ -108,7 +111,8 @@ typedef struct { long long quot,rem; } lldiv_t;
 lldiv_t lldiv(long long numerator, long long denominator);
 
 #ifdef _GNU_SOURCE
-int clearenv(void);
+int clearenv(void) __THROW;
+char* secure_getenv(const char* name) __THROW;
 #endif
 
 int mbtowc(wchar_t *pwc, const char *s, size_t n) __THROW;
@@ -117,6 +121,13 @@ size_t mbstowcs(wchar_t *dest, const char *src, size_t n) __THROW;
 int mblen(const char* s,size_t n) __THROW __pure;
 
 size_t wcstombs(char *dest, const wchar_t *src, size_t n) __THROW;
+
+/* These come from OpenBSD: */
+uint32_t arc4random(void) __THROW;
+void arc4random_buf(void* buf, size_t n) __THROW;
+uint32_t arc4random_uniform(uint32_t upper_bound) __THROW;
+void arc4random_stir(void) __THROW;
+void arc4random_addrandom(unsigned char* dat,size_t datlen) __THROW;
 
 __END_DECLS
 

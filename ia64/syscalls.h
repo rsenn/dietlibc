@@ -289,6 +289,45 @@
 #define __NR_timerfd_create		1310
 #define __NR_timerfd_settime		1311
 #define __NR_timerfd_gettime		1312
+#define __NR_signalfd4			1313
+#define __NR_eventfd2			1314
+#define __NR_epoll_create1		1315
+#define __NR_dup3			1316
+#define __NR_pipe2			1317
+#define __NR_inotify_init1		1318
+#define __NR_preadv			1319
+#define __NR_pwritev			1320
+#define __NR_rt_tgsigqueueinfo		1321
+#define __NR_recvmmsg			1322
+#define __NR_fanotify_init		1323
+#define __NR_fanotify_mark		1324
+#define __NR_prlimit64			1325
+#define __NR_name_to_handle_at		1326
+#define __NR_open_by_handle_at  	1327
+#define __NR_clock_adjtime		1328
+#define __NR_syncfs			1329
+#define __NR_setns			1330
+#define __NR_sendmmsg			1331
+#define __NR_process_vm_readv		1332
+#define __NR_process_vm_writev		1333
+#define __NR_accept4			1334
+#define __NR_finit_module		1335
+#define __NR_sched_setattr		1336
+#define __NR_sched_getattr		1337
+#define __NR_renameat2			1338
+#define __NR_getrandom			1339
+#define __NR_memfd_create		1340
+#define __NR_bpf			1341
+#define __NR_execveat			1342
+#define __NR_userfaultfd		1343
+#define __NR_membarrier			1344
+#define __NR_kcmp			1345
+#define __NR_mlock2			1346
+#define __NR_copy_file_range		1347
+#define __NR_preadv2			1348
+#define __NR_pwritev2			1349
+
+#define __NR_umount_with_flags __NR_umount
 
 #define syscall(name, sym) \
 .text; \

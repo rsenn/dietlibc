@@ -42,8 +42,8 @@ int readdir_r (DIR* __dirp, struct dirent* entry, struct dirent** result) __THRO
 #endif
 struct dirent64 *readdir64 (DIR *__dirp) __THROW;
 void rewinddir (DIR *__dirp) __THROW;
-void seekdir (DIR *__dirp, long int __pos) __THROW;
-long int telldir (DIR *__dirp) __THROW;
+void seekdir (DIR *__dirp, off_t __pos) __THROW;
+off_t telldir (DIR *__dirp) __THROW;
 
 int scandir(const char *dir, struct dirent ***namelist,
       int (*selection)(const struct dirent *),
@@ -95,6 +95,10 @@ enum
 /* Convert between stat structure types and directory types.  */
 # define IFTODT(mode)	(((mode) & 0170000) >> 12)
 # define DTTOIF(dirtype)	((dirtype) << 12)
+#endif
+
+#ifdef __aarch64__
+#define __DIET_ARCH_ONLY_DIRENT64
 #endif
 
 __END_DECLS

@@ -1,18 +1,20 @@
 #include "dietfeatures.h"
+#include "arm-features.h"
 
-	.text
-	.align	2
+.extern	__valgrind
 
-	.global	strlen
-
-strlen:
-
+FUNC_START	strlen
 #if 0
 	teq	a1, #0			@ is string pointer NULL ??
 	moveq	pc, lr			@ if so, return 0
 #endif
 
 #ifndef WANT_SMALL_STRING_ROUTINES
+#ifdef WANT_VALGRIND_SUPPORT
+	ldr	ip, =__valgrind
+	bne	.Lvalgrind
+#endif
+
 	ands	a3, a1, #3
 	ldr	ip, .Lmagic
 	mov	a2, a1
@@ -51,22 +53,28 @@ strlen:
 	addeq	a1, a1, #1
 #endif
 	sub	a1, a1, a2
-#else
+
+#ifdef WANT_VALGRIND_SUPPORT
+	RET
+
+.Lvalgrind:
+#endif
+#endif
+
+#if defined(WANT_SMALL_STRING_ROUTINES) || defined(WANT_VALGRIND_SUPPORT)
 	ldrb	a3, [a1], #1
 	mov	a2, a1
-.Lloop:
+.Lslowloop:
 	tst	a3, #255
 	ldrneb	a3, [a1], #1
-	bne	.Lloop
+	bne	.Lslowloop
 	sub	a1, a1, a2
 #endif
 
-	mov	pc, lr
+	RET
 
 #ifndef WANT_SMALL_STRING_ROUTINES
 .Lmagic:
 	.word	0x01010101
 #endif
-
-.Lstrlen:
-	.size	strlen,.Lstrlen-strlen
+FUNC_END	strlen

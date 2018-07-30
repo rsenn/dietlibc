@@ -1,6 +1,9 @@
 .text
 .align 0
 .global strcpy
+#ifdef __PIE__
+.hidden strcpy
+#endif
 .type	 strcpy,@function
 strcpy:
 	mov %rdi,%rdx
@@ -13,3 +16,6 @@ strcpy:
 
 	mov %rdx,%rax
 	ret
+.Lhere:
+.size strcpy,.Lhere-strcpy
+	.section	.note.GNU-stack,"",@progbits

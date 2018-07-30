@@ -29,7 +29,7 @@ struct hostent* gethostent_r(char* buf, int len) {
     hostlen=lseek(hostfd,0,SEEK_END);
     hostmap=mmap(0,hostlen,PROT_READ|PROT_WRITE,MAP_PRIVATE,hostfd,0);
     if ((long)hostmap==(-1)) { close(hostfd); hostmap=0; goto error; }
-    close(hostfd); hostfd=-1;
+    close(hostfd);
     cur=hostmap;
   }
   last=hostmap+hostlen;
@@ -74,11 +74,11 @@ again:
     while (cur<last && !isspace(*cur)) ++cur;
     {
       char *from=pe->h_aliases[aliasidx];
-      int len=cur-from;
-      if (max-dest<len+2) goto nospace;
+      int l=cur-from;
+      if (max-dest<l+2) goto nospace;
       pe->h_aliases[aliasidx]=dest;
       memmove(dest,from,(size_t)(cur-from));
-      dest+=len;
+      dest+=l;
       *dest=0; ++dest;
     }
     if (*cur=='\n') { ++cur; ++aliasidx; break; }

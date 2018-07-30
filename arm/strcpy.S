@@ -1,11 +1,13 @@
 #include "dietfeatures.h"
+#include "arm-features.h"
 
-.text
-	.align	2
-	.global	strcpy
-
-strcpy:
+FUNC_START	strcpy
 #ifndef WANT_SMALL_STRING_ROUTINES
+#ifdef WANT_VALGRIND_SUPPORT
+	ldr	ip, =__valgrind
+	bne	.Lvalgrind
+#endif
+
 	mov	ip, r0
 	ands	r2, r1, #3
 	ldr	r3, [r1, -r2]!
@@ -52,15 +54,22 @@ strcpy:
 	strb	r3, [ip], #1
 	ldrne	r3, [r1, #4]!
 #endif
-#else
+	bne	.Lloop
+#ifdef WANT_VALGRIND_SUPPORT
+	RET
+
+.Lvalgrind:
+#endif
+#endif
+
+#if defined(WANT_SMALL_STRING_ROUTINES) || defined(WANT_VALGRIND_SUPPORT)
 	ldrb	r2, [r1], #1
 	mov	r3, r0
-.Lloop:
+.Lslowloop:
 	strb	r2, [r3], #1
 	tst	r2, #255
 	ldrneb	r2, [r1], #1
+	bne	.Lslowloop
 #endif
-	bne	.Lloop
-	mov	pc, lr
-.Lfe1:
-	.size	 strcpy,.Lfe1-strcpy
+	RET
+FUNC_END	strcpy

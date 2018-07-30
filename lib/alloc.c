@@ -143,7 +143,6 @@ static void _alloc_libc_free(void *ptr) {
 }
 void __libc_free(void *ptr) __attribute__((alias("_alloc_libc_free")));
 void free(void *ptr) __attribute__((weak,alias("_alloc_libc_free")));
-void if_freenameindex(void* ptr) __attribute__((alias("free")));
 
 #ifdef WANT_MALLOC_ZERO
 static __alloc_t zeromem[2];
@@ -179,11 +178,19 @@ void* malloc(size_t size) __attribute__((weak,alias("_alloc_libc_malloc")));
 
 void* __libc_calloc(size_t nmemb, size_t _size);
 void* __libc_calloc(size_t nmemb, size_t _size) {
-  register size_t size=_size*nmemb;
+  size_t size;
+#if __GNUC__>=5
+  if (__builtin_mul_overflow(_size,nmemb,&size)) {
+    (*__errno_location())=ENOMEM;
+    return 0;
+  }
+#else
+  size=_size*nmemb;
   if (nmemb && size/nmemb!=_size) {
     (*__errno_location())=ENOMEM;
     return 0;
   }
+#endif
 #ifdef WANT_FREE_OVERWRITE
   if (size<__MAX_SMALL_SIZE) {
     void* x=malloc(size);

@@ -11,6 +11,13 @@ int main() {
   memset(buf,'a',sizeof buf);
   strcpy(buf+sizeof(buf)-100," foo . .. bar\n");
 
+  assert(regcomp(&r,"(foo)(bar)",REG_EXTENDED)==0);
+  assert(regexec(&r,"foobarbaz",10,matches,0)==0);
+  assert(matches[0].rm_so==0 && matches[0].rm_eo==6);
+  assert(matches[1].rm_so==0 && matches[1].rm_eo==3);
+  assert(matches[2].rm_so==3 && matches[2].rm_eo==6);
+  regfree(&r);
+
   assert(regcomp(&r,"a\\|b",0)==0);
   assert(regexec(&r,"a|b",10,matches,0)==0);
   regfree(&r);
@@ -116,6 +123,9 @@ int main() {
   assert(regcomp(&r,"\\(foo\\)bar\\1",0)==0);
   assert(regexec(&r,"foobarfoo",10,matches,0)==0);
   regfree(&r);
+
+  assert(regcomp(&r,"^(postmaster|abuse|(felix|leitner|zoke|sanjiyan|dreesen|akuma|braun|kristine|gilda|oskar|moritz)(-[^@]*|))@qarx.de$",REG_NOSUB|REG_EXTENDED)==0);
+  assert(regexec(&r,"apollo.bingo-ev.de@fefe.de",10,matches,0)!=0);
 
 #if 0
   printf("regcomp %d\n",regcomp(&r,"\\.( ? ? ?\\.)*\\.",REG_EXTENDED|REG_NOSUB));

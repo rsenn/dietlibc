@@ -5,13 +5,15 @@
 
 static int copystring(char* buf,int maxlen, const char* s) {
   int i;
-  for (i=0; i<3&&i<maxlen; ++i)
+  for (i=0; i<maxlen; ++i) {
     buf[i]=s[i];
-  if (i<maxlen) { buf[i]=0; ++i; }
+    if (!s[i])
+      break;
+  }
   return i;
 }
 
-int __dtostr(double d,char *buf,unsigned int maxlen,unsigned int prec,unsigned int prec2,int g) {
+int __dtostr(double d,char *buf,unsigned int maxlen,unsigned int prec,unsigned int prec2,int flags) {
 #if 1
   union {
     unsigned long long l;
@@ -35,15 +37,19 @@ int __dtostr(double d,char *buf,unsigned int maxlen,unsigned int prec,unsigned i
   double tmp;
   char *oldbuf=buf;
 
-  if ((i=isinf(d))) return copystring(buf,maxlen,i>0?"inf":"-inf");
-  if (isnan(d)) return copystring(buf,maxlen,"nan");
+  if (isinf(d))
+    return copystring(buf,maxlen,
+		      (d<0)?
+		      (flags&0x02?"-INF":"-inf"):
+		      (flags&0x02?"INF":"inf"));
+  if (isnan(d)) return copystring(buf,maxlen,flags&0x02?"NAN":"nan");
   e10=1+(long)(e*0.30102999566398119802); /* log10(2) */
   /* Wir iterieren von Links bis wir bei 0 sind oder maxlen erreicht
    * ist.  Wenn maxlen erreicht ist, machen wir das nochmal in
-   * scientific notation.  Wenn dann von prec noch was übrig ist, geben
+   * scientific notation.  Wenn dann von prec noch was Ã¼brig ist, geben
    * wir einen Dezimalpunkt aus und geben prec2 Nachkommastellen aus.
    * Wenn prec2 Null ist, geben wir so viel Stellen aus, wie von prec
-   * noch übrig ist. */
+   * noch Ã¼brig ist. */
   if (d==0.0) {
     prec2=prec2==0?1:prec2+2;
     prec2=prec2>maxlen?8:prec2;
@@ -120,13 +126,15 @@ int __dtostr(double d,char *buf,unsigned int maxlen,unsigned int prec,unsigned i
   }
 
   if (buf==oldbuf) {
-    if (!maxlen) return 0; --maxlen;
+    if (!maxlen) return 0;
+    --maxlen;
     *buf='0'; ++buf;
   }
   if (prec2 || prec>(unsigned int)(buf-oldbuf)+1) {	/* more digits wanted */
-    if (!maxlen) return 0; --maxlen;
+    if (!maxlen) return 0;
+    --maxlen;
     *buf='.'; ++buf;
-    if (g) {
+    if ((flags & 0x01)) {
       if (prec2) prec=prec2;
       prec-=buf-oldbuf-1;
     } else {

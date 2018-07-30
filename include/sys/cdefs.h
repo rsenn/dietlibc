@@ -16,6 +16,22 @@
 #define __extension__
 #endif
 
+#if (__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 6))
+#define __leaf , __leaf__
+#else
+#define __leaf
+#endif
+
+#if !defined(__cplusplus) && ((__GNUC__ > 3) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 3)))
+#undef __THROW
+#define __THROW __attribute__((__nothrow__ __leaf))
+#define __THROWNL __attribute__((__nothrow__))
+#endif
+
+#ifndef __THROWNL
+#define __THROWNL __THROW
+#endif
+
 #if (__GNUC__ > 2) || ((__GNUC__ == 2) && (__GNUC_MINOR__ >= 96))
 #define __pure __attribute__ ((__pure__))
 #else
@@ -94,8 +110,8 @@
 #define __attribute_alloc__(x)
 #define __attribute_alloc2__(x,y)
 #else
-#define __attribute_alloc__(x) __attribute__((alloc_size(x))
-#define __attribute_alloc2__(x,y) __attribute__((alloc_size(x,y))
+#define __attribute_alloc__(x) __attribute__((alloc_size(x)))
+#define __attribute_alloc2__(x,y) __attribute__((alloc_size(x,y)))
 #endif
 
 #if (__GNUC__ < 2) || ((__GNUC__ == 2) && (__GNUC_MINOR__ < 5))
@@ -109,5 +125,18 @@
 #else
 #define __attribute_formatarg__(x) __attribute__((format_arg(x)))
 #endif
+
+#if (__GNUC__ < 3) || ((__GNUC__ == 3) && (__GNUC_MINOR__ < 1))
+#define __noinline__
+#else
+#define __noinline__ __attribute__((noinline))
+#endif
+
+#if (__GNUC__ < 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ < 6))
+#define __hidden__
+#else
+#define __hidden__ __attribute__((visibility("hidden")))
+#endif
+
 
 #endif

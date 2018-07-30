@@ -53,7 +53,8 @@ void __dns_make_fd6(void) {
 #endif
 
 static int parsesockaddr(const char* c,void* x) {
-  struct sockaddr_in to;
+  struct sockaddr_in_pad to;
+  memset(&to,0,sizeof(to));
   if (inet_aton(c,&to.sin_addr)) {
     to.sin_port=htons(53);
     to.sin_family=AF_INET;
@@ -159,6 +160,7 @@ int __dns_decodename(const unsigned char *packet,unsigned int offset,unsigned ch
     if ((*tmp>>6)==3) {		/* goofy DNS decompression */
       unsigned int ofs=((unsigned int)(*tmp&0x3f)<<8)|*(tmp+1);
       if (ofs>=(unsigned int)offset) return -1;	/* RFC1035: "pointer to a _prior_ occurrance" */
+      offset=ofs;
       if (after<tmp+2) after=tmp+2;
       tmp=packet+ofs;
       ok=0;

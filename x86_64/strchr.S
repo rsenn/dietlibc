@@ -2,6 +2,10 @@
 .type   strchr,@function
 .global strchr
 .weak index
+#ifdef __PIE__
+.hidden strchr
+.hidden index
+#endif
 .type index,@function
 
 index:
@@ -18,3 +22,6 @@ strchr:
 .Lfound:
 	lea	-1(%rsi),%rax
 	ret
+.Lhere:
+.size strchr,.Lhere-strchr
+	.section	.note.GNU-stack,"",@progbits

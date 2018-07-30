@@ -1,3 +1,5 @@
+#include "arm-features.h"
+
 /*****************************************************************************
 * Copyright (C) 2002 Andre McCurdy  <armccurdy@yahoo.co.uk>
 *
@@ -53,42 +55,31 @@
 
 #if (__BYTE_ORDER == __LITTLE_ENDIAN)
 
-   .global MD5Init
-   .global MD5Update
-
-   .text
-#ifdef __ARM_EABI__
-   .align  4
-#else		
-   .align  2
-#endif
-	
     @ --
     @ void MD5Init (MD5_CTX* context);
     @ --
 
-MD5Init:
-
+FUNC_START	MD5Init
     adr     r1, 1f                          @ r1 = base address of MD5InitData array
     ldmia   r1, { r1 - r3, r12 }            @ load 4 elements from MD5InitData array
     stmia   r0, { r1 - r3, r12 }            @ store into MD5 context->state[0..3]
     mov     r1, #0
     str     r1, [r0, #0x10]                 @ initial count[0] = 0
     str     r1, [r0, #0x14]                 @ initial count[1] = 0
-    mov     pc, lr                          @ return
+    RET
 
+   .align 3
 1: .word    0x67452301                      @ initial MD5 context->state[0]
    .word    0xefcdab89                      @ initial MD5 context->state[1]
    .word    0x98badcfe                      @ initial MD5 context->state[2]
    .word    0x10325476                      @ initial MD5 context->state[3]
-
+FUNC_END	MD5Init
 
     @ --
     @ void MD5Update (MD5_CTX* context, const uint8_t* buf, signed int len);
     @ --
 
-MD5Update:
-
+FUNC_START	MD5Update
     stmdb   sp!, { r4 - r8, lr }
     add     r4, r0, #(6 * 4)                @ r4 = &context->buffer[0]
     ldmdb   r4, { r0, r3 }                  @ r0 = count[0], r3 = count[1]
@@ -122,12 +113,13 @@ MD5Update:
     sub     r2, r8, r2
 2:  ldmia   sp!, { r4 - r8, lr }
     b       memcpy                          @ classic tail-call optimisation...
-
+FUNC_END	MD5Update
 
     @ --
     @ static void __MD5Transform (uint32_t *buf, const uint32_t *in, int repeat);
     @ --
 
+.align 3
 MD5MagicData:
 
 1: .word     0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee
@@ -148,6 +140,7 @@ MD5MagicData:
    .word     0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391, (17f-19f-4)
    .word     0x6e4120A9, 0x20657264, 0x7543634d, 0x00796472, (19f-19f-4)
 
+.align 2
 __MD5Transform:
 
     cmp     r2, #0

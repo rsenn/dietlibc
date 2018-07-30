@@ -7,7 +7,7 @@ strnlen:
 	mov %rsi,%r9
 	mov %rsi,%rdx
 	xor %esi,%esi
-#ifdef __DYN_LIB
+#ifdef __PIC__
 	call memchr@PLT
 #else
 	call memchr
@@ -22,3 +22,5 @@ strnlen:
 
 .Lhere:
 	.size	 strnlen,.Lhere-strnlen
+
+	.section	.note.GNU-stack,"",@progbits
