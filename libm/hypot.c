@@ -8,14 +8,14 @@
 #define SPLIT (0x1p27 + 1)
 #endif
 
-static void sq(double_t *hi, double_t *lo, double x)
+static void sq(double *hi, double *lo, double x)
 {
-	double_t xh, xl, xc;
+	double xh, xl, xc;
 
-	xc = (double_t)x*SPLIT;
+	xc = (double)x*SPLIT;
 	xh = x - xc + xc;
 	xl = x - xh;
-	*hi = (double_t)x*x;
+	*hi = (double)x*x;
 	*lo = xh*xh - *hi + 2*xh*xl + xl*xl;
 }
 
@@ -23,7 +23,7 @@ double hypot(double x, double y)
 {
 	union {double f; uint64_t i;} ux = {x}, uy = {y}, ut;
 	int ex, ey;
-	double_t hx, lx, hy, ly, z;
+	double hx, lx, hy, ly, z;
 
 	/* arrange |x| >= |y| */
 	ux.i &= -1ULL>>1;
@@ -45,7 +45,7 @@ double hypot(double x, double y)
 	if (ex == 0x7ff || uy.i == 0)
 		return x;
 	/* note: hypot(x,y) ~= x + y*y/x/2 with inexact for small y/x */
-	/* 64 difference is enough for ld80 double_t */
+	/* 64 difference is enough for ld80 double */
 	if (ex - ey > 64)
 		return x + y;
 

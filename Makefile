@@ -1,78 +1,78 @@
-INSTALL = install
-prefix? = /opt/diet
+INSTALL=install
+prefix?=/opt/diet
 # Set the following to install to a different root
-#DESTDIR = /tmp/fefix
+#DESTDIR=/tmp/fefix
 # Use "make DEBUG=1" to compile a debug version.
 
-LIBDIR = ${prefix}/lib
-BINDIR = ${prefix}/bin
-MAN1DIR = ${prefix}/man/man1
+LIBDIR=${prefix}/lib
+BINDIR=${prefix}/bin
+MAN1DIR=${prefix}/man/man1
 
-EXTRACFLAGS = 
+EXTRACFLAGS=
 
-MYARCH := $(shell uname -m | sed -e 's/i[4-9]86/i386/' -e 's/armv[3-7]t\?e\?[lb]/arm/')
+MYARCH:=$(shell uname -m | sed -e 's/i[4-9]86/i386/' -e 's/armv[3-7]t\?e\?[lb]/arm/')
 
 # This extra-ugly cruft is here so make will not run uname and sed each
 # time it looks at $(OBJDIR).  This alone sped up running make when
 # nothing has to be done from 1 sec to 0.12 sec on a 900 MHz Athlon.
 # We don't use ARCH:=$(MYARCH) so we can detect unknown architectures.
 ifeq ($(MYARCH),i386)
-ARCH = i386
+ARCH=i386
 else
 ifeq ($(MYARCH),mips)
-ARCH = mips
+ARCH=mips
 else
 ifeq ($(MYARCH),alpha)
-ARCH = alpha
+ARCH=alpha
 else
 ifeq ($(MYARCH),ppc)
-ARCH = ppc
+ARCH=ppc
 else
 ifeq ($(MYARCH),ppc64)
-ARCH = ppc64
+ARCH=ppc64
 else
 ifeq ($(MYARCH),ppc64le)
-ARCH = ppc64le
+ARCH=ppc64le
 else
 ifeq ($(MYARCH),arm)
-ARCH = arm
+ARCH=arm
 else
 ifeq ($(MYARCH),aarch64)
-ARCH = aarch64
+ARCH=aarch64
 else
 ifeq ($(MYARCH),sparc)
-ARCH = sparc
+ARCH=sparc
 else
 ifeq ($(MYARCH),sparc64)
-ARCH = sparc64
+ARCH=sparc64
 else
 ifeq ($(MYARCH),s390)
-ARCH = s390
+ARCH=s390
 else
 ifeq ($(MYARCH),s390x)
-ARCH = s390x
+ARCH=s390x
 else
 ifeq ($(MYARCH),mipsel)
-ARCH = mipsel
+ARCH=mipsel
 else
 ifeq ($(MYARCH),mips64)
-ARCH = mips64
+ARCH=mips64
 else
 ifeq ($(MYARCH),parisc)
-ARCH = parisc
+ARCH=parisc
 else
 ifeq ($(MYARCH),parisc64)
-ARCH = parisc
-MYARCH = parisc
+ARCH=parisc
+MYARCH=parisc
 else
 ifeq ($(MYARCH),x86_64)
-ARCH = x86_64
+ARCH=x86_64
 else
 ifeq ($(MYARCH),ia64)
-ARCH = ia64
+ARCH=ia64
 else
 ifeq ($(MYARCH),armeb)
-ARCH = arm
+ARCH=arm
 else
 $(error unknown architecture, please fix Makefile)
 endif
@@ -95,21 +95,20 @@ endif
 endif
 endif
 
-#PIE = -fpie -fvisibility=hidden
-PIE = 
+PIE=-fpie
 
 # ARCH=$(MYARCH)
 
-OBJDIR = bin-$(ARCH)
-ILIBDIR = $(LIBDIR)-$(ARCH)
+OBJDIR=bin-$(ARCH)
+ILIBDIR=$(LIBDIR)-$(ARCH)
 
-DIETHOME = $(shell pwd)
+DIETHOME=$(shell pwd)
 
-WHAT = 	$(OBJDIR) $(OBJDIR)/start.o $(OBJDIR)/dyn_start.o $(OBJDIR)/dyn_stop.o \
+WHAT=	$(OBJDIR) $(OBJDIR)/start.o $(OBJDIR)/dyn_start.o $(OBJDIR)/dyn_stop.o \
 	$(OBJDIR)/dietlibc.a $(OBJDIR)/liblatin1.a \
 	$(OBJDIR)/libcompat.a $(OBJDIR)/libm.a \
 	$(OBJDIR)/librpc.a $(OBJDIR)/libpthread.a \
-	$(OBJDIR)/libcrypt.a \
+	$(OBJDIR)/libcrypt.a $(OBJDIR)/stackgap-g.o \
 	$(OBJDIR)/diet $(OBJDIR)/diet-i $(OBJDIR)/elftrunc \
 	$(OBJDIR)/dnsd
 
@@ -117,44 +116,44 @@ all: $(WHAT)
 
 profiling: $(OBJDIR)/libgmon.a $(OBJDIR)/pstart.o
 
-DEFAULTCFLAGS = -pipe -nostdinc -D_REENTRANT $(EXTRACFLAGS)
-CFLAGS = $(DEFAULTCFLAGS)
-CROSS = 
+DEFAULTCFLAGS=-pipe -nostdinc -D_REENTRANT $(EXTRACFLAGS)
+CFLAGS=$(DEFAULTCFLAGS)
+CROSS=
 
-CC = gcc
-CCC = $(CROSS)$(CC)
-STRIP = $(COMMENT) $(CROSS)strip
-INC = -I. -isystem include
-#INC = -I. -Iinclude
+CC=gcc
+CCC=$(CROSS)$(CC)
+STRIP=$(COMMENT) $(CROSS)strip
+INC=-I. -isystem include
+#INC=-I. -Iinclude
 
-VPATH = lib:libstdio:libugly:libcruft:libcrypt:libshell:liblatin1:libcompat:libdl:librpc:libregex:libm:profiling
+VPATH=lib:libstdio:libugly:libcruft:libcrypt:libshell:liblatin1:libcompat:libdl:librpc:libregex:libm:profiling
 
-SYSCALLOBJ = $(patsubst syscalls.s/%.S,$(OBJDIR)/%.o,$(sort $(wildcard syscalls.s/*.S)))
+SYSCALLOBJ=$(patsubst syscalls.s/%.S,$(OBJDIR)/%.o,$(sort $(wildcard syscalls.s/*.S)))
 
-LIBOBJ = $(patsubst lib/%.c,$(OBJDIR)/%.o,$(sort $(wildcard lib/*.c)))
-LIBUGLYOBJ = $(patsubst libugly/%.c,$(OBJDIR)/%.o,$(sort $(wildcard libugly/*.c)))
-LIBSTDIOOBJ = $(patsubst libstdio/%.c,$(OBJDIR)/%.o,$(sort $(wildcard libstdio/*.c)))
-LIBCRUFTOBJ = $(patsubst libcruft/%.c,$(OBJDIR)/%.o,$(sort $(wildcard libcruft/*.c)))
-LIBCRYPTOBJ = $(patsubst libcrypt/%.c,$(OBJDIR)/%.o,$(sort $(wildcard libcrypt/*.c)))
-LIBSHELLOBJ = $(patsubst libshell/%.c,$(OBJDIR)/%.o,$(sort $(wildcard libshell/*.c)))
-LIBCOMPATOBJ = $(patsubst libcompat/%.c,$(OBJDIR)/%.o,$(sort $(wildcard libcompat/*.c))) $(OBJDIR)/syscall.o
-LIBMATH = $(patsubst libm/%.c,%.o,$(sort $(wildcard libm/*.c)))
+LIBOBJ=$(patsubst lib/%.c,$(OBJDIR)/%.o,$(sort $(wildcard lib/*.c)))
+LIBUGLYOBJ=$(patsubst libugly/%.c,$(OBJDIR)/%.o,$(sort $(wildcard libugly/*.c)))
+LIBSTDIOOBJ=$(patsubst libstdio/%.c,$(OBJDIR)/%.o,$(sort $(wildcard libstdio/*.c)))
+LIBCRUFTOBJ=$(patsubst libcruft/%.c,$(OBJDIR)/%.o,$(sort $(wildcard libcruft/*.c)))
+LIBCRYPTOBJ=$(patsubst libcrypt/%.c,$(OBJDIR)/%.o,$(sort $(wildcard libcrypt/*.c)))
+LIBSHELLOBJ=$(patsubst libshell/%.c,$(OBJDIR)/%.o,$(sort $(wildcard libshell/*.c)))
+LIBCOMPATOBJ=$(patsubst libcompat/%.c,$(OBJDIR)/%.o,$(sort $(wildcard libcompat/*.c))) $(OBJDIR)/syscall.o
+LIBMATH=$(patsubst libm/%.c,%.o,$(sort $(wildcard libm/*.c)))
 
-LIBRPCOBJ = $(patsubst librpc/%.c,$(OBJDIR)/%.o,$(sort $(wildcard librpc/*.c)))
-LIBREGEXOBJ = $(patsubst libregex/%.c,$(OBJDIR)/%.o,$(sort $(wildcard libregex/*.c)))
+LIBRPCOBJ=$(patsubst librpc/%.c,$(OBJDIR)/%.o,$(sort $(wildcard librpc/*.c)))
+LIBREGEXOBJ=$(patsubst libregex/%.c,$(OBJDIR)/%.o,$(sort $(wildcard libregex/*.c)))
 
-LIBDLOBJ = $(patsubst libdl/%.c,$(OBJDIR)/%.o,$(sort $(wildcard libdl/*.c))) $(OBJDIR)/_dl_jump.o
+LIBDLOBJ=$(patsubst libdl/%.c,$(OBJDIR)/%.o,$(sort $(wildcard libdl/*.c))) $(OBJDIR)/_dl_jump.o
 
-LIBPTHREAD_OBJS = $(patsubst libpthread/%.c,$(OBJDIR)/%.o,$(sort $(shell ./threadsafe.sh))) $(OBJDIR)/__testandset.o
+LIBPTHREAD_OBJS=$(patsubst libpthread/%.c,$(OBJDIR)/%.o,$(sort $(shell ./threadsafe.sh))) $(OBJDIR)/__testandset.o
 
-LIBGMON_OBJS = $(OBJDIR)/__mcount.o $(OBJDIR)/monitor.o $(OBJDIR)/profil.o
+LIBGMON_OBJS=$(OBJDIR)/__mcount.o $(OBJDIR)/monitor.o $(OBJDIR)/profil.o
 
 include $(ARCH)/Makefile.add
 
-LIBMATHOBJ = $(patsubst %,$(OBJDIR)/%,$(LIBMATH))
+LIBMATHOBJ=$(patsubst %,$(OBJDIR)/%,$(LIBMATH))
 
 ifeq ($(CFLAGS),$(DEFAULTCFLAGS))
-CFLAGS+ = -O -fomit-frame-pointer
+CFLAGS+=-O -fomit-frame-pointer
 endif
 
 ifneq ($(DEBUG),)
@@ -169,12 +168,12 @@ ASM_CFLAGS += -fno-integrated-as
 endif
 
 ifeq ($(ALWAYS_PIC),1)
-CCFLAGS = $(CFLAGS) $(PIE)
+CCFLAGS=$(CFLAGS) $(PIE)
 else
-CCFLAGS = $(CFLAGS)
+CCFLAGS=$(CFLAGS)
 endif
 
-PWD = $(shell pwd)
+PWD=$(shell pwd)
 
 .SUFFIXES:
 .SUFFIXES: .S .c
@@ -213,14 +212,14 @@ endif
 
 
 ifeq ($(shell $(CC) -v 2>&1 | grep "gcc version"),gcc version 4.0.0)
-SAFE_CFLAGS = $(shell echo $(CCFLAGS)|sed 's/-Os/-O2/')
-SAFER_CFLAGS = $(shell echo $(CCFLAGS)|sed 's/-Os/-O/')
+SAFE_CFLAGS=$(shell echo $(CCFLAGS)|sed 's/-Os/-O2/')
+SAFER_CFLAGS=$(shell echo $(CCFLAGS)|sed 's/-Os/-O/')
 else
-SAFE_CFLAGS = $(CCFLAGS)
-SAFER_CFLAGS = $(CCFLAGS)
+SAFE_CFLAGS=$(CCFLAGS)
+SAFER_CFLAGS=$(CCFLAGS)
 endif
 
-CC+ = -D__dietlibc__
+CC+=-D__dietlibc__
 
 $(OBJDIR)/start-pie.o: start.S | $(OBJDIR)
 	$(CCC) $(INC) $(CCFLAGS) $(EXTRACFLAGS) -c $< $(ASM_CFLAGS) -fpie -o $@
@@ -252,7 +251,7 @@ $(OBJDIR)/libcrypt.a: | $(OBJDIR)
 
 dummy.o:
 
-LIBLATIN1_OBJS = $(patsubst liblatin1/%.c,$(OBJDIR)/%.o,$(sort $(wildcard liblatin1/*.c)))
+LIBLATIN1_OBJS=$(patsubst liblatin1/%.c,$(OBJDIR)/%.o,$(sort $(wildcard liblatin1/*.c)))
 $(OBJDIR)/liblatin1.a: $(LIBLATIN1_OBJS)
 	$(CROSS)ar cru $@ $^
 
@@ -349,8 +348,8 @@ $(OBJDIR)/elftrunc: $(OBJDIR)/diet contrib/elftrunc.c
 $(OBJDIR)/dnsd: $(OBJDIR)/diet contrib/dnsd.c
 	bin-$(MYARCH)/diet $(CCC) $(CFLAGS) -o $@ contrib/dnsd.c
 
-VERSION = dietlibc-$(shell head -n 1 CHANGES|sed 's/://')
-CURNAME = $(notdir $(shell pwd))
+VERSION=dietlibc-$(shell head -n 1 CHANGES|sed 's/://')
+CURNAME=$(notdir $(shell pwd))
 
 $(OBJDIR)/diet: $(OBJDIR)/start.o $(OBJDIR)/dyn_start.o diet.c $(OBJDIR)/dietlibc.a $(OBJDIR)/dyn_stop.o
 	$(CCC) -isystem include $(CFLAGS) -nostdlib -o $@ $^ -DDIETHOME=\"$(DIETHOME)\" -DVERSION=\"$(VERSION)\" -lgcc
@@ -401,10 +400,11 @@ t:
 t1:
 	$(CCC) -g -o t1 t.c
 
-install-bin: $(OBJDIR)/start.o $(OBJDIR)/dietlibc.a $(OBJDIR)/librpc.a $(OBJDIR)/liblatin1.a $(OBJDIR)/libcompat.a $(OBJDIR)/elftrunc $(OBJDIR)/diet-i
+install-bin: $(OBJDIR)/start.o $(OBJDIR)/dietlibc.a $(OBJDIR)/librpc.a $(OBJDIR)/liblatin1.a $(OBJDIR)/libcompat.a $(OBJDIR)/elftrunc $(OBJDIR)/diet-i $(OBJDIR)/stackgap-g.o
 	$(INSTALL) -d $(DESTDIR)$(ILIBDIR) $(DESTDIR)$(MAN1DIR) $(DESTDIR)$(BINDIR)
 	$(INSTALL) -m 644 $(OBJDIR)/start.o $(DESTDIR)$(ILIBDIR)/
 	-$(INSTALL) -m 644 $(OBJDIR)/start-pie.o $(DESTDIR)$(ILIBDIR)/
+	-$(INSTALL) -m 644 $(OBJDIR)/stackgap-g.o $(DESTDIR)$(ILIBDIR)/
 	$(INSTALL) -m 644 $(OBJDIR)/libm.a $(OBJDIR)/libpthread.a $(OBJDIR)/librpc.a \
 $(OBJDIR)/liblatin1.a $(OBJDIR)/libcompat.a $(OBJDIR)/libcrypt.a $(DESTDIR)$(ILIBDIR)
 	$(INSTALL) -m 644 $(OBJDIR)/dietlibc.a $(DESTDIR)$(ILIBDIR)/libc.a
@@ -486,7 +486,7 @@ hppa:
 	ln -sf bin-parisc bin-hppa
 	$(MAKE) ARCH=parisc CROSS=hppa-linux- all
 
-CROSS_ARCH = arm sparc ppc alpha i386 mips sparc64 x86_64 s390 parisc
+CROSS_ARCH=arm sparc ppc alpha i386 mips sparc64 x86_64 s390 parisc
 cross:
 	$(MAKE) $(subst $(ARCH),,$(CROSS_ARCH))
 
@@ -593,10 +593,12 @@ $(OBJDIR)/fcntl64.o: dietfeatures.h
 # WANT_SSP
 # This facepalm brought to you by: Ubuntu!
 $(PICODIR)/stackgap.o: EXTRACFLAGS:=-fno-stack-protector
-$(OBJDIR)/stackgap.o: EXTRACFLAGS:=-fno-stack-protector -fno-pie
-$(OBJDIR)/stackgap-pie.o: EXTRACFLAGS:=-fno-stack-protector -Dstackgap=stackgap_pie -fpie -fvisibility=hidden
+$(OBJDIR)/stackgap.o: EXTRACFLAGS:=-fno-stack-protector -fno-pie -DNDEBUG
+$(OBJDIR)/stackgap-pie.o: EXTRACFLAGS:=-fno-stack-protector -Dstackgap=stackgap_pie -fpie
 
-$(OBJDIR)/stackgap.o $(OBJDIR)/stackgap-pie.o $(PICODIR)/stackgap.o: lib/stackgap-common.h
+$(OBJDIR)/stackgap-g.o: EXTRACFLAGS:=-fno-stack-protector -fno-pie
+
+$(OBJDIR)/stackgap.o $(OBJDIR)/stackgap-pie.o $(OBJDIR)/stackgap-g.o $(PICODIR)/stackgap.o: lib/stackgap-common.h
 
 # WANT_MALLOC_ZERO
 $(OBJDIR)/strndup.o: dietfeatures.h
@@ -662,6 +664,8 @@ $(OBJDIR)/tempnam.o $(OBJDIR)/thrd_exit.o $(OBJDIR)/thrd_join.o \
 $(OBJDIR)/tmpnam.o $(OBJDIR)/utxent.o $(OBJDIR)/verr.o \
 $(OBJDIR)/verrx.o $(OBJDIR)/vwarn.o $(OBJDIR)/warn.o \
 $(OBJDIR)/wcsrtombs.o $(OBJDIR)/wcstombs.o $(OBJDIR)/eventfd.o: include/errno_definition.h
+
+$(OBJDIR)/errno_location.o $(OBJDIR)/errno.o: dietfeatures.h
 
 $(OBJDIR)/abort.o $(OBJDIR)/pselect.o $(OBJDIR)/__utmp_block_signals.o \
 $(OBJDIR)/system.o $(OBJDIR)/utxent.o $(OBJDIR)/sigemptyset.o \
