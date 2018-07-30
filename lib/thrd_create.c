@@ -8,7 +8,6 @@
 #include "dietfeatures.h"
 #include <sys/tls.h>
 #include <stdio.h>
-#include <sys/random.h>
 
 extern thrd_t _thrd_root;
 extern size_t _thrd_stacksize;
@@ -46,8 +45,7 @@ int thrd_create(thrd_t *thr, thrd_start_t func, void *arg) {
   tcb->multiple_threads=1;
 #ifdef WANT_TLS
   tcb->sysinfo=__tcb_mainthread->sysinfo;
-  if (getrandom(&tcb->stack_guard,sizeof(tcb->stack_guard),GRND_NONBLOCK) != sizeof(tcb->stack_guard))
-    tcb->stack_guard=__tcb_mainthread->stack_guard ^ gettid() ^ (uintptr_t)t;
+  tcb->stack_guard=__tcb_mainthread->stack_guard ^ gettid() ^ (uintptr_t)t;
   __tcb_mainthread->multiple_threads=1;
 #endif
   t->memstart=stack;

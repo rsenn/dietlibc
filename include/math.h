@@ -107,6 +107,16 @@ double modf(double x, double * iptr);
 double frexp(double x, int *exp);
 double ldexp(double x, int exp);
 
+double      round(double) __THROW __attribute__((__const__));
+float       roundf(float) __THROW __attribute__((__const__));
+long double roundl(long double) __THROW __attribute__((__const__));
+long long   llroundf(float) __THROW __attribute__((__const__));
+long long   llroundl(long double) __THROW __attribute__((__const__));
+long long   llround(double) __THROW __attribute__((__const__));
+long        lroundf(float) __THROW __attribute__((__const__));
+long        lroundl(long double) __THROW __attribute__((__const__));
+long        lround(double) __THROW __attribute__((__const__));
+
 __END_DECLS
 
 #endif
