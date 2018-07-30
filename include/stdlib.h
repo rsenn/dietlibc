@@ -111,6 +111,11 @@ lldiv_t lldiv(long long numerator, long long denominator);
 int clearenv(void);
 #endif
 
+int mbtowc(wchar_t *pwc, const char *s, size_t n) __THROW;
+int wctomb(char *s, wchar_t wc) __THROW;
+size_t mbstowcs(wchar_t *dest, const char *src, size_t n) __THROW;
+int mblen(const char* s,size_t n) __THROW __pure;
+
 __END_DECLS
 
 #endif

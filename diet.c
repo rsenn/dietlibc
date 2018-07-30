@@ -32,7 +32,11 @@ static const char* Os[] = {
   "sparc","-Os","-mcpu=supersparc",0,
   "sparc64","-Os","-m64","-mhard-quad-float",0,
   "alpha","-Os","-fomit-frame-pointer",0,
+#ifdef __ARM_EABI__
+  "arm","-Os","-fomit-frame-pointer","-mfloat-abi=soft","-meabi=4",0,
+#else
   "arm","-Os","-fomit-frame-pointer",0,
+#endif 
   "mips","-Os","-fomit-frame-pointer","-mno-abicalls","-fno-pic","-G","0",0,
   "mipsel","-Os","-fomit-frame-pointer","-mno-abicalls","-fno-pic","-G","0",0,
   "ppc","-Os","-fomit-frame-pointer","-mpowerpc-gpopt","-mpowerpc-gfxopt",0,
@@ -77,6 +81,7 @@ int main(int argc,char *argv[]) {
 #endif
   const char *nostdlib="-nostdlib";
   const char *libgcc="-lgcc";
+  char *libpthread="-lpthread";
   char dashL[1000];
   char dashstatic[]="-static";
   int i;
@@ -225,7 +230,7 @@ int main(int argc,char *argv[]) {
 pp:
 	  preprocess=compile=1;
       }
-/* we need to add -nostdlib if we are not compiling*/
+/* we need to add -nostdlib if we are not compiling */
       _link=!compile;
 #ifdef __DYN_LIB
       if (_link) {
@@ -241,6 +246,7 @@ pp:
 	if (!strcmp(argv[i],"-o"))
 	  if (!compile) _link=1;
 #endif
+
       newargv=alloca(sizeof(char*)*(argc+100));
       a=alloca(strlen(diethome)+20);
       b=alloca(strlen(platform)+20);
@@ -315,6 +321,11 @@ pp:
       if (_link) { *dest++=d; }
 #endif
       for (i=2; i<argc; ++i) {
+	if (!strcmp(argv[i],"-pthread")) {
+	  *dest++="-D_REENTRANT";
+	  if (_link) *dest++="-lpthread";
+	  continue;
+	}
 	if (mangleopts)
 	  if (argv[i][0]=='-' && (argv[i][1]=='O' || argv[i][1]=='f' ||
 				  (argv[i][1]=='m' && argv[i][2]!='3' && argv[i][2]!='6'))) {

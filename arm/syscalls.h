@@ -1,5 +1,16 @@
-#define __NR_SYSCALL_BASE	0x900000
+#ifndef _ARM_SYSCALL_H
+#define _ARM_SYSCALL_H 1
 
+#define __NR_OABI_SYSCALL_BASE	0x900000
+
+#if defined(__thumb__) || defined(__ARM_EABI__)
+#define __NR_SYSCALL_BASE	0
+#else
+#define __NR_SYSCALL_BASE	__NR_OABI_SYSCALL_BASE
+#endif
+
+
+#define __NR_restart_syscall		(__NR_SYSCALL_BASE+  0)
 #define __NR_exit			(__NR_SYSCALL_BASE+  1)
 #define __NR_fork			(__NR_SYSCALL_BASE+  2)
 #define __NR_read			(__NR_SYSCALL_BASE+  3)
@@ -126,10 +137,10 @@
 #define __NR_adjtimex			(__NR_SYSCALL_BASE+124)
 #define __NR_mprotect			(__NR_SYSCALL_BASE+125)
 #define __NR_sigprocmask		(__NR_SYSCALL_BASE+126)
-#define __NR_create_module		(__NR_SYSCALL_BASE+127)
+					/* 127 was sys_create_module */
 #define __NR_init_module		(__NR_SYSCALL_BASE+128)
 #define __NR_delete_module		(__NR_SYSCALL_BASE+129)
-#define __NR_get_kernel_syms		(__NR_SYSCALL_BASE+130)
+					/* 130 was sys_get_kernel_syms */
 #define __NR_quotactl			(__NR_SYSCALL_BASE+131)
 #define __NR_getpgid			(__NR_SYSCALL_BASE+132)
 #define __NR_fchdir			(__NR_SYSCALL_BASE+133)
@@ -166,7 +177,7 @@
 #define __NR_setresuid			(__NR_SYSCALL_BASE+164)
 #define __NR_getresuid			(__NR_SYSCALL_BASE+165)
 					/* 166 was sys_vm86 */
-#define __NR_query_module		(__NR_SYSCALL_BASE+167)
+					/* 167 was sys_query_module */
 #define __NR_poll			(__NR_SYSCALL_BASE+168)
 #define __NR_nfsservctl			(__NR_SYSCALL_BASE+169)
 #define __NR_setresgid			(__NR_SYSCALL_BASE+170)
@@ -179,8 +190,8 @@
 #define __NR_rt_sigtimedwait		(__NR_SYSCALL_BASE+177)
 #define __NR_rt_sigqueueinfo		(__NR_SYSCALL_BASE+178)
 #define __NR_rt_sigsuspend		(__NR_SYSCALL_BASE+179)
-#define __NR_pread			(__NR_SYSCALL_BASE+180)
-#define __NR_pwrite			(__NR_SYSCALL_BASE+181)
+#define __NR_pread64			(__NR_SYSCALL_BASE+180)
+#define __NR_pwrite64			(__NR_SYSCALL_BASE+181)
 #define __NR_chown			(__NR_SYSCALL_BASE+182)
 #define __NR_getcwd			(__NR_SYSCALL_BASE+183)
 #define __NR_capget			(__NR_SYSCALL_BASE+184)
@@ -269,7 +280,7 @@
 #define __NR_fstatfs64			(__NR_SYSCALL_BASE+267)
 #define __NR_tgkill			(__NR_SYSCALL_BASE+268)
 #define __NR_utimes			(__NR_SYSCALL_BASE+269)
-#define __NR_fadvise64			(__NR_SYSCALL_BASE+270)
+#define __NR_arm_fadvise64_64		(__NR_SYSCALL_BASE+270)
 #define __NR_pciconfig_iobase		(__NR_SYSCALL_BASE+271)
 #define __NR_pciconfig_read		(__NR_SYSCALL_BASE+272)
 #define __NR_pciconfig_write		(__NR_SYSCALL_BASE+273)
@@ -280,10 +291,38 @@
 #define __NR_mq_notify			(__NR_SYSCALL_BASE+278)
 #define __NR_mq_getsetattr		(__NR_SYSCALL_BASE+279)
 #define __NR_waitid			(__NR_SYSCALL_BASE+280)
-
+#define __NR_socket			(__NR_SYSCALL_BASE+281)
+#define __NR_bind			(__NR_SYSCALL_BASE+282)
+#define __NR_connect			(__NR_SYSCALL_BASE+283)
+#define __NR_listen			(__NR_SYSCALL_BASE+284)
+#define __NR_accept			(__NR_SYSCALL_BASE+285)
+#define __NR_getsockname		(__NR_SYSCALL_BASE+286)
+#define __NR_getpeername		(__NR_SYSCALL_BASE+287)
+#define __NR_socketpair			(__NR_SYSCALL_BASE+288)
+#define __NR_send			(__NR_SYSCALL_BASE+289)
+#define __NR_sendto			(__NR_SYSCALL_BASE+290)
+#define __NR_recv			(__NR_SYSCALL_BASE+291)
+#define __NR_recvfrom			(__NR_SYSCALL_BASE+292)
+#define __NR_shutdown			(__NR_SYSCALL_BASE+293)
+#define __NR_setsockopt			(__NR_SYSCALL_BASE+294)
+#define __NR_getsockopt			(__NR_SYSCALL_BASE+295)
+#define __NR_sendmsg			(__NR_SYSCALL_BASE+296)
+#define __NR_recvmsg			(__NR_SYSCALL_BASE+297)
+#define __NR_semop			(__NR_SYSCALL_BASE+298)
+#define __NR_semget			(__NR_SYSCALL_BASE+299)
+#define __NR_semctl			(__NR_SYSCALL_BASE+300)
+#define __NR_msgsnd			(__NR_SYSCALL_BASE+301)
+#define __NR_msgrcv			(__NR_SYSCALL_BASE+302)
+#define __NR_msgget			(__NR_SYSCALL_BASE+303)
+#define __NR_msgctl			(__NR_SYSCALL_BASE+304)
+#define __NR_shmat			(__NR_SYSCALL_BASE+305)
+#define __NR_shmdt			(__NR_SYSCALL_BASE+306)
+#define __NR_shmget			(__NR_SYSCALL_BASE+307)
+#define __NR_shmctl			(__NR_SYSCALL_BASE+308)
 #define __NR_add_key			(__NR_SYSCALL_BASE+309)
 #define __NR_request_key		(__NR_SYSCALL_BASE+310)
 #define __NR_keyctl			(__NR_SYSCALL_BASE+311)
+#define __NR_semtimedop			(__NR_SYSCALL_BASE+312)
 #define __NR_vserver			(__NR_SYSCALL_BASE+313)
 #define __NR_ioprio_set			(__NR_SYSCALL_BASE+314)
 #define __NR_ioprio_get			(__NR_SYSCALL_BASE+315)
@@ -293,6 +332,39 @@
 #define __NR_mbind			(__NR_SYSCALL_BASE+319)
 #define __NR_get_mempolicy		(__NR_SYSCALL_BASE+320)
 #define __NR_set_mempolicy		(__NR_SYSCALL_BASE+321)
+#define __NR_openat			(__NR_SYSCALL_BASE+322)
+#define __NR_mkdirat			(__NR_SYSCALL_BASE+323)
+#define __NR_mknodat			(__NR_SYSCALL_BASE+324)
+#define __NR_fchownat			(__NR_SYSCALL_BASE+325)
+#define __NR_futimesat			(__NR_SYSCALL_BASE+326)
+#define __NR_fstatat64			(__NR_SYSCALL_BASE+327)
+#define __NR_unlinkat			(__NR_SYSCALL_BASE+328)
+#define __NR_renameat			(__NR_SYSCALL_BASE+329)
+#define __NR_linkat			(__NR_SYSCALL_BASE+330)
+#define __NR_symlinkat			(__NR_SYSCALL_BASE+331)
+#define __NR_readlinkat			(__NR_SYSCALL_BASE+332)
+#define __NR_fchmodat			(__NR_SYSCALL_BASE+333)
+#define __NR_faccessat			(__NR_SYSCALL_BASE+334)
+					/* 335 for pselect6 */
+					/* 336 for ppoll */
+#define __NR_unshare			(__NR_SYSCALL_BASE+337)
+#define __NR_set_robust_list		(__NR_SYSCALL_BASE+338)
+#define __NR_get_robust_list		(__NR_SYSCALL_BASE+339)
+#define __NR_splice			(__NR_SYSCALL_BASE+340)
+#define __NR_arm_sync_file_range	(__NR_SYSCALL_BASE+341)
+#define __NR_tee			(__NR_SYSCALL_BASE+342)
+#define __NR_vmsplice			(__NR_SYSCALL_BASE+343)
+#define __NR_move_pages			(__NR_SYSCALL_BASE+344)
+#define __NR_getcpu			(__NR_SYSCALL_BASE+345)
+					/* 346 for epoll_pwait */
+#define __NR_kexec_load			(__NR_SYSCALL_BASE+347)
+#define __NR_utimensat			(__NR_SYSCALL_BASE+348)
+#define __NR_signalfd			(__NR_SYSCALL_BASE+349)
+#define __NR_timerfd			(__NR_SYSCALL_BASE+350)
+#define __NR_eventfd			(__NR_SYSCALL_BASE+351)
+#define __NR_fallocate			(__NR_SYSCALL_BASE+352)
+#define __NR_timerfd_settime		(__NR_SYSCALL_BASE+353)
+#define __NR_timerfd_gettime		(__NR_SYSCALL_BASE+354)
 
 /*
  * The following SWIs are ARM private.
@@ -303,6 +375,25 @@
 #define __ARM_NR_usr26			(__ARM_NR_BASE+3)
 #define __ARM_NR_usr32			(__ARM_NR_BASE+4)
 #define __ARM_NR_set_tls		(__ARM_NR_BASE+5)
+
+/*
+ * The following syscalls are obsolete and no longer available for EABI.
+ */
+#if defined(__ARM_EABI__) && !defined(__KERNEL__)
+#undef __NR_time
+#undef __NR_umount
+#undef __NR_stime
+#undef __NR_alarm
+#undef __NR_utime
+#undef __NR_getrlimit
+#undef __NR_select
+#undef __NR_readdir
+#undef __NR_mmap
+#undef __NR_socketcall
+#undef __NR_syscall
+#undef __NR_ipc
+#endif
+
 
 /* ok the next few values are for the optimization of the unified syscalls
  * on arm.
@@ -597,6 +688,35 @@
 #define __ARGS_mq_getsetattr		0
 #define __ARGS_waitid			0
 
+#define __ARGS_socket			0
+#define __ARGS_bind			0
+#define __ARGS_connect			0
+#define __ARGS_listen			0
+#define __ARGS_accept			0
+#define __ARGS_getsockname		0
+#define __ARGS_getpeername		0
+#define __ARGS_socketpair		0
+#define __ARGS_send			0
+#define __ARGS_sendto			0
+#define __ARGS_recv			0
+#define __ARGS_recvfrom			0
+#define __ARGS_shutdown			0
+#define __ARGS_setsockopt		0
+#define __ARGS_getsockopt		0
+#define __ARGS_sendmsg			0
+#define __ARGS_recvmsg			0
+#define __ARGS_semop			0
+#define __ARGS_semget			0
+#define __ARGS_semctl			0
+#define __ARGS_msgsnd			0
+#define __ARGS_msgrcv			0
+#define __ARGS_msgget			0
+#define __ARGS_msgctl			0
+#define __ARGS_shmat			0
+#define __ARGS_shmdt			0
+#define __ARGS_shmget			0
+#define __ARGS_shmctl			0
+
 #define __ARGS_add_key			1
 #define __ARGS_request_key		1
 #define __ARGS_keyctl			0
@@ -610,8 +730,80 @@
 #define __ARGS_get_mempolicy		1
 #define __ARGS_set_mempolicy		1
 
+#define __ARGS_openat			0
+#define __ARGS_mkdirat			0
+#define __ARGS_mknodat			0
+#define __ARGS_fchownat			1
+#define __ARGS_futimesat		0
+#define __ARGS_fstatat64		0
+#define __ARGS_unlinkat			0
+#define __ARGS_renameat			0
+#define __ARGS_linkat			1
+#define __ARGS_symlinkat		0
+#define __ARGS_readlinkat		0
+#define __ARGS_fchmodat			0
+#define __ARGS_faccessat		0
+					/* 335 for pselect6 */
+					/* 336 for ppoll */
+#define __ARGS_unshare			0
+#define __ARGS_set_robust_list		0
+#define __ARGS_get_robust_list		0
+#define __ARGS_splice			1
+#define __ARGS_arm_sync_file_range	0
+#define __ARGS_sync_file_range2		0
+#define __ARGS_tee			0
+#define __ARGS_vmsplice			0
+#define __ARGS_move_pages		1
+#define __ARGS_getcpu			0
+					/* 346 for epoll_pwait */
+#define __ARGS_kexec_load		0
+#define __ARGS_utimensat		0
+#define __ARGS_signalfd			0
+#define __ARGS_timerfd			0
+#define __ARGS_eventfd			0
+#define __ARGS_fallocate		0
+#define __ARGS_timerfd_settime		0
+#define __ARGS_timerfd_gettime		0
+
 
 #ifdef __ASSEMBLER__
+
+#ifdef __ARM_EABI__
+
+#define syscall_weak(name,wsym,sym) __syscall_weak __NR_##name, wsym, sym, __ARGS_##name
+.macro __syscall_weak name wsym sym typ
+.text
+.type \wsym,function
+.weak \wsym
+\wsym:
+.type \sym,function
+.global \sym
+\sym:
+        stmfd	sp!,{r4,r5,r7,lr}
+	ldr	r4, [sp,#16]
+	ldr	r5, [sp,#20]
+        ldr     r7, =\name
+	swi	0
+	b	__unified_syscall
+.endm
+
+
+#define syscall(name,sym) __syscall __NR_##name, sym, __ARGS_##name
+.macro __syscall name sym typ
+.text
+.type \sym,function
+.global \sym
+\sym:
+        stmfd	sp!,{r4,r5,r7,lr}
+	ldr	r4, [sp,#16]
+	ldr	r5, [sp,#20]
+        ldr     r7, =\name
+	swi	0
+	b	__unified_syscall
+.endm
+
+#else
+
 #define syscall_weak(name,wsym,sym) __syscall_weak $__NR_##name, wsym, sym, __ARGS_##name
 .macro __syscall_weak name wsym sym typ
 .text
@@ -652,5 +844,8 @@
 	b	__unified_syscall
 .endif
 .endm
+
+#endif
+#endif
 
 #endif

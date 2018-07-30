@@ -4,20 +4,13 @@
 #include <sys/cdefs.h>
 #include <sys/types.h>
 #include <time.h>
+#include <paths.h>
 
 __BEGIN_DECLS
 
 #define UT_LINESIZE	32
 #define UT_NAMESIZE	32
 #define UT_HOSTSIZE	256
-
-#define _PATH_UTMP	"/var/run/utmp"
-#define _PATH_WTMP	"/var/log/wtmp"
-#ifdef _BSD_SOURCE
-/* die, BSD, die!!! */
-#define UTMP_FILE _PATH_UTMP
-#define WTMP_FILE _PATH_WTMP
-#endif
 
 /* The structure describing an entry in the database of
    previous logins.  */
@@ -72,6 +65,7 @@ struct utmp
   char __unused[20];		/* Reserved for future use.  */
 };
 
+#ifndef _UTMPX_H		/* untmpx.h hasn't already defined these. */
 /* Values for the `ut_type' field of a `struct utmp'.  */
 #define EMPTY		0	/* No valid user accounting information.  */
 
@@ -86,6 +80,7 @@ struct utmp
 #define DEAD_PROCESS	8	/* Terminated process.  */
 
 #define ACCOUNTING	9
+#endif
 
 /* Tell the user that we have a modern system with UT_HOST, UT_PID,
    UT_TYPE, UT_ID and UT_TV fields.  */

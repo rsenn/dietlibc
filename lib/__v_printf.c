@@ -21,7 +21,8 @@ static inline unsigned long skip_to(const char *format) {
 static const char pad_line[2][16]= { "                ", "0000000000000000", };
 static int write_pad(unsigned int* dlen,struct arg_printf* fn, unsigned int len, int padwith) {
   int nr=0;
-  if ((int)len<0 || *dlen+len<len) return -1;
+  if ((int)len<=0) return 0;
+  if(*dlen+len<len) return -1;
   for (;len>15;len-=16,nr+=16) {
     A_WRITE(fn,pad_line[(padwith=='0')?1:0],16);
   }
@@ -80,8 +81,6 @@ inn_printf:
       /* FLAGS */
       case '#':
 	flag_hash=-1;
-      case 'z':
-	goto inn_printf;
 
       case 'h':
 	--flag_long;
@@ -95,6 +94,7 @@ inn_printf:
 #if __WORDSIZE == 64
       case 'j':
 #endif
+      case 'z':
       case 'l':
 	++flag_long;
 	goto inn_printf;
@@ -129,10 +129,18 @@ inn_printf:
 	goto inn_printf;
 
       case '*':
-	width=va_arg(arg_ptr,int);
-	if (width>MAX_WIDTH) return -1; /* width is unsiged, so this catches <0, too */
-	goto inn_printf;
-
+	{
+	  /* A negative field width is taken as a '-' flag followed by
+	   * a positive field width
+	   **/
+	  int tmp;
+	  if ((tmp=va_arg(arg_ptr,int))<0) {
+	    flag_left=1;
+	    tmp=-tmp;
+	  }
+	  if ((width=(unsigned long)tmp)>MAX_WIDTH) return -1;
+	  goto inn_printf;
+	}
       case '.':
 	flag_dot=1;
 	if (*format=='*') {
@@ -214,13 +222,17 @@ print_out:
 
 	if (flag_dot && width==0) width=preci;
 	if (!flag_dot) preci=sz;
-	if (!flag_left) { /* do left-side padding */
+	if (!flag_left && padwith==' ') { /* do left-side padding with spaces */
 	  if (write_pad(&len,fn,width-preci,padwith))
 	    return -1;
 	}
 	if (todo) {
 	  B_WRITE(fn,sign,todo);
 	  len+=todo;
+	}
+	if (!flag_left && padwith!=' ') { /* do left-side padding with '0' */
+	  if (write_pad(&len,fn,width-preci,padwith))
+	    return -1;
 	}
 	/* do preci padding */
 	if (write_pad(&len,fn,preci-sz,precpadwith))
@@ -377,7 +389,7 @@ num_printf:
 	  
 	  sz=strlen(s);
 	  if (width<sz) width=sz;
-	  padwith='0';
+	  precpadwith='0';
 	  flag_dot=0;
 	  flag_hash=0;
 	  goto print_out;

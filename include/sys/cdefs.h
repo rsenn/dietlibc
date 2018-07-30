@@ -31,6 +31,7 @@
 #if __GNUC__ < 3
 #define __builtin_expect(foo,bar) (foo)
 #define __expect(foo,bar) (foo)
+#define __malloc__
 #else
 #define __expect(foo,bar) __builtin_expect((long)(foo),bar)
 #define __attribute_malloc__ __attribute__((__malloc__))
@@ -74,6 +75,7 @@
 # define __attribute_used __attribute__ ((__used__))
 #else
 # define __attribute_used
+# define __warn_unused_result__
 #endif
 
 #if (__GNUC__ >= 4)
@@ -81,6 +83,31 @@
 #else
 #define __needsNULL__(x)
 #define __sentinel__
+#endif
+
+#if (__GNUC__ < 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ < 3))
+# define __cold__
+# define __hot__
+#endif
+
+#if (__GNUC__ < 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ < 3))
+#define __attribute_alloc__(x)
+#define __attribute_alloc2__(x,y)
+#else
+#define __attribute_alloc__(x) __attribute__((alloc_size(x))
+#define __attribute_alloc2__(x,y) __attribute__((alloc_size(x,y))
+#endif
+
+#if (__GNUC__ < 2) || ((__GNUC__ == 2) && (__GNUC_MINOR__ < 5))
+#define __attribute_const__
+#else
+#define __attribute_const__ __attribute__((const))
+#endif
+
+#if (__GNUC__ < 2) || ((__GNUC__ == 2) && (__GNUC_MINOR__ < 8))
+#define __attribute_formatarg__(x)
+#else
+#define __attribute_formatarg__(x) __attribute__((format_arg(x)))
 #endif
 
 #endif

@@ -325,6 +325,15 @@
 #define __NR_sync_file_range	277
 #define __NR_vmsplice		278
 #define __NR_move_pages		279
+#define __NR_utimensat		280
+#define __IGNORE_getcpu		/* implemented as a vsyscall */
+#define __NR_epoll_pwait	281
+#define __NR_signalfd		282
+#define __NR_timerfd		283
+#define __NR_eventfd		284
+#define __NR_fallocate		285
+#define __NR_timerfd_settime	286
+#define __NR_timerfd_gettime	287
 
 #ifdef __PIC__
 #define syscall_weak(name,wsym,sym) \
@@ -356,14 +365,24 @@ wsym: ; \
 .type sym,@function; \
 .global sym; \
 sym: \
+.ifge __NR_##name-256 ; \
+	mov	$__NR_##name,%ax; \
+	jmp	__unified_syscall_16bit;  \
+.else ; \
 	mov	$__NR_##name,%al; \
-	jmp	__unified_syscall
+	jmp	__unified_syscall;  \
+.endif
 
 #define syscall(name,sym) \
 .text; \
 .type sym,@function; \
 .global sym; \
 sym: \
+.ifge __NR_##name-256 ; \
+	mov	$__NR_##name,%ax; \
+	jmp	__unified_syscall_16bit; \
+.else ; \
 	mov	$__NR_##name,%al; \
-	jmp	__unified_syscall
+	jmp	__unified_syscall; \
+.endif
 #endif

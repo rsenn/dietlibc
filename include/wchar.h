@@ -13,7 +13,7 @@ typedef __WINT_TYPE__ wint_t;
 #else
 typedef unsigned int wint_t;
 #endif
-typedef unsigned long int wctype_t;
+typedef int (*wctype_t)(wint_t) __THROW __attribute__((__const__));
 
 #ifndef WCHAR_MIN
 #define WCHAR_MIN (-2147483647 - 1)
@@ -27,7 +27,7 @@ struct tm;
 
 typedef struct {
   int count;
-  unsigned long sofar;
+  wchar_t sofar;
 } mbstate_t;
 
 wint_t btowc(int);
@@ -93,6 +93,10 @@ wchar_t *wmemmove(wchar_t *, const wchar_t *, size_t);
 wchar_t *wmemset(wchar_t *, wchar_t, size_t);
 int wprintf(const wchar_t *__restrict__, ...);
 int wscanf(const wchar_t *__restrict__, ...);
+
+#ifdef _XOPEN_SOURCE
+int wcwidth(wchar_t c);
+#endif
 
 __END_DECLS
 

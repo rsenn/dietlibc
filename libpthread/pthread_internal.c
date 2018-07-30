@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <signal.h>
 #include <string.h>
 #include <sys/wait.h>
@@ -5,7 +6,7 @@
 #include <errno.h>
 #include <sys/mman.h>
 
-#include <sys/poll.h>
+#include <poll.h>
 #include <sched.h>
 #include <sys/resource.h>
 
