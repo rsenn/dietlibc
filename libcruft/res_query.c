@@ -145,7 +145,10 @@ nxdomain:
       }
     }
   }
-  h_errno=NO_DATA;
+  h_errno=TRY_AGAIN;
   return -1;
 }
 
+#ifndef WANT_FULL_RESOLV_CONF
+int res_search(const char *dname, int class, int type, unsigned char *answer, int anslen) __attribute__((alias("res_query")));
+#endif

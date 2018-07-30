@@ -34,6 +34,7 @@ static const char* Os[] = {
   "alpha","-Os","-fomit-frame-pointer",0,
   "arm","-Os","-fomit-frame-pointer",0,
   "mips","-Os","-fomit-frame-pointer","-mno-abicalls","-fno-pic","-G","0",0,
+  "mipsel","-Os","-fomit-frame-pointer","-mno-abicalls","-fno-pic","-G","0",0,
   "ppc","-Os","-fomit-frame-pointer","-mpowerpc-gpopt","-mpowerpc-gfxopt",0,
   "ppc64","-Os","-fomit-frame-pointer","-mpowerpc-gpopt","-mpowerpc-gfxopt",0,
   "s390","-Os","-fomit-frame-pointer",0,
@@ -314,7 +315,9 @@ pp:
 	    if (strlen(tmp)+strlen(cc)<900) {
 	      strcpy(manglebuf,tmp);
 	      strcat(manglebuf,"/.diet/");
-	      strcat(manglebuf,cc);
+	      tmp=strrchr(cc,'/');
+	      if (tmp) ++tmp; else tmp=cc;
+	      strcat(manglebuf,tmp);
 	      if ((fd=open(manglebuf,O_RDONLY))>=0) {
 		int len=read(fd,manglebuf,1023);
 		if (len>0) {

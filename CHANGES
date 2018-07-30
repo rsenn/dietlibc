@@ -1,3 +1,42 @@
+0.28:
+  add tcgetsid (Yuri Kozlov)
+  add _udivdi3, _divdi3, _umoddi3, _moddi3 for MIPS
+    These are in libgcc, but libgcc is compiled PIC and we compile the
+    diet libc non-pic, and that is not compatible on MIPS so ld
+    complains.
+  setlocale now accepts setting the locale to "C".
+  several fixes from Gwenole Beauchesne, AMD64 and otherwise.
+  fix memory leak in regfree (thanks, Valgrind!).
+  add support for gcc ProPolice and stack gap (see README.security).
+  add ftw64 (yuck!)
+  #include <endian.h> in syscalls.s/environ.S to make sure environ is
+    actually large enough (Enrico Scholz)
+  add waitpid wrapper around wait4 for arm-linux (Avinash Bhatia)
+  make res_mkquery reject invalid domains (label>64, name>255) (Nikola Vladov)
+  make res_query return TRY_AGAIN instead of NO_DATA if no answer was
+    received (Nikola Vladov)
+  fix PT_READ_U in sys/trace.h (John K. Hohm)
+  Olaf: added mmap64 wrapper (arm,mips,sparc,...)
+  work around new kernel rt signal semantics (need to set restorer function)
+  Olaf:
+    - libdl + gcc 3.4 resulted in a SIGSEGV because local names were
+      dynamically resolved....
+    - Also fixed a bug in the symbol resolver
+    - fixing the mmap64 stuff & arm/dyn_syscalls had no mmap2 (Gerrit Pape)
+  tzfile parser fix (John K. Hohm)
+  ppc64 fixes (Gwenole Beauchesne)
+  add sigisemptyset, sigandset and sigorset (John K. Hohm)
+  minor additions to make gdb 6.3 happy (John K. Hohm)
+  ld.so support for gdb (John K. Hohm)
+  implement nice(2) via setpriority() if there is no nice syscall
+  support libm.so (John K. Hohm)
+  hack rpc/xdr.h to work with gcc 4 (Andreas Jochens via Gerrit Pape)
+  make dyn didn't work for !WANT_FULL_RESOLV_CONF (Sampo Kellomaki)
+  #undef __i686 in i386/PIC.h (George Sawinski)
+  fix timegm bug (found by Nikola Vladov)
+  add sys/swap.h (George Sawinski)
+  Olaf: dynamic x86_64 support (libdl relocator and dyn_syscalls)
+
 0.27:
   change DNS routines to look for ip6.arpa instead of ip6.int
   WANT_FREAD_OPTIMIZATION was broken on sockets (Johannes Stezenbach)

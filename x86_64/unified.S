@@ -9,9 +9,7 @@ exit:
 _exit:
 	mov	$SYS_exit,%al
 
-#ifndef __DYN_LIB
 .global __unified_syscall
-#endif
 __unified_syscall:
 	movzbl	%al, %eax
 	mov	%rcx, %r10

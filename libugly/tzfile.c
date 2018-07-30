@@ -38,11 +38,11 @@ void __maplocaltime(void) {
   tzlen=len;
 }
 
-static unsigned long __myntohl(const unsigned char* c) {
-  return (((unsigned long)c[0])<<24) +
-         (((unsigned long)c[1])<<16) +
-         (((unsigned long)c[2])<<8) +
-         ((unsigned long)c[3]);
+static int32_t __myntohl(const unsigned char* c) {
+  return (((uint32_t)c[0])<<24) +
+         (((uint32_t)c[1])<<16) +
+         (((uint32_t)c[2])<<8) +
+         ((uint32_t)c[3]);
 }
 
 time_t __tzfile_map(time_t t, int *isdst, int forward);
@@ -96,7 +96,7 @@ time_t __tzfile_map(time_t t, int *isdst, int forward) {
 	i=tmp[i-1];
   /*      printf("using index %d\n",i); */
 	tmp+=tzh_timecnt;
-	tz+=tzh_timecnt*5+tzh_leapcnt*4+tzh_typecnt*6;
+	tz+=tzh_timecnt*5+tzh_typecnt*6;
 	tmp+=i*6;
   /*      printf("(%lu,%d,%d)\n",ntohl(*(int*)tmp),tmp[4],tmp[5]); */
 	*isdst=tmp[4];
