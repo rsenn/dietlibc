@@ -1,5 +1,5 @@
 INSTALL=install
-prefix=/opt/diet
+prefix?=/opt/diet
 # Set the following to install to a different root
 #DESTDIR=/tmp/fefix
 # Use "make DEBUG=1" to compile a debug version.
@@ -44,6 +44,10 @@ else
 ifeq ($(MYARCH),parisc)
 ARCH=parisc
 else
+ifeq ($(MYARCH),parisc64)
+ARCH=parisc
+MYARCH=parisc
+else
 ifeq ($(MYARCH),x86_64)
 ARCH=x86_64
 else
@@ -51,6 +55,7 @@ ifeq ($(MYARCH),ia64)
 ARCH=ia64
 else
 $(error unknown architecture, please fix Makefile)
+endif
 endif
 endif
 endif
@@ -138,7 +143,7 @@ $(OBJDIR) $(PICODIR):
 $(OBJDIR)/pstart.o: start.S
 	$(CROSS)$(CC) -I. -Iinclude $(CFLAGS) -DPROFILING -c $< -o $@
 
-$(OBJDIR)/%.o: %.S
+$(OBJDIR)/%.o: %.S $(ARCH)/syscalls.h
 	$(CROSS)$(CC) -I. -Iinclude $(CFLAGS) -c $< -o $@
 
 $(OBJDIR)/pthread_%.o: libpthread/pthread_%.c
@@ -182,21 +187,16 @@ $(OBJDIR)/libdietc.so: $(OBJDIR)/dietlibc.a
 
 dyn: dyn_lib
 
-#dyn: dynlinker/diet-linux.so dyn_lib
-
 # added dynamic linker
 $(OBJDIR)/libdl.a: $(LIBDLOBJ)
 	$(CROSS)ar cru $@ $(LIBDLOBJ)
-
-dynlinker/diet-linux.so: $(OBJDIR)/libdl.a
-	make -C dynlinker
 
 dyn_lib: $(PICODIR) $(PICODIR)/libc.so $(PICODIR)/dstart.o \
 	$(PICODIR)/dyn_so_start.o $(PICODIR)/dyn_start.o $(PICODIR)/dyn_stop.o \
 	$(PICODIR)/libpthread.so $(PICODIR)/libdl.so $(PICODIR)/libcompat.so \
 	$(PICODIR)/diet-dyn $(PICODIR)/diet-dyn-i
 
-$(PICODIR)/%.o: %.S
+$(PICODIR)/%.o: %.S $(ARCH)/syscalls.h
 	$(CROSS)$(CC) -I. -Iinclude $(CFLAGS) -fPIC -D__DYN_LIB -c $< -o $@
 
 $(PICODIR)/pthread_%.o: libpthread/pthread_%.c
@@ -259,25 +259,13 @@ $(OBJDIR)/diet-i: $(OBJDIR)/start.o $(OBJDIR)/dyn_start.o diet.c $(OBJDIR)/dietl
 	$(CROSS)$(CC) -Iinclude $(CFLAGS) -nostdlib -o $@ $^ -DDIETHOME=\"$(prefix)\" -DVERSION=\"$(VERSION)\" -DINSTALLVERSION -lgcc
 	$(CROSS)strip -R .comment -R .note $@
 
-$(PICODIR)/diet-gen: $(OBJDIR)/start.o $(OBJDIR)/dyn_start.o diet.c $(OBJDIR)/dietlibc.a $(OBJDIR)/dyn_stop.o
-	$(CROSS)$(CC) -Iinclude $(CFLAGS) -nostdlib -o $@ $^ -DDIETHOME=\"$(HOME)\" -D__DYN_LIB -DVERSION=\"$(VERSION)\" -lgcc
-	$(CROSS)strip -R .command -R .note $@
-
 $(PICODIR)/diet-dyn: $(PICODIR)/start.o $(PICODIR)/dyn_start.o diet.c
-	$(CROSS)$(CC) -Iinclude $(CFLAGS) -nostdlib -o $@ $^ -DDIETHOME=\"$(HOME)\" -D__DYN_LIB -DVERSION=\"$(VERSION)\" -L$(PICODIR) -lc -lgcc $(PICODIR)/dyn_stop.o -Wl,-dynamic-linker=$(HOME)/$(PICODIR)/libdl.so
+	$(CROSS)$(CC) -Iinclude $(CFLAGS) -fPIC -nostdlib -o $@ $^ -DDIETHOME=\"$(HOME)\" -D__DYN_LIB -DVERSION=\"$(VERSION)\" -L$(PICODIR) -lc -lgcc $(PICODIR)/dyn_stop.o -Wl,-dynamic-linker=$(HOME)/$(PICODIR)/libdl.so
 	$(CROSS)strip -R .command -R .note $@
-
-#$(PICODIR)/diet-dyn: $(PICODIR)/start.o $(PICODIR)/dyn_start.o diet.c
-#	$(CROSS)$(CC) -Iinclude $(CFLAGS) -nostdlib -o $@ $^ -DDIETHOME=\"$(HOME)\" -D__DYN_LIB -DVERSION=\"$(VERSION)\" -L$(PICODIR) -ldietc -lgcc $(PICODIR)/dyn_stop.o -Wl,-dynamic-linker=$(HOME)/dynlinker/diet-linux.so
-#	$(CROSS)strip -R .command -R .note $@
 
 $(PICODIR)/diet-dyn-i: $(PICODIR)/start.o $(PICODIR)/dyn_start.o diet.c
-	$(CROSS)$(CC) -Iinclude $(CFLAGS) -nostdlib -o $@ $^ -DDIETHOME=\"$(prefix)\" -D__DYN_LIB -DVERSION=\"$(VERSION)\" -L$(PICODIR) -lc -lgcc $(PICODIR)/dyn_stop.o -Wl,-dynamic-linker=$(ILIBDIR)/libdl.so -DINSTALLVERSION
+	$(CROSS)$(CC) -Iinclude $(CFLAGS) -fPIC -nostdlib -o $@ $^ -DDIETHOME=\"$(prefix)\" -D__DYN_LIB -DVERSION=\"$(VERSION)\" -L$(PICODIR) -lc -lgcc $(PICODIR)/dyn_stop.o -Wl,-dynamic-linker=$(ILIBDIR)/libdl.so -DINSTALLVERSION
 	$(CROSS)strip -R .command -R .note $@
-
-#$(PICODIR)/diet-dyn-i: $(PICODIR)/start.o $(PICODIR)/dyn_start.o diet.c
-#	$(CROSS)$(CC) -Iinclude $(CFLAGS) -nostdlib -o $@ $^ -DDIETHOME=\"$(prefix)\" -D__DYN_LIB -DVERSION=\"$(VERSION)\" -L$(PICODIR) -ldietc -lgcc $(PICODIR)/dyn_stop.o -Wl,-dynamic-linker=$(ILIBDIR)/diet-linux.so -DINSTALLVERSION
-#	$(CROSS)strip -R .command -R .note $@
 
 $(OBJDIR)/djb: $(OBJDIR)/compile $(OBJDIR)/load
 
@@ -330,7 +318,6 @@ endif
 	-$(INSTALL) $(PICODIR)/dyn_start.o $(DESTDIR)$(ILIBDIR)/dyn_dstart.o
 	-$(INSTALL) $(PICODIR)/dyn_stop.o  $(DESTDIR)$(ILIBDIR)/dyn_dstop.o
 	-$(INSTALL) $(PICODIR)/dstart.o $(PICODIR)/dyn_so_start.o $(DESTDIR)$(ILIBDIR)
-	-$(INSTALL) dynlinker/diet-linux.so $(DESTDIR)$(ILIBDIR)/diet-linux.so
 	$(INSTALL) -m 644 diet.1 $(DESTDIR)$(MAN1DIR)/diet.1
 	if test -f $(PICODIR)/libc.so -a ! -f $(DESTDIR)/etc/diet.ld.conf; then echo "$(ILIBDIR)" > $(DESTDIR)/etc/diet.ld.conf; fi
 	for i in `find include -name \*.h`; do install -m 644 -D $$i $(DESTDIR)$(prefix)/$$i; done
@@ -375,7 +362,7 @@ strcasecmp.o $(OBJDIR)/strcat.o $(OBJDIR)/strchr.o $(OBJDIR)/strcmp.o $(OBJDIR)/
 $(OBJDIR)/ttyname.o $(OBJDIR)/sysconf_cpus.o: dietfeatures.h
 
 # these depend on dietfeatures.h for WANT_TZFILE_PARSER
-$(OBJDIR)/localtime_r.o: dietfeatures.h
+$(OBJDIR)/localtime_r.o $(OBJDIR)/strftime.o: dietfeatures.h
 
 # these depend on dietfeatures.h for WANT_SMALL_STDIO_BUFS
 $(LIBSTDIOOBJ): dietfeatures.h

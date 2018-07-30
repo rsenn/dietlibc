@@ -5,6 +5,7 @@
 
 #include <sys/cdefs.h>
 #include <sys/types.h>
+#include <alloca.h>
 
 void *calloc(size_t nmemb, size_t size) __attribute_malloc__ __THROW;
 void *malloc(size_t size) __attribute_malloc__ __THROW;
@@ -42,6 +43,7 @@ void exit(int status) __THROW __attribute__((noreturn));
 void abort(void) __THROW;
 
 extern int rand(void) __THROW;
+extern int rand_r(unsigned int *seed) __THROW;
 extern void srand(unsigned int seed) __THROW;
 #ifdef _BSD_SOURCE
 extern int random(void) __THROW;
@@ -69,12 +71,6 @@ extern char **environ;
 typedef struct { int quot,rem; } div_t;
 div_t div(int numer, int denom) __THROW __attribute__((const));
 
-#ifdef __GNUC__
-#define alloca(x) __builtin_alloca(x)
-#else
-void *alloca(size_t size) __THROW;
-#endif
-
 char *realpath(const char *path, char *resolved_path) __THROW;
 
 int mkstemp(char *_template);
@@ -97,7 +93,8 @@ char *ptsname (int fd) __THROW;
 #define EXIT_FAILURE 1
 #define EXIT_SUCCESS 0
 
-/* warning: the rand() implementation of the diet libc really sucks. */
-#define RAND_MAX 32767
+#define RAND_MAX 	((1<<31) -2)
+
+#define MB_CUR_MAX 1
 
 #endif

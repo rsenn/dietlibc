@@ -53,7 +53,7 @@ int __v_printf(struct arg_printf* fn, const unsigned char *format, va_list arg_p
       unsigned int base;
       unsigned int width=0, preci=0;
 
-      int number=0;
+      long number=0;
 #ifdef WANT_LONGLONG_PRINTF
       long long llnumber=0;
 #endif
@@ -175,12 +175,14 @@ print_out:
 	goto num_printf;
       case 'p':
 	flag_hash=2;
+	flag_long=1;
 	ch='x';
       case 'X':
 	flag_upcase=(ch=='X');
       case 'x':
 	base=16;
 	sz=0;
+	if (flag_dot) width=preci;
 	if (flag_hash) {
 	  buf[1]='0';
 	  buf[2]=ch;

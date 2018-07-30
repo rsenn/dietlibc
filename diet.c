@@ -252,6 +252,8 @@ pp:
 #ifndef __DYN_LIB
       if (_link) { *dest++=(char*)nostdlib; *dest++=dashstatic; *dest++=dashL; }
 #else
+      /* avoid R_*_COPY relocations */
+      *dest++="-fPIC";
       if (_link || shared) { *dest++=(char*)nostdlib; *dest++=dashL; }
 #endif
 #ifdef WANT_SAFEGUARD
@@ -323,7 +325,11 @@ pp:
 incorporated:
       if (_link) {
 	if (profile) *dest++="-lgmon";
-	*dest++=c; *dest++=(char*)libgcc;
+	if (!strcmp(shortplatform,"sparc") || !strcmp(shortplatform,"sparc64")) {
+	  *dest++=(char*)libgcc; *dest++=c;
+	} else {
+	  *dest++=c; *dest++=(char*)libgcc;
+	}
       }
 #ifdef WANT_DYNAMIC
       if (_link) { *dest++=e; }

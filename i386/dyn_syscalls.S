@@ -58,6 +58,12 @@
 
 /* OK this is basicaly unified.S */
 .text
+.type __unified_syscall_256,@function
+__unified_syscall_256:
+	movzwl %ax, %eax
+	jmp .L23
+.L22:
+.size __unified_syscall_256,.L22-__unified_syscall_256
 .type exit,@function
 .weak exit
 exit:
@@ -68,6 +74,7 @@ __exit:
 	mov $__NR_exit, %al
 __unified_syscall:
 	movzbl	%al, %eax
+.L23:
 	push	%edi
 	push	%esi
 	push	%ebx
@@ -230,6 +237,9 @@ __unified_syscall:
 #include "../syscalls.s/ptrace.S"
 #include "../syscalls.s/truncate64.S"
 #include "../syscalls.s/ftruncate64.S"
+#include "../syscalls.s/epoll_create.S"
+#include "../syscalls.s/epoll_ctl.S"
+#include "../syscalls.s/epoll_wait.S"
 
 #undef __PIC__
 #undef __socketcall

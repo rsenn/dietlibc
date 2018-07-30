@@ -168,9 +168,9 @@
 #define SA_RESTART	SV_INTR
 #define SA_RESETHAND	SV_RESET
 #define SA_INTERRUPT	0x10
-#define SA_DEFER	0x20
+#define SA_NODEFER	0x20
 #define SA_SHIRQ	0x40
-#define SA_NOCLDWAIT	0x100»··/* not supported yet */
+#define SA_NOCLDWAIT	0x100	/* not supported yet */
 #define SA_SIGINFO	0x200
 #else
 #if defined (__mips__)
@@ -204,9 +204,15 @@
 #define MINSIGSTKSZ	2048
 #define SIGSTKSZ	8192
 
+#if defined(__alpha__) || defined(__mips__)
+#define SIG_BLOCK	1	/* for blocking signals */
+#define SIG_UNBLOCK	2	/* for unblocking signals */
+#define SIG_SETMASK	3	/* for setting the signal mask */
+#else
 #define SIG_BLOCK	0	/* for blocking signals */
 #define SIG_UNBLOCK	1	/* for unblocking signals */
 #define SIG_SETMASK	2	/* for setting the signal mask */
+#endif
 
 typedef int sig_atomic_t;
 
@@ -483,6 +489,8 @@ int sigaction(int signum, const struct sigaction *act, struct sigaction *oldact)
 int sigtimedwait(const sigset_t *mask, siginfo_t *info, const struct timespec *ts) __THROW;
 int sigqueueinfo(int pid, int sig, siginfo_t *info) __THROW;
 int siginterrupt(int sig, int flag) __THROW;
+
+int killpg(int pgrp, int sig) __THROW;
 
 /* 0 is OK ! kernel puts in MAX_THREAD_TIMEOUT :) */
 #define sigwaitinfo(m, i) sigtimedwait((m),(i),0)

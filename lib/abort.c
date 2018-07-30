@@ -3,9 +3,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#ifndef __PIC__
+void __stdio_flushall(void) __attribute__((weak));
+void __stdio_flushall(void) { }
+#endif
+
 void abort() {
   sigset_t t;
-  fflush(0);
+  __stdio_flushall();
   if (!sigemptyset(&t) && !sigaddset(&t, SIGABRT))
     sigprocmask(SIG_UNBLOCK, &t, 0);
   while (1)

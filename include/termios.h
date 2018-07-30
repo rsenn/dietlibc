@@ -76,6 +76,8 @@ typedef unsigned char	cc_t;
 typedef unsigned int	speed_t;
 typedef unsigned int	tcflag_t;
 
+#define _POSIX_VDISABLE '\0'
+
 #if defined(__i386__) || defined(__arm__) || defined(__ia64__) || defined(__hppa__) || defined(__s390__) || defined(__s390x__) || defined(__x86_64__)
 #define NCCS	19
 struct termios {
@@ -329,33 +331,41 @@ struct termios {
 #define ECHOK	0000040
 #define ECHONL	0000100
 #define NOFLSH	0000200
-#define TOSTOP	0000400
 #define ECHOCTL	0001000
 #define ECHOPRT	0002000
 #define ECHOKE	0004000
 #ifdef __mips__
+#define IEXTEN	0000400
 #define FLUSHO	0020000
+#define TOSTOP	0100000
 #else
+#define TOSTOP	0000400
 #define FLUSHO	0010000
+#define IEXTEN	0100000
 #endif
 #define PENDIN	0040000
-#define IEXTEN	0100000
 
 /* tcflow() and TCXONC use these */
-#define	TCOOFF		0
-#define	TCOON		1
-#define	TCIOFF		2
-#define	TCION		3
+#define TCOOFF		0
+#define TCOON		1
+#define TCIOFF		2
+#define TCION		3
 
 /* tcflush() and TCFLSH use these */
-#define	TCIFLUSH	0
-#define	TCOFLUSH	1
-#define	TCIOFLUSH	2
+#define TCIFLUSH	0
+#define TCOFLUSH	1
+#define TCIOFLUSH	2
 
 /* tcsetattr uses these */
-#define	TCSANOW		0
-#define	TCSADRAIN	1
-#define	TCSAFLUSH	2
+#ifdef __mips__
+#define TCSANOW		0x540e
+#define TCSADRAIN	0x540f
+#define TCSAFLUSH	0x5410
+#else
+#define TCSANOW		0
+#define TCSADRAIN	1
+#define TCSAFLUSH	2
+#endif
 
 int tcgetattr(int fd, struct termios *termios_p) __THROW;
 int tcsetattr(int fd, int optional_actions, struct termios *termios_p) __THROW;

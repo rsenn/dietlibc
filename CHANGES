@@ -1,3 +1,56 @@
+0.22:
+  fix i386 libm
+  fix netinet/ip_icmp.h (Rui Prior)
+  make strings.h susv3 compliant (Gunnar Ritter)
+  remove stdio dependence in abort
+  fix truncate64, ftruncate64 (Luc Van Oostenryck and Yuri Kozlov)
+  fix and improve erand48() (Luc Van Oostenryck)
+  fix realpath for non-existant directories (Gergely Nagy and Gerrit Pape)
+  fix DNS timeout and IPv6 socket reuse
+  strtoul now accepts "-1" as well (Thomas Ogrisegg)
+  add i386 strcasecmp and __ltostr (Thomas Ogrisegg)
+  add killpg prototype (Luc Van Oostenryck)
+  remove some compiler warnings (Luc Van Oostenryck)
+  better rand() from Knuth's TAOCP (Luc Van Oostenryck)
+  fix unified x86_64 unified syscall 64-bit return value issue (Gwenole)
+  the getdents64 emulation was broken and repairing it opened a can of
+    worms.  So I ripped it out.  I also changed the readdir64 emulation
+    to work if there is no getdents64.
+  fix ia64 start.S (Thanks to Volker Birk for an account on his ia64 box)
+  many ia64 fixes (waitpid, nice, fork, vfork, time, utime ...)
+  More fixes from Gwenole (printf %p only printed the last 32 bits, I
+    botched the getdents64 #ifdefs, we violated the x86_64 ABI)
+  change signal() to do as glibc does
+  remove a few more warnings
+  add new 2.5 syscall #defines
+  add epoll_create, epoll_ctl and epoll_wait
+  the new x86 syscall numbers exceed 255, breaking our %al optimization
+    I worked around it with conditional assembly in cpp macros.  Ugh.
+  more MIPS fixes (the stoned MIPS ABI for restartable syscalls expects
+    the instruction before the syscall to be a load immediate)
+  fix fread() from a pipe (oops, tried to lseek)
+  #define _POSIX_VDISABLE in termios.h (Laurent Bercot)
+  two *printf fixes (Gernot Tenchio)
+  add nan and +-inf handling in __dtostr
+  add _SC_NGROUPS_MAX support to sysconf (Felix J. Ogris)
+  make assert() use expect(), slight optimization
+  add i386 vfork (Thomas Ogrisegg)
+  fix SA_NODEFER on sparc (Gerrit Pape, Thomas Bader)
+  fix sin, cos and __dtostr (Gernot Tenchio)
+  add /dev/epoll ioctl constants to sys/ioctl.h
+  add linux/eventpoll.h for /dev/epoll
+  fix lseek64 on 64-bit architectures
+  Olaf: fix x86_64 start-code (we have reg-args)
+    fixing some broken macros in sparc32-code (.udiv,.urem)
+    adding strndup (GNU Extension)
+  fix glob strncpy (R.L. Horn)
+  fix regfree (Uwe Ohse)
+  fix puts in full stdio mode (would omit \n)
+  fix wrong types on powerpc, broke *stat (Gerrit Pape)
+  allow more than 64k in i386 memchr (Karsten Scheibler)
+  make strftime work it WANT_TZFILE_PARSER is not set (Gwenole Beauchesne)
+  build parisc on parisc64, change libgcc link order on sparc (Gerrit Pape)
+
 0.21:
   use gcc's size_t, ptrdiff_t and wchar_t types (Olaf)
   use -G 8 on MIPS to reduce code size (Johannes Stezenbach)

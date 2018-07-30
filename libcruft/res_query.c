@@ -37,14 +37,14 @@ int res_query(const char *dname, int class, int type, unsigned char *answer, int
       struct pollfd duh;
       struct timeval last,now;
 #ifdef WANT_IPV6_DNS
-      int tmpfd;
+      int tmpfd;	/* the warning gcc issues here is bogus */
 #else
       duh.fd=__dns_fd;
 #endif
       i=0;
       duh.events=POLLIN;
       last.tv_sec=0;
-      for (j=10; j>0; --j) {
+      for (j=120; j>0; --j) {
 	gettimeofday(&now,0);
 	if (now.tv_sec-last.tv_sec>10) {
 #ifdef WANT_IPV6_DNS
@@ -63,6 +63,7 @@ int res_query(const char *dname, int class, int type, unsigned char *answer, int
 	  if (sendto(__dns_fd,packet,size,0,(struct sockaddr*)&(_res.nsaddr_list[i]),sizeof(struct sockaddr))==0)
 	    gettimeofday(&last,0);
 #endif
+	  last=now;
 	}
 	if (++i >= _res.nscount) i=0;
 	if (poll(&duh,1,1000) == 1) {

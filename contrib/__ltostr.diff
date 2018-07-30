@@ -1,0 +1,19 @@
+--- /bsd/dietlibc/lib/__ltostr.c	Tue Aug 14 18:56:49 2001
++++ __ltostr.c	Fri Oct 25 03:17:41 2002
+@@ -19,6 +19,16 @@
+     j=1;
+   }
+ 
++#ifdef WANT_SHIFT
++  if (base==8||base==16) {
++    int shift = (base==8)?3:4;
++    while((tmp>s)&&(i)) {
++      if ((*--tmp=(i&base-1)+'0')>'9') *tmp+=(UpCase?'A':'a')-'9'-1;
++      i >>= shift;
++      j++;
++    }
++  } else
++#endif
+   while((tmp>s)&&(i))
+   {
+     tmp--;

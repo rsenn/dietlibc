@@ -1187,6 +1187,9 @@
 #define __NR_mincore			(__NR_Linux + 217)
 #define __NR_madvise			(__NR_Linux + 218)
 #define __NR_getdents64			(__NR_Linux + 219)
+#define __NR_fcntl64			(__NR_Linux + 220)
+#define __NR_gettid			(__NR_Linux + 221)
+#define __NR_tkill			(__NR_Linux + 222)
 
 #define syscall_weak(name,wsym,sym) \
 .text; \
@@ -1196,6 +1199,7 @@ wsym: ; \
 .ent sym; \
 sym: \
 	li	$2,__NR_##name; \
+	syscall; \
 	la	$25,__unified_syscall; \
 	jr	$25; \
 .end sym
@@ -1206,6 +1210,7 @@ sym: \
 .ent sym; \
 sym: \
 	li	$2,__NR_##name; \
+	syscall; \
 	la	$25,__unified_syscall; \
 	jr	$25; \
 .end sym
