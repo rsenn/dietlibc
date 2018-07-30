@@ -30,7 +30,7 @@ static const char* Os[] = {
 	 "-malign-loops=1","-fomit-frame-pointer",0,
   "x86_64","-Os","-fno-omit-frame-pointer",0,
   "sparc","-Os","-mcpu=supersparc",0,
-  "sparc64","-Os","-m64",0,
+  "sparc64","-Os","-m64","-mhard-quad-float",0,
   "alpha","-Os","-fomit-frame-pointer",0,
   "arm","-Os","-fomit-frame-pointer",0,
   "mips","-Os","-fomit-frame-pointer","-mno-abicalls","-fno-pic","-G","0",0,
@@ -40,7 +40,7 @@ static const char* Os[] = {
   "s390x","-Os","-fomit-frame-pointer",0,
   "sh","-Os","-fomit-frame-pointer",0,
   "ia64","-Os","-fno-omit-frame-pointer",0,
-  "x86_64","-Os","-fstrict-aliasing","-momit-leaf-frame-pointer","-mfance-math-387",0,
+  "x86_64","-Os","-fstrict-aliasing","-momit-leaf-frame-pointer","-mfancy-math-387",0,
   0};
 
 static void usage(void) {
@@ -64,15 +64,15 @@ int main(int argc,char *argv[]) {
   int preprocess=0;
   int verbose=0;
   int profile=0;
-  char diethome[]=DIETHOME;
-  char platform[1000];
+  char* diethome;
+  char* platform;
 #ifdef __DYN_LIB
   int shared=0;
 #endif
   char* shortplatform=0;
 #ifdef WANT_SAFEGUARD
   char safeguard1[]="-include";
-  char safeguard2[]=DIETHOME "/include/dietref.h";
+  char* safeguard2;
 #endif
   const char *nostdlib="-nostdlib";
   const char *libgcc="-lgcc";
@@ -82,13 +82,22 @@ int main(int argc,char *argv[]) {
   int mangleopts=0;
   char manglebuf[1024];
 
+  if (!(diethome = getenv("DIETHOME")))
+    diethome=DIETHOME;
+#ifdef WANT_SAFEGUARD
+  safeguard2=alloca(strlen(diethome)+30);
+  strcpy(safeguard2, diethome);
+  strcat(safeguard2, "/include/dietref.h");
+#endif
+  platform=alloca(strlen(diethome)+100);
+  strcpy(platform,diethome);
 #ifdef INSTALLVERSION
-  strcpy(platform,DIETHOME "/lib-");
+  strcat(platform,"/lib-");
 #else
 #ifndef __DYN_LIB
-  strcpy(platform,DIETHOME "/bin-");
+  strcat(platform,"/bin-");
 #else
-  strcpy(platform,DIETHOME "/pic-");
+  strcat(platform,"/pic-");
 #endif
 #endif
   strcpy(dashL,"-L");

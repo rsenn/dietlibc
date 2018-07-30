@@ -1,3 +1,22 @@
+0.27:
+  change DNS routines to look for ip6.arpa instead of ip6.int
+  WANT_FREAD_OPTIMIZATION was broken on sockets (Johannes Stezenbach)
+  Olaf:
+    - added fix for getgrouplist (Nikola Vladov)
+    - fix the fd leak on error path (Denis Vlasenko)
+    - the regparm attribute in typedefinition generats error with gcc-2.95
+      on non-x86 arch... (reported: Johannes Stezenbach)
+  PowerPC build fix (Gerrit Pape)
+  Olaf: added missing settimeofday
+  add netinet/ether.h and netinet/if_ether.h
+  add linux/fd.h
+  add pivot_root, delete_module and init_module prototypes to unistd.h
+    (protected by _LINUX_SOURCE)
+  add some BSD legacy declarations to dirent.h (Bryan Henderson)
+  add strtoull and strtoll as aliases to strtoull and strtoll
+  use _FILE_OFFSET_BITS consistently (Indan Zupancic)
+  add support for $DIETHOME in diet, to override the compiled-in path (George)
+
 0.26:
   iconv UTF-8 fix (Kuba Winnicki)
   Olaf:
