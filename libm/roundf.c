@@ -1,4 +1,5 @@
 #include <float.h>
+#include "libm.h"
 #include <stdint.h>
 
 #define EPS FLT_EPSILON

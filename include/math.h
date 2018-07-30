@@ -117,6 +117,10 @@ long        lroundf(float) __THROW __attribute__((__const__));
 long        lroundl(long double) __THROW __attribute__((__const__));
 long        lround(double) __THROW __attribute__((__const__));
 
+void sincos(double x, double *sin, double *cos);
+void sincosf(float x, float *sin, float *cos);
+void sincosl(long double x, long double *sin, long double *cos);
+
 __END_DECLS
 
 #endif

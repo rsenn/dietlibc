@@ -592,8 +592,8 @@ $(OBJDIR)/fcntl64.o: dietfeatures.h
 
 # WANT_SSP
 # This facepalm brought to you by: Ubuntu!
-$(PICODIR)/stackgap.o: EXTRACFLAGS:=-fno-stack-protector
-$(OBJDIR)/stackgap.o: EXTRACFLAGS:=-fno-stack-protector -fno-pie -DNDEBUG
+$(PICODIR)/stackgap.o: EXTRACFLAGS:=-fno-stack-protector -fPIC
+$(OBJDIR)/stackgap.o: EXTRACFLAGS:=-fno-stack-protector -fno-pie -fPIC -DNDEBUG
 $(OBJDIR)/stackgap-pie.o: EXTRACFLAGS:=-fno-stack-protector -Dstackgap=stackgap_pie -fpie
 
 $(OBJDIR)/stackgap-g.o: EXTRACFLAGS:=-fno-stack-protector -fno-pie
