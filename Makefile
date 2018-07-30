@@ -88,6 +88,7 @@ WHAT=	$(OBJDIR) $(OBJDIR)/start.o $(OBJDIR)/dyn_start.o $(OBJDIR)/dyn_stop.o \
 	$(OBJDIR)/dietlibc.a $(OBJDIR)/liblatin1.a \
 	$(OBJDIR)/libcompat.a $(OBJDIR)/libm.a \
 	$(OBJDIR)/librpc.a $(OBJDIR)/libpthread.a \
+	$(OBJDIR)/libcrypt.a \
 	$(OBJDIR)/diet $(OBJDIR)/diet-i $(OBJDIR)/elftrunc
 
 all: $(WHAT)
@@ -133,7 +134,7 @@ ifneq ($(DEBUG),)
 CFLAGS = -g
 COMMENT = :
 endif
-CFLAGS += -Wall -W -Wchar-subscripts -Wmissing-prototypes -Wmissing-declarations -Wno-switch -Wredundant-decls -Wno-unused
+CFLAGS += -Wall -W -Wchar-subscripts -Wmissing-prototypes -Wmissing-declarations -Wno-switch -Wno-unused -Wredundant-decls
 
 PWD=$(shell pwd)
 
@@ -149,17 +150,17 @@ $(OBJDIR) $(PICODIR):
 % :: %,v
 
 $(OBJDIR)/pstart.o: start.S
-	$(CROSS)$(CC) -I. -Iinclude $(CFLAGS) -DPROFILING -c $< -o $@
+	$(CROSS)$(CC) -I. -isystem include $(CFLAGS) -DPROFILING -c $< -o $@
 
 $(OBJDIR)/%.o: %.S $(ARCH)/syscalls.h
-	$(CROSS)$(CC) -I. -Iinclude $(CFLAGS) -c $< -o $@
+	$(CROSS)$(CC) -I. -isystem include $(CFLAGS) -c $< -o $@
 
 $(OBJDIR)/pthread_%.o: libpthread/pthread_%.c
-	$(CROSS)$(CC) -I. -Iinclude $(CFLAGS) -c $< -o $@
+	$(CROSS)$(CC) -I. -isystem include $(CFLAGS) -c $< -o $@
 	$(COMMENT) -$(CROSS)strip -x -R .comment -R .note $@
 
 $(OBJDIR)/%.o: %.c
-	$(CROSS)$(CC) -I. -Iinclude $(CFLAGS) -c $< -o $@
+	$(CROSS)$(CC) -I. -isystem include $(CFLAGS) -c $< -o $@
 	$(COMMENT) -$(CROSS)strip -x -R .comment -R .note $@
 
 DIETLIBC_OBJ = $(OBJDIR)/unified.o \
@@ -173,6 +174,14 @@ $(OBJDIR)/dietlibc.a: $(DIETLIBC_OBJ) $(OBJDIR)/start.o
 
 $(OBJDIR)/librpc.a: $(LIBRPCOBJ)
 	$(CROSS)ar cru $@ $(LIBRPCOBJ)
+
+$(OBJDIR)/libcrypt.a:
+	touch dummy.c
+	$(CROSS)gcc -c dummy.c
+	$(CROSS)ar cru $@ dummy.o
+	rm -f dummy.c dummy.o
+
+dummy.o:
 
 LIBLATIN1_OBJS=$(patsubst liblatin1/%.c,$(OBJDIR)/%.o,$(wildcard liblatin1/*.c))
 $(OBJDIR)/liblatin1.a: $(LIBLATIN1_OBJS)
@@ -205,21 +214,21 @@ dyn_lib: $(PICODIR) $(PICODIR)/libc.so $(PICODIR)/dstart.o \
 	$(PICODIR)/diet-dyn $(PICODIR)/diet-dyn-i
 
 $(PICODIR)/%.o: %.S $(ARCH)/syscalls.h
-	$(CROSS)$(CC) -I. -Iinclude $(CFLAGS) -fPIC -D__DYN_LIB -c $< -o $@
+	$(CROSS)$(CC) -I. -isystem include $(CFLAGS) -fPIC -D__DYN_LIB -c $< -o $@
 
 $(PICODIR)/pthread_%.o: libpthread/pthread_%.c
-	$(CROSS)$(CC) -I. -Iinclude $(CFLAGS) -fPIC -D__DYN_LIB -c $< -o $@
+	$(CROSS)$(CC) -I. -isystem include $(CFLAGS) -fPIC -D__DYN_LIB -c $< -o $@
 	$(COMMENT) $(CROSS)strip -x -R .comment -R .note $@
 
 $(PICODIR)/%.o: %.c
-	$(CROSS)$(CC) -I. -Iinclude $(CFLAGS) -fPIC -D__DYN_LIB -c $< -o $@
+	$(CROSS)$(CC) -I. -isystem include $(CFLAGS) -fPIC -D__DYN_LIB -c $< -o $@
 	$(COMMENT) $(CROSS)strip -x -R .comment -R .note $@
 
 $(PICODIR)/dstart.o: start.S
-	$(CROSS)$(CC) -I. -Iinclude $(CFLAGS) -fPIC -D__DYN_LIB -c $< -o $@
+	$(CROSS)$(CC) -I. -isystem include $(CFLAGS) -fPIC -D__DYN_LIB -c $< -o $@
 
 $(PICODIR)/dyn_so_start.o: dyn_start.c
-	$(CROSS)$(CC) -I. -Iinclude $(CFLAGS) -fPIC -D__DYN_LIB -D__DYN_LIB_SHARED -c $< -o $@
+	$(CROSS)$(CC) -I. -isystem include $(CFLAGS) -fPIC -D__DYN_LIB -D__DYN_LIB_SHARED -c $< -o $@
 	$(COMMENT) $(CROSS)strip -x -R .comment -R .note $@
 
 DYN_LIBC_PIC = $(LIBOBJ) $(LIBSTDIOOBJ) $(LIBUGLYOBJ) \
@@ -241,7 +250,7 @@ $(PICODIR)/libpthread.so: $(DYN_PTHREAD_OBJS) dietfeatures.h
 	$(CROSS)$(CC) -nostdlib -shared -o $@ $(CFLAGS) -fPIC $(DYN_PTHREAD_OBJS) -L$(PICODIR) -lc -Wl,-soname=libpthread.so
 
 $(PICODIR)/libdl.so: libdl/_dl_main.c dietfeatures.h
-	$(CROSS)$(CC) -D__OD_CLEAN_ROOM -DNODIETREF -fPIC -nostdlib -shared -o $@ $(CFLAGS) -I. -Iinclude libdl/_dl_main.c -Wl,-soname=libdl.so
+	$(CROSS)$(CC) -D__OD_CLEAN_ROOM -DNODIETREF -fPIC -nostdlib -shared -o $@ $(CFLAGS) -I. -isystem include libdl/_dl_main.c -Wl,-soname=libdl.so
 
 #$(PICODIR)/libdl.so: $(DYN_LIBDL_OBJS) dietfeatures.h
 #	$(CROSS)$(CC) -nostdlib -shared -o $@ $(CFLAGS) -fPIC $(DYN_LIBDL_OBJS) -L$(PICODIR) -ldietc -Wl,-soname=libdl.so
@@ -260,19 +269,19 @@ VERSION=dietlibc-$(shell head -n 1 CHANGES|sed 's/://')
 CURNAME=$(notdir $(shell pwd))
 
 $(OBJDIR)/diet: $(OBJDIR)/start.o $(OBJDIR)/dyn_start.o diet.c $(OBJDIR)/dietlibc.a $(OBJDIR)/dyn_stop.o
-	$(CROSS)$(CC) -Iinclude $(CFLAGS) -nostdlib -o $@ $^ -DDIETHOME=\"$(HOME)\" -DVERSION=\"$(VERSION)\" -lgcc
+	$(CROSS)$(CC) -isystem include $(CFLAGS) -nostdlib -o $@ $^ -DDIETHOME=\"$(HOME)\" -DVERSION=\"$(VERSION)\" -lgcc
 	$(CROSS)strip -R .comment -R .note $@
 
 $(OBJDIR)/diet-i: $(OBJDIR)/start.o $(OBJDIR)/dyn_start.o diet.c $(OBJDIR)/dietlibc.a $(OBJDIR)/dyn_stop.o
-	$(CROSS)$(CC) -Iinclude $(CFLAGS) -nostdlib -o $@ $^ -DDIETHOME=\"$(prefix)\" -DVERSION=\"$(VERSION)\" -DINSTALLVERSION -lgcc
+	$(CROSS)$(CC) -isystem include $(CFLAGS) -nostdlib -o $@ $^ -DDIETHOME=\"$(prefix)\" -DVERSION=\"$(VERSION)\" -DINSTALLVERSION -lgcc
 	$(CROSS)strip -R .comment -R .note $@
 
 $(PICODIR)/diet-dyn: $(PICODIR)/start.o $(PICODIR)/dyn_start.o diet.c
-	$(CROSS)$(CC) -Iinclude $(CFLAGS) -fPIC -nostdlib -o $@ $^ -DDIETHOME=\"$(HOME)\" -D__DYN_LIB -DVERSION=\"$(VERSION)\" -L$(PICODIR) -lc -lgcc $(PICODIR)/dyn_stop.o -Wl,-dynamic-linker=$(HOME)/$(PICODIR)/libdl.so
+	$(CROSS)$(CC) -isystem include $(CFLAGS) -fPIC -nostdlib -o $@ $^ -DDIETHOME=\"$(HOME)\" -D__DYN_LIB -DVERSION=\"$(VERSION)\" -L$(PICODIR) -lc -lgcc $(PICODIR)/dyn_stop.o -Wl,-dynamic-linker=$(HOME)/$(PICODIR)/libdl.so
 	$(CROSS)strip -R .command -R .note $@
 
 $(PICODIR)/diet-dyn-i: $(PICODIR)/start.o $(PICODIR)/dyn_start.o diet.c
-	$(CROSS)$(CC) -Iinclude $(CFLAGS) -fPIC -nostdlib -o $@ $^ -DDIETHOME=\"$(prefix)\" -D__DYN_LIB -DVERSION=\"$(VERSION)\" -L$(PICODIR) -lc -lgcc $(PICODIR)/dyn_stop.o -Wl,-dynamic-linker=$(ILIBDIR)/libdl.so -DINSTALLVERSION
+	$(CROSS)$(CC) -isystem include $(CFLAGS) -fPIC -nostdlib -o $@ $^ -DDIETHOME=\"$(prefix)\" -D__DYN_LIB -DVERSION=\"$(VERSION)\" -L$(PICODIR) -lc -lgcc $(PICODIR)/dyn_stop.o -Wl,-dynamic-linker=$(ILIBDIR)/libdl.so -DINSTALLVERSION
 	$(CROSS)strip -R .command -R .note $@
 
 $(OBJDIR)/djb: $(OBJDIR)/compile $(OBJDIR)/load
@@ -299,11 +308,11 @@ rename:
 	if test $(CURNAME) != $(VERSION); then cd .. && mv $(CURNAME) $(VERSION); fi
 
 $(OBJDIR)/exports: $(OBJDIR)/dietlibc.a
-	nm -g $(OBJDIR)/dietlibc.a | grep -w T | awk '{ print $$3 }' | sort -u > $(OBJDIR)/exports
+	nm -g $(OBJDIR)/dietlibc.a | grep '\<T\>' | awk '{ print $$3 }' | sort -u > $(OBJDIR)/exports
 
 .PHONY: t t1
 t:
-	$(CROSS)$(CC) -g $(CFLAGS) -fno-builtin -nostdlib -Iinclude -o t t.c $(OBJDIR)/start.o $(OBJDIR)/dyn_start.o $(OBJDIR)/dietlibc.a -lgcc $(OBJDIR)/dyn_stop.o -Wl,-Map,mapfile
+	$(CROSS)$(CC) -g $(CFLAGS) -fno-builtin -nostdlib -isystem include -o t t.c $(OBJDIR)/start.o $(OBJDIR)/dyn_start.o $(OBJDIR)/dietlibc.a -lgcc $(OBJDIR)/dyn_stop.o -Wl,-Map,mapfile
 
 t1:
 	$(CROSS)$(CC) -g -o t1 t.c
@@ -312,7 +321,7 @@ install: $(OBJDIR)/start.o $(OBJDIR)/dietlibc.a $(OBJDIR)/librpc.a $(OBJDIR)/lib
 	$(INSTALL) -d $(DESTDIR)$(ILIBDIR) $(DESTDIR)$(MAN1DIR) $(DESTDIR)$(BINDIR)
 	$(INSTALL) $(OBJDIR)/start.o $(DESTDIR)$(ILIBDIR)/start.o
 	$(INSTALL) -m 644 $(OBJDIR)/libm.a $(OBJDIR)/libpthread.a $(OBJDIR)/librpc.a \
-$(OBJDIR)/liblatin1.a $(OBJDIR)/libcompat.a $(DESTDIR)$(ILIBDIR)
+$(OBJDIR)/liblatin1.a $(OBJDIR)/libcompat.a $(OBJDIR)/libcrypt.a $(DESTDIR)$(ILIBDIR)
 	$(INSTALL) -m 644 $(OBJDIR)/dietlibc.a $(DESTDIR)$(ILIBDIR)/libc.a
 ifeq ($(MYARCH),$(ARCH))
 	$(INSTALL) $(OBJDIR)/diet-i $(DESTDIR)$(BINDIR)/diet
@@ -329,6 +338,14 @@ endif
 	$(INSTALL) -m 644 diet.1 $(DESTDIR)$(MAN1DIR)/diet.1
 	if test -f $(PICODIR)/libc.so -a ! -f $(DESTDIR)/etc/diet.ld.conf; then echo "$(ILIBDIR)" > $(DESTDIR)/etc/diet.ld.conf; fi
 	for i in `find include -name \*.h`; do install -m 644 -D $$i $(DESTDIR)$(prefix)/$$i; done
+
+uninstall:
+	for i in start.o libm.a libpthread.a librpc.a liblatin1.a libcompat.a libcrypt.a libc.a; do rm -f $(DESTDIR)$(ILIBDIR)/$$i; done
+	rm -f $(DESTDIR)$(BINDIR)/diet $(DESTDIR)$(BINDIR)/diet-dyn
+	for i in libgmon.a dyn_start.o dyn_stop.o libc.so libpthread.so libdl.so libcompat.so dyn_dstart.o dyn_dstop.o dyn_so_start.o; do rm -f $(DESTDIR)$(ILIBDIR)/$$i; done
+	rm -f $(DESTDIR)$(MAN1DIR)/diet.1 $(DESTDIR)/etc/diet.ld.conf
+	for i in `find include -name \*.h`; do rm -f $(DESTDIR)$(prefix)/$$i; done
+	-rmdir $(DESTDIR)$(ILIBDIR) $(DESTDIR)$(MAN1DIR) $(DESTDIR)$(BINDIR)
 
 .PHONY: sparc ppc mips arm alpha i386 parisc mipsel powerpc s390 sparc64
 .PHONY: x86_64 ia64

@@ -3,9 +3,9 @@
 
 #include <sys/cdefs.h>
 #include <sys/types.h>
-#include <sys/time.h>
 #include <sys/stat.h>
 #include <sys/fsuid.h>
+#include <sys/select.h>
 
 __BEGIN_DECLS
 
@@ -56,8 +56,10 @@ int close(int fd) __THROW;
 
 int unlink(const char *pathname) __THROW;
 
-int pread(int fd, void *buf, size_t count, off_t offset);
-int pwrite(int fd, const void *buf, size_t count, off_t offset);
+ssize_t pread(int fd, void *buf, size_t count, off_t offset);
+ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset);
+ssize_t pread64(int fd, void *buf, size_t count, off64_t offset);
+ssize_t pwrite64(int fd, const void *buf, size_t count, off64_t offset);
 
 int execve(const char *filename, char *const argv [], char *const envp[]) __THROW;
 int execlp(const char *file, const char *arg, ...) __THROW;
@@ -147,8 +149,6 @@ int ftruncate(int fd, off_t length) __THROW;
 int truncate64(const char *path, loff_t length) __THROW;
 int ftruncate64(int fd, loff_t length) __THROW;
 #endif
-
-int select(int n, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout) __THROW;
 
 int nice(int inc) __THROW;
 

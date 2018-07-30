@@ -1,3 +1,23 @@
+0.26:
+  iconv UTF-8 fix (Kuba Winnicki)
+  Olaf:
+    - add 'getgrouplist'
+    - fix type of 'unsetenv'
+    - add missing realtime syscalls 'clock_*' 'timer_*' and types
+  ARGH!  gcc 3.4 breaks regparm attributes on i386!
+  grep portability fixes (Gunnar Ritter)
+  add empty libcrypt.a to help compile code from others (Gunnar Ritter)
+  add make uninstall
+  fix pread64, pwrite64
+  Olaf: MIPS has a special case for the pread/pwrite syscall ...
+  Use -isystem instead of -I for our system includes (Paul Jarc)
+  Add MNT_DETACH to sys/mount.h
+  add pselect
+  fix for tzfile (Felix J. Ogris)
+  add res_close to close the DNS UDP sockets
+  remove ia64/waitpid.S; it was broken and there is a working C version
+    (Gerrit Pape)
+
 0.25:
   fix sprintf
   head -1  ->  head -n 1
