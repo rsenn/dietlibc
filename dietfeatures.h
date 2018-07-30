@@ -7,6 +7,7 @@
 #define WANT_FLOATING_POINT_IN_SCANF
 #define WANT_CHARACTER_CLASSES_IN_SCANF
 #define WANT_NULL_PRINTF
+/* #define WANT_ERROR_PRINTF */
 #define WANT_LONGLONG_PRINTF
 #define WANT_LONGLONG_SCANF
 
@@ -78,6 +79,10 @@
 /* do you want diet to include a safeguard dependency to make linking
  * against glibc fail?  This may fail with older binutils. */
 #define WANT_SAFEGUARD
+
+/* this enables an experimental DNS hack of mine.
+ * See http://www.fefe.de/ipv6pnpdns.html */
+// #define WANT_IPV6_PLUGPLAY_DNS
 
 /* dy you want that malloc(0) return a pointer to a "zero-length" object
  * that is realloc-able; means realloc(..,size) gives a NEW object (like a

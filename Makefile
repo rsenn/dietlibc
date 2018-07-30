@@ -26,6 +26,9 @@ else
 ifeq ($(MYARCH),ppc)
 ARCH=ppc
 else
+ifeq ($(MYARCH),ppc64)
+ARCH=ppc64
+else
 ifeq ($(MYARCH),arm)
 ARCH=arm
 else
@@ -37,6 +40,9 @@ ARCH=sparc64
 else
 ifeq ($(MYARCH),s390)
 ARCH=s390
+else
+ifeq ($(MYARCH),s390x)
+ARCH=s390x
 else
 ifeq ($(MYARCH),mipsel)
 ARCH=mipsel
@@ -55,6 +61,8 @@ ifeq ($(MYARCH),ia64)
 ARCH=ia64
 else
 $(error unknown architecture, please fix Makefile)
+endif
+endif
 endif
 endif
 endif
@@ -339,6 +347,10 @@ mips-gnu:
 powerpc:
 	$(MAKE) ARCH=ppc CROSS=powerpc-linux- all
 
+hppa:
+	ln -sf bin-parisc bin-hppa
+	$(MAKE) ARCH=parisc CROSS=hppa-linux- all
+
 CROSS_ARCH=arm sparc ppc alpha i386 mips sparc64 x86_64 s390 parisc
 cross:
 	$(MAKE) $(subst $(ARCH),,$(CROSS_ARCH))
@@ -366,7 +378,7 @@ $(OBJDIR)/ttyname.o $(OBJDIR)/sysconf_cpus.o: dietfeatures.h
 $(OBJDIR)/localtime_r.o $(OBJDIR)/strftime.o: dietfeatures.h
 
 # these depend on dietfeatures.h for WANT_SMALL_STDIO_BUFS
-$(LIBSTDIOOBJ): dietfeatures.h
+$(LIBSTDIOOBJ): dietfeatures.h include/stdio.h dietstdio.h
 
 # these depend on dietfeatures.h for WANT_FULL_RESOLV_CONF
 $(OBJDIR)/dnscruft.o $(OBJDIR)/dnscruft2.o: dietfeatures.h
@@ -410,6 +422,8 @@ $(OBJDIR)/strxfrm.o: dietfeatures.h
 
 # these depend on dietfeatures.h for WANT_INET_ADDR_DNS
 $(OBJDIR)/gethostbyname_r.o: dietfeatures.h
+
+$(OBJDIR)/strsignal.o: include/signal.h
 
 $(LIBPTHREAD_OBJS): include/pthread.h
 

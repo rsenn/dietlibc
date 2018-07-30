@@ -9,8 +9,8 @@
 
 __BEGIN_DECLS
 
-int optind,opterr;
-char *optarg;
+extern int optind,opterr,optopt;
+extern char *optarg;
 int getopt(int argc, char *const argv[], const char *options);
 
 /* Values for the second argument to access.
@@ -122,14 +122,6 @@ int daemon(int nochdir,int noclose) __THROW;
 
 int pause(void) __THROW;
 
-#if defined _FILE_OFFSET_BITS && _FILE_OFFSET_BITS == 64
-#define open open64
-#define creat creat64
-#define truncate truncate64
-#define ftruncate ftruncate64
-#define getdents getdents64
-#endif
-
 char* getlogin(void) __THROW;
 /* warning: the diet libc getlogin() simply returns getenv("LOGNAME") */
 
@@ -159,8 +151,6 @@ int ftruncate64(int fd, loff_t length) __THROW;
 int select(int n, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout) __THROW;
 
 int nice(int inc) __THROW;
-
-char **__environ;
 
 char *crypt(const char *key, const char *salt) __THROW;
 void encrypt(char block[64], int edflag) __THROW;
@@ -235,7 +225,7 @@ void endusershell(void) __attribute_dontuse__;
 
 /* this is so bad, we moved it to -lcompat */
 #define   L_cuserid   17
-char * cuserid(char * string); /* ugh! */
+char* cuserid(char * string); /* ugh! */
 
 #define   _POSIX_VERSION  199506L
 
@@ -250,6 +240,16 @@ int lockf64 (int __fd, int __cmd, off64_t __len) __THROW;
 void swab(const void *src, void *dest, ssize_t nbytes) __THROW;
 
 int vhangup(void) __THROW;
+
+extern char **__environ;
+
+#if defined _FILE_OFFSET_BITS && _FILE_OFFSET_BITS == 64
+#define open open64
+#define creat creat64
+#define truncate truncate64
+#define ftruncate ftruncate64
+#define getdents getdents64
+#endif
 
 __END_DECLS
 

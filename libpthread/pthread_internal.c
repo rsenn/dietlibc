@@ -185,7 +185,7 @@ static void __thread_sleep() {
  * cleanup / remove zombie thread
  * this is entered with "td" not in the list of threads and UNLOCKED !!!
  */
-int __thread_cleanup(_pthread_descr td) {
+static int __thread_cleanup(_pthread_descr td) {
   int cnt=0;
   do { ++cnt;
     /* the next operations are only to make sure any thread_self that still uses "td" will go away */
@@ -232,10 +232,10 @@ void __thread_suspend(_pthread_descr this,int cancel) {
   this->p_sig=0;
   sigprocmask(SIG_SETMASK,0,&mask);
   sigdelset(&mask,PTHREAD_SIG_RESTART);
-  do {
+  while (this->p_sig!=PTHREAD_SIG_RESTART) {
     if (cancel && (this->cancelstate==PTHREAD_CANCEL_ENABLE) && this->canceled) break;
     sigsuspend(&mask);
-  } while (this->p_sig!=PTHREAD_SIG_RESTART);
+  }
 }
 
 /* restart a thread */
@@ -421,6 +421,29 @@ void __thread_manager_close(void) {
   manager_thread=0;
 }
 
+static void __MGR_thread_start_new(_thread_descr data) {
+  _pthread_descr td=data->td;
+  pthread_attr_t*attr=data->attr;
+  if ((td->pid=(*(data->pid))=__clone(__managed_start,attr->__stackaddr,CLONE_FLAGS,td))!=-1) {
+    sched_setscheduler(td->pid,attr->__schedpolicy,&attr->__schedparam);
+    __thread_add_list(td);
+    __thread_restart(td); 	/* let the thread loose */
+  }
+#ifdef DEBUG
+  printf("__MGR_thread_start_new: created thread %d\n",td->pid);
+#endif
+  __thread_restart(data->tr);	/* restart request sender */
+}
+
+static void __MGR_thread_join_cleanup(_pthread_descr td) {
+#ifdef DEBUG
+  printf("__MGR_thread_join_cleanup: wind up red-tape for thread %d\n",td->pid);
+#endif
+  __thread_del_list(td);
+  UNLOCK(td);
+  __thread_cleanup(td);
+}
+
 /* manager thread */
 static char __manager_thread_stack[PTHREAD_STACK_SIZE];
 __attribute__((noreturn))
@@ -457,19 +480,12 @@ static void*__manager_thread(void*arg) {
       _exit(0);
     }
     if (n==1) {
-      struct __thread_descr data;
+      __thread_manager_func data;
       if (INTR_RETRY(__libc_read(mgr_recv_fd,&data,sizeof(data)))==sizeof(data)) {
-	pthread_attr_t*attr=data.attr;
-	td=data.td;
-	if ((td->pid=(*data.pid)=__clone(__managed_start,data.attr->__stackaddr,CLONE_FLAGS,td))!=-1) {
-	  sched_setscheduler(td->pid,attr->__schedpolicy,&attr->__schedparam);
-	  __thread_add_list(td);
-	  __thread_restart(td); 	/* let the thread loose */
-	}
 #ifdef DEBUG
-	printf("__manager_thread: created thread %d\n",td->pid);
+	printf("__manager_thread: do func %08x %08x\n",data.func,data.arg);
 #endif
-	__thread_restart(data.tr);	/* restart request sender */
+	data.func(data.arg);
       }
     }
     while ((n=__libc_waitpid(-1,&status,WNOHANG|__WCLONE))!=-1) {
@@ -485,7 +501,11 @@ static void*__manager_thread(void*arg) {
 #endif
 	    /* Oh, oohhhhhh.... */
 	    sched_yield();
+#ifdef DEBUG
+	    kill_all_threads(SIGKILL,1);
+#else
 	    kill_all_threads(WTERMSIG(status),1);
+#endif
 	    sched_yield();
 	    __thread_sleep();
 	    kill_all_threads(SIGKILL,1);
@@ -496,10 +516,13 @@ static void*__manager_thread(void*arg) {
 #ifdef DEBUG
 	printf("__manager_thread: thread %d is dead\n",n);
 #endif
-	__thread_del_list(td);
-	td->canceled|=2;
-	if (__testandset(&td->joined.__spinlock)) __thread_restart(td->jt);
-	else __thread_cleanup(td);
+	if (td->detached) __MGR_thread_join_cleanup(td);
+	else {
+	  td->canceled|=2;
+	  td->dead=1;
+	  UNLOCK(td);
+	  if (td->joined.__spinlock==PTHREAD_SPIN_LOCKED) __thread_restart(td->jt);
+	}
       }
     }
   }
@@ -601,18 +624,30 @@ static void __thread_init() {
   }
 }
 
+/* send the manager a function and an argument to run */
+static int __MGR_send(void(*f)(void*),void*arg) {
+  __thread_manager_func data={ .func=f, .arg=arg, };
+  __pthread_once(&__thread_started,__thread_init);
+  return INTR_RETRY(__libc_write(mgr_send_fd,&data,sizeof(data)));
+}
+int __thread_send_manager(void(*f)(void*),void*arg) __attribute__((alias("__MGR_send")));
+
 /* start a new thread */
 int __thread_start_new(_thread_descr data) {
   int pid;
 
-  __pthread_once(&__thread_started,__thread_init);
   data->pid=&pid;
-  if (INTR_RETRY(__libc_write(mgr_send_fd,data,sizeof(*data)))==-1) {
+
+  if (__MGR_send((MGR_func)__MGR_thread_start_new,data)==-1) {
     __thread_cleanup(data->tr);
     return -1;
   }
   __thread_suspend(data->tr,0);
   return pid;
+}
+
+int __thread_join_cleanup(_pthread_descr td) {
+  return __MGR_send((MGR_func)__MGR_thread_join_cleanup,td)==0;
 }
 
 //int __G_E_T() { return sizeof(struct _pthread_descr_struct); }

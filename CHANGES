@@ -1,3 +1,43 @@
+0.24:
+  work around incompatible Linux select() modifying the timeout in
+    librpc (Patch was sent from Mike Waychison from Sun)
+  the overflow checking in strtou?ll? was broken in some cases.
+    Unfortunately, correct overflow checking enlarged the routine by 20%.
+    (reported by Manuel Novoa III)
+  two stdio bug fixes (also reported by Manuel Novoa III)
+  remove several warnings (Johannes Stezenbach)
+  Olaf: fixing tmpfile (missing parameter) and __dtostr (gcc 2.95)
+  Olaf: add the pthread-semaphore support.
+  implemented experimental plug-and-play IPv6 DNS
+    (see dietfeatures.h, see http://www.fefe.de/ipv6pnpdns.html)
+  typo in parisc setjmp.S (Michael Mueller)
+  Olaf: fixing the pthread_join function
+  add IPv6 link-local%eth0 support to getaddrinfo
+  Olaf: added missing syscalls (cap{g,s}et) and addmntent
+  Add s390x and ppc64 support (Marian Jancar, SuSE)
+  Marian also contributed %m support to printf, and fixes for many bugs
+  Olaf:
+   - fixing strtok_r (rewrite)
+   - making the %m support NON DEFAULT as it is NOT SUSv3 or SUSv2
+   - make the HUGE_VAL/HUGE_VALF macros arch (endian) independend
+   - changeing __dtostr so that it returns "inf" for an inf-value not "nan"
+   - fixing the strrchr bug (reported by Gernot Tenchio)
+   - fixing the strtoul/strtoull bug (reported by Gernot Tenchio)
+   - adding the patch to printf (Gernot Tenchio)
+   - fixing snprintf (Gernot Tenchio)
+   - fixing memccpy,memcmp,strncmp (reported by Gernot Tenchio)
+   - fixing strtoXXX (Gernot Tenchio, patch modified)
+   - fixing the *scanf return behavior (reported by Enrico Scholz)
+  add printf test
+  change sys_siglist to char** (removes linker warning)
+  fix getnameinfo (Arnaldo Carvalho de Melo)
+  add ar.h (for GNU make)
+  replace qsort with new quicksort with three-way partitioning
+  parisc start.S fix (Gerrit Pape)
+  check fflush return code (Manuel Novoa III)
+  add el-cheapo strptime and more BSD legacy crap to get more of
+    e2fsutils, dump and util-linux compiled
+
 0.23:
   update sys/soundcard.h
   various x86_64 fixes (Gwenole Beauchesne)
@@ -176,7 +216,7 @@
   add libm2.s from contrib to i386 (oops, how long has it been sitting
     there?)
   add truncate64 and ftruncate64 and prototype for truncate (only had ftruncate)
-  Michal Ludvig ported the diet libc to the x86_64 architecture (the
+  Michal Ludvig (SuSE) ported the diet libc to the x86_64 architecture (the
     upcoming AMD Hammer chips!).  You can't even buy the chips yet and
     the diet libc already supports it!  Amazing ;-)
   Michal's patch also fixed several of the outstanding warnings.  Thanks!

@@ -11,9 +11,9 @@ _exit:
 	svc	__NR_exit
 .global __unified_syscall
 __unified_syscall:
-	lhi	%r4,-4095
+	lhi	%r4,-127
 	clr	%r2,%r4
-	jm	.Lnoerror
+	jl	.Lnoerror
 
 .global __error_unified_syscall
 __error_unified_syscall:

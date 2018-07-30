@@ -38,7 +38,6 @@ int __v_scanf(struct arg_scanf* fn, const unsigned char *format, va_list arg_ptr
   //while ((tpch!=-1)&&(*format))
   while (*format)
   {
-//    const unsigned char *prev_fmt=format;
     ch=*format++;
     switch (ch) {
     /* end of format string ?!? */
@@ -128,7 +127,7 @@ in_scan:
 #else
 	    unsigned long v=0;
 #endif
-	    unsigned int consumedsofar=consumed;
+	    unsigned int consumedsofar;
 	    int neg=0;
 	    while(isspace(tpch)) tpch=A_GETC(fn);
 	    if (tpch=='-') {
@@ -137,6 +136,9 @@ in_scan:
 	    }
 
 	    if (tpch=='+') tpch=A_GETC(fn);
+
+	    if (tpch==-1) return n;
+	    consumedsofar=consumed;
 
 	    if (!flag_width) {
 	      if ((_div==16) && (tpch=='0')) goto scan_hex;
@@ -171,6 +173,9 @@ scan_hex:
 	      --width;
 	      tpch=A_GETC(fn);
 	    }
+
+	    if (consumedsofar==consumed) return n;
+
 	    if ((ch|0x20)<'p') {
 #ifdef WANT_LONGLONG_SCANF
 	      register long long l=v;
@@ -207,12 +212,12 @@ scan_hex:
 		pi=(int *)va_arg(arg_ptr,int*);
 		*pi=v;
 	      }
-	      if(consumedsofar<consumed)
-	      ++n;
+	      if(consumedsofar<consumed) ++n;
 	    }
 	  }
 	  break;
 
+	/* FIXME: return value of *scanf with ONE float maybe -1 instead of 0 */
 #ifdef WANT_FLOATING_POINT_IN_SCANF
 	/* floating point numbers */
 	case 'e':
@@ -222,6 +227,7 @@ scan_hex:
 	  {
 	    double d=0.0;
 	    int neg=0;
+	    unsigned int consumedsofar;
 
 	    while(isspace(tpch)) tpch=A_GETC(fn);
 
@@ -231,12 +237,15 @@ scan_hex:
 	    }
 	    if (tpch=='+') tpch=A_GETC(fn);
 
+	    consumedsofar=consumed;
+
 	    while (isdigit(tpch)) {
 	      d=d*10+(tpch-'0');
 	      tpch=A_GETC(fn);
 	    }
 	    if (tpch=='.') {
 	      double factor=.1;
+	      consumedsofar++;
 	      tpch=A_GETC(fn);
 	      while (isdigit(tpch)) {
 		d=d+(factor*(tpch-'0'));
@@ -244,6 +253,7 @@ scan_hex:
 		tpch=A_GETC(fn);
 	      }
 	    }
+	    if (consumedsofar==consumed) return n;	/* error */
 	    if ((tpch|0x20)=='e') {
 	      int exp=0, prec=tpch;
 	      double factor=10;
@@ -259,10 +269,12 @@ scan_hex:
 		tpch=prec;
 		goto exp_out;
 	      }
+	      consumedsofar=consumed;
 	      while (isdigit(tpch)) {
 		exp=exp*10+(tpch-'0');
 		tpch=A_GETC(fn);
 	      }
+	      if (consumedsofar==consumed) return n;	/* error */
 	      while (exp) {	/* as in strtod: XXX: this introduces rounding errors */
 		d*=factor; --exp;
 	      }
@@ -276,8 +288,8 @@ exp_out:
 		pf=(float *)va_arg(arg_ptr,float*);
 		*pf=d;
 	      }
+	      ++n;
 	    }
-	    ++n;
 	  }
 	  break;
 #endif
@@ -296,26 +308,27 @@ exp_out:
 	  }
 	  break;
 
-	/* c-string */
+	/* string */
 	case 's':
 	  if (!flag_discard) s=(char *)va_arg(arg_ptr,char*);
 	  while(isspace(tpch)) tpch=A_GETC(fn);
+	  if (tpch==-1) break;		/* end of scan -> error */
 	  while (width && (tpch!=-1) && (!isspace(tpch))) {
 	    if (!flag_discard) *s=tpch;
 	    if (tpch) ++s; else break;
 	    --width;
 	    tpch=A_GETC(fn);
 	  }
-	  if (!flag_discard) { *s=0; n++; }
+	  if (!flag_discard) { *s=0; ++n; }
 	  break;
 
 	/* consumed-count */
 	case 'n':
 	  if (!flag_discard) {
-	    s=(char *)va_arg(arg_ptr,char*);
+	    pi=(int *)va_arg(arg_ptr,int *);
 //	    ++n;	/* in accordance to ANSI C we don't count this conversion */
+            *pi=consumed-1;
 	  }
-	  if (!flag_discard) *(s++)=consumed-1;
 	  break;
 
 #ifdef WANT_CHARACTER_CLASSES_IN_SCANF
@@ -382,6 +395,16 @@ exp_out:
       break;
     }
   }
+
+  /* maybe a "%n" follows */
+  if(*format) {
+    while(isspace(*format)) format++;
+    if(format[0] == '%' && format[1] == 'n') {
+      pi = (int *) va_arg(arg_ptr, int *);
+      *pi = consumed - 1;
+    }
+  }
+
 err_out:
   if (tpch<0 && n==0) return EOF;
   A_PUTC(tpch,fn);

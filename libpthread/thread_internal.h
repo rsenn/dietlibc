@@ -60,6 +60,7 @@ struct _pthread_descr_struct {
   volatile unsigned char canceltype;	/* type of cancellation */
 
   /* thread flags */
+  volatile char dead;		/* thread has terminated */
   volatile char canceled;	/* thread canceled */
   char detached;		/* thread is detached */
   char stack_free;		/* stack is allocated by pthread_create */
@@ -111,6 +112,9 @@ int __pthread_unlock(struct _pthread_fastlock*lock);
 #define TRYLOCK(td) __pthread_trylock(&((td)->lock))
 #define UNLOCK(td)  __pthread_unlock(&((td)->lock))
 
+int __pthread_mutex_lock(pthread_mutex_t*mutex,_pthread_descr this);
+int __pthread_mutex_unlock(pthread_mutex_t*mutex,_pthread_descr this);
+
 int __clone(void*(*fn)(void*),void*stack,int flags,void*arg);
 void __thread_manager_close(void);
 
@@ -118,7 +122,7 @@ struct _pthread_descr_struct*__thread_self(void);
 struct _pthread_descr_struct*__thread_find(pthread_t pid);
 
 int __thread_join(struct _pthread_descr_struct*td,void**return_value);
-int __thread_cleanup(struct _pthread_descr_struct*td);
+int __thread_join_cleanup(struct _pthread_descr_struct*td);
 
 void __thread_restart(struct _pthread_descr_struct*td);
 void __thread_suspend(struct _pthread_descr_struct*td,int cancel);
@@ -138,6 +142,14 @@ int __thread_setcanceltype(int type,int*oldtype,struct _pthread_descr_struct*td)
 #define __TEST_CANCEL() pthread_testcancel()
 
 /* manager thread stuff */
+typedef void(*MGR_func)(void*);
+typedef struct __thread_manager_func {
+  void(*func)(void*);
+  void*arg;
+} __thread_manager_func;
+
+int __thread_send_manager(void(*f)(void*),void*arg);
+
 typedef struct __thread_descr {
   struct _pthread_descr_struct*tr;	/* thread sending the request */
   struct _pthread_descr_struct*td;	/* new thread descriptor */

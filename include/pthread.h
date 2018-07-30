@@ -23,7 +23,7 @@ __BEGIN_DECLS
 
 #define MAX_SPIN_COUNT		50
 #define SPIN_SLEEP_DURATION	2000001
-#define PTHREAD_DESTRUCTOR_ITERATIONS 4
+#define PTHREAD_DESTRUCTOR_ITERATIONS 1
 
 #define PTHREAD_KEYS_MAX	32
 
@@ -31,7 +31,7 @@ typedef struct _pthread_descr_struct*_pthread_descr;
 typedef int pthread_t;
 
 /* Fast locks */
-#ifdef __parisc__
+#ifdef __hppa__
 struct _pthread_fastlock { int __spinlock; } __attribute__((aligned(16)));
 
 #define PTHREAD_SPIN_LOCKED 0
