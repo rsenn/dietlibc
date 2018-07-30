@@ -83,7 +83,6 @@ inn_printf:
       /* FLAGS */
       case '#':
 	flag_hash=-1;
-	/* fall through */
 
       case 'h':
 	--flag_long;
@@ -93,11 +92,7 @@ inn_printf:
 #endif
       case 'q':		/* BSD ... */
       case 'L':
-	++flag_long;	/* fall through */
-#if defined(__GNUC__) && (__GNUC__ >= 7)
-	__attribute__((fallthrough));
-#endif
-
+	++flag_long; /* fall through */
 #if __WORDSIZE == 64
       case 'j':
 #endif
@@ -148,7 +143,6 @@ inn_printf:
 	  if ((width=(unsigned long)tmp)>MAX_WIDTH) return -1;
 	  goto inn_printf;
 	}
-	/* fall through */
       case '.':
 	flag_dot=1;
 	if (*format=='*') {
@@ -166,7 +160,6 @@ inn_printf:
       /* print a char or % */
       case 'c':
 	ch=(char)va_arg(arg_ptr,int);
-	/* fall through */
       case '%':
 	B_WRITE(fn,&ch,1);
 	++len;
@@ -269,10 +262,8 @@ print_out:
 	flag_hash=2;
 	flag_long=1;
 	ch='x';
-	/* fall through */
       case 'X':
 	flag_upcase=(ch=='X');
-	/* fall through */
       case 'x':
 	base=16;
 	sz=0;
@@ -287,7 +278,6 @@ print_out:
       case 'd':
       case 'i':
 	flag_in_sign=1;
-	/* fall through */
       case 'u':
 	base=10;
 	sz=0;

@@ -115,13 +115,10 @@ in_scan:
 	case 'X':
 	case 'x':
 	  _div+=6;
-	  /* fall through */
 	case 'd':
 	  _div+=2;
-	  /* fall through */
 	case 'o':
 	  _div+=8;
-	  /* fall through */
 	case 'u':
 	case 'i':
 	  {

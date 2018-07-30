@@ -111,8 +111,7 @@ typedef struct { long long quot,rem; } lldiv_t;
 lldiv_t lldiv(long long numerator, long long denominator);
 
 #ifdef _GNU_SOURCE
-int clearenv(void) __THROW;
-char* secure_getenv(const char* name) __THROW;
+int clearenv(void);
 #endif
 
 int mbtowc(wchar_t *pwc, const char *s, size_t n) __THROW;

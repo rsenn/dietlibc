@@ -1,5 +1,8 @@
 .text
 .global strnlen
+#ifdef __PIE__
+.hidden strnlen
+#endif
 .type strnlen,@function
 strnlen:
 	/* incoming: rdi = ptr, rsi = len */
@@ -7,7 +10,7 @@ strnlen:
 	mov %rsi,%r9
 	mov %rsi,%rdx
 	xor %esi,%esi
-#ifdef __PIC__
+#ifdef __DYN_LIB
 	call memchr@PLT
 #else
 	call memchr

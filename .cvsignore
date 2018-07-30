@@ -28,3 +28,5 @@ bin-ia64
 bin-x86_64
 pic-x86_64
 cycles
+include/errno_definition.h
+bin-x32

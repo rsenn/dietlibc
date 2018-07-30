@@ -1,6 +1,9 @@
 #include "dietfeatures.h"
 .text
 .global strlen
+#ifdef __PIE__
+.hidden strlen
+#endif
 .type strlen,@function
 strlen:
 	/*
@@ -17,7 +20,7 @@ strlen:
 	*/
 
 #ifdef WANT_VALGRIND_SUPPORT
-#ifdef __PIC__
+#ifdef __DYN_LIB
 	movq	__valgrind@GOTPCREL(%rip), %rax
 	movl	(%rax), %eax
 	test	%eax, %eax
