@@ -8,3 +8,6 @@ ALWAYS_PIC=1
 VPATH  := x86_64:syscalls.s:$(VPATH)
 LIBOBJ += $(OBJDIR)/arch_prctl.o $(OBJDIR)/__CAS.o $(OBJDIR)/__munmap_and_exit.o $(OBJDIR)/getcontext.o
 LIBOBJ += $(OBJDIR)/setcontext.o $(OBJDIR)/start-pie.o $(OBJDIR)/stackgap-pie.o
+
+LIBMATH += acosl.o asinl.o atan2l.o atanl.o ceill.o exp2l.o expl.o expm1l.o fabs.o fabsf.o fabsl.o floorl.o fmodl.o llrint.o llrintf.o llrintl.o log1pl.o log2l.o log10l.o logl.o lrint.o lrintf.o lrintl.o remainderl.o rintl.o sqrt.o sqrtf.o sqrtl.o truncl.o
+
