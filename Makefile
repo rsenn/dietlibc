@@ -89,7 +89,8 @@ WHAT=	$(OBJDIR) $(OBJDIR)/start.o $(OBJDIR)/dyn_start.o $(OBJDIR)/dyn_stop.o \
 	$(OBJDIR)/libcompat.a $(OBJDIR)/libm.a \
 	$(OBJDIR)/librpc.a $(OBJDIR)/libpthread.a \
 	$(OBJDIR)/libcrypt.a \
-	$(OBJDIR)/diet $(OBJDIR)/diet-i $(OBJDIR)/elftrunc
+	$(OBJDIR)/diet $(OBJDIR)/diet-i $(OBJDIR)/elftrunc \
+	$(OBJDIR)/dnsd
 
 all: $(WHAT)
 
@@ -163,6 +164,17 @@ $(OBJDIR)/%.o: %.c
 	$(CROSS)$(CC) -I. -isystem include $(CFLAGS) -c $< -o $@
 	$(COMMENT) -$(CROSS)strip -x -R .comment -R .note $@
 
+ifeq ($(shell $(CC) -v 2>&1 | grep "gcc version"),gcc version 4.0.0)
+SAFE_CFLAGS=$(shell echo $(CFLAGS)|sed 's/-Os/-O2/')
+SAFER_CFLAGS=$(shell echo $(CFLAGS)|sed 's/-Os/-O/')
+else
+SAFE_CFLAGS=$(CFLAGS)
+SAFER_CFLAGS=$(CFLAGS)
+endif
+
+$(OBJDIR)/crypt.o: libcrypt/crypt.c
+	$(CROSS)$(CC) -I. -isystem include $(SAFER_CFLAGS) -c $< -o $@
+
 DIETLIBC_OBJ = $(OBJDIR)/unified.o \
 $(SYSCALLOBJ) $(LIBOBJ) $(LIBSTDIOOBJ) $(LIBUGLYOBJ) \
 $(LIBCRUFTOBJ) $(LIBCRYPTOBJ) $(LIBSHELLOBJ) $(LIBREGEXOBJ) \
@@ -177,7 +189,7 @@ $(OBJDIR)/librpc.a: $(LIBRPCOBJ)
 
 $(OBJDIR)/libcrypt.a:
 	touch dummy.c
-	$(CROSS)gcc -c dummy.c
+	$(CROSS)$(CC) -c dummy.c
 	$(CROSS)ar cru $@ dummy.o
 	rm -f dummy.c dummy.o
 
@@ -199,8 +211,10 @@ $(OBJDIR)/libcompat.a: $(LIBCOMPATOBJ)
 $(OBJDIR)/libm.a: $(LIBMATHOBJ)
 	$(CROSS)ar cru $@ $(LIBMATHOBJ)
 
+LD_UNSET = env -u LD_RUN_PATH
+
 $(OBJDIR)/libdietc.so: $(OBJDIR)/dietlibc.a
-	LD_RUN_PATH= $(CROSS)ld -whole-archive -shared -o $@ $^
+	$(LD_UNSET) $(CROSS)ld -whole-archive -shared -o $@ $^
 
 dyn: dyn_lib
 
@@ -246,29 +260,32 @@ DYN_LIBCOMPAT_OBJS = $(patsubst $(OBJDIR)/%.o,$(PICODIR)/%.o,$(LIBCOMPATOBJ))
 DYN_LIBMATH_OBJS = $(patsubst $(OBJDIR)/%.o,$(PICODIR)/%.o,$(LIBMATHOBJ))
 
 $(PICODIR)/libc.so: $(PICODIR) $(DYN_LIBC_OBJ)
-	LD_RUN_PATH= $(CROSS)$(CC) -nostdlib -shared -o $@ $(CFLAGS) -fPIC $(DYN_LIBC_OBJ) -lgcc -Wl,-soname=libc.so
+	$(LD_UNSET) $(CROSS)$(CC) -nostdlib -shared -o $@ $(CFLAGS) -fPIC $(DYN_LIBC_OBJ) -lgcc -Wl,-soname=libc.so
 
 $(PICODIR)/libpthread.so: $(DYN_PTHREAD_OBJS) dietfeatures.h
-	LD_RUN_PATH= $(CROSS)$(CC) -nostdlib -shared -o $@ $(CFLAGS) -fPIC $(DYN_PTHREAD_OBJS) -L$(PICODIR) -lc -Wl,-soname=libpthread.so
+	$(LD_UNSET) $(CROSS)$(CC) -nostdlib -shared -o $@ $(CFLAGS) -fPIC $(DYN_PTHREAD_OBJS) -L$(PICODIR) -lc -Wl,-soname=libpthread.so
 
 $(PICODIR)/libdl.so: libdl/_dl_main.c dietfeatures.h
-	LD_RUN_PATH= $(CROSS)$(CC) -D__OD_CLEAN_ROOM -DNODIETREF -fPIC -nostdlib -shared -Bsymbolic -Wl,-Bsymbolic \
-		-o $@ $(CFLAGS) -I. -isystem include libdl/_dl_main.c -Wl,-soname=libdl.so
+	$(LD_UNSET) $(CROSS)$(CC) -D__OD_CLEAN_ROOM -DNODIETREF -fPIC -nostdlib -shared -Bsymbolic -Wl,-Bsymbolic \
+		-o $@ $(SAFE_CFLAGS) -I. -isystem include libdl/_dl_main.c -Wl,-soname=libdl.so
 
 #$(PICODIR)/libdl.so: $(DYN_LIBDL_OBJS) dietfeatures.h
 #	$(CROSS)$(CC) -nostdlib -shared -o $@ $(CFLAGS) -fPIC $(DYN_LIBDL_OBJS) -L$(PICODIR) -ldietc -Wl,-soname=libdl.so
 
 $(PICODIR)/libcompat.so: $(DYN_LIBCOMPAT_OBJS) dietfeatures.h
-	LD_RUN_PATH= $(CROSS)$(CC) -nostdlib -shared -o $@ $(CFLAGS) -fPIC $(DYN_LIBCOMPAT_OBJS) -L$(PICODIR) -lc -Wl,-soname=libcompat.so
+	$(LD_UNSET) $(CROSS)$(CC) -nostdlib -shared -o $@ $(CFLAGS) -fPIC $(DYN_LIBCOMPAT_OBJS) -L$(PICODIR) -lc -Wl,-soname=libcompat.so
 
 $(PICODIR)/libm.so: $(DYN_LIBMATH_OBJS) dietfeatures.h
-	LD_RUN_PATH= $(CROSS)$(CC) -nostdlib -shared -o $@ $(CFLAGS) -fPIC $(DYN_LIBMATH_OBJS) -L$(PICODIR) -lc -Wl,-soname=libm.so
+	$(LD_UNSET) $(CROSS)$(CC) -nostdlib -shared -o $@ $(CFLAGS) -fPIC $(DYN_LIBMATH_OBJS) -L$(PICODIR) -lc -Wl,-soname=libm.so
 
 
 $(SYSCALLOBJ): syscalls.h
 
 $(OBJDIR)/elftrunc: $(OBJDIR)/diet contrib/elftrunc.c
 	bin-$(MYARCH)/diet $(CROSS)$(CC) $(CFLAGS) -o $@ contrib/elftrunc.c
+
+$(OBJDIR)/dnsd: $(OBJDIR)/diet contrib/dnsd.c
+	bin-$(MYARCH)/diet $(CROSS)$(CC) $(CFLAGS) -o $@ contrib/dnsd.c
 
 VERSION=dietlibc-$(shell head -n 1 CHANGES|sed 's/://')
 CURNAME=$(notdir $(shell pwd))
@@ -282,11 +299,11 @@ $(OBJDIR)/diet-i: $(OBJDIR)/start.o $(OBJDIR)/dyn_start.o diet.c $(OBJDIR)/dietl
 	$(CROSS)strip -R .comment -R .note $@
 
 $(PICODIR)/diet-dyn: $(PICODIR)/start.o $(PICODIR)/dyn_start.o diet.c
-	LD_RUN_PATH= $(CROSS)$(CC) -isystem include $(CFLAGS) -fPIC -nostdlib -o $@ $^ -DDIETHOME=\"$(HOME)\" -D__DYN_LIB -DVERSION=\"$(VERSION)\" -L$(PICODIR) -lc -lgcc $(PICODIR)/dyn_stop.o -Wl,-dynamic-linker=$(HOME)/$(PICODIR)/libdl.so
+	$(LD_UNSET) $(CROSS)$(CC) -isystem include $(CFLAGS) -fPIC -nostdlib -o $@ $^ -DDIETHOME=\"$(HOME)\" -D__DYN_LIB -DVERSION=\"$(VERSION)\" -L$(PICODIR) -lc -lgcc $(PICODIR)/dyn_stop.o -Wl,-dynamic-linker=$(HOME)/$(PICODIR)/libdl.so
 	$(CROSS)strip -R .command -R .note $@
 
 $(PICODIR)/diet-dyn-i: $(PICODIR)/start.o $(PICODIR)/dyn_start.o diet.c
-	LD_RUN_PATH= $(CROSS)$(CC) -isystem include $(CFLAGS) -fPIC -nostdlib -o $@ $^ -DDIETHOME=\"$(prefix)\" -D__DYN_LIB -DVERSION=\"$(VERSION)\" -L$(PICODIR) -lc -lgcc $(PICODIR)/dyn_stop.o -Wl,-dynamic-linker=$(ILIBDIR)/libdl.so -DINSTALLVERSION
+	$(LD_UNSET) $(CROSS)$(CC) -isystem include $(CFLAGS) -fPIC -nostdlib -o $@ $^ -DDIETHOME=\"$(prefix)\" -D__DYN_LIB -DVERSION=\"$(VERSION)\" -L$(PICODIR) -lc -lgcc $(PICODIR)/dyn_stop.o -Wl,-dynamic-linker=$(ILIBDIR)/libdl.so -DINSTALLVERSION
 	$(CROSS)strip -R .command -R .note $@
 
 $(OBJDIR)/djb: $(OBJDIR)/compile $(OBJDIR)/load
@@ -307,7 +324,7 @@ clean:
 	$(MAKE) -C libdl clean
 
 tar: clean rename
-	cd ..; tar cvvf $(VERSION).tar.bz2 $(VERSION) --use=bzip2 --exclude CVS
+	cd ..; tar cvvf $(VERSION).tar.bz2 --use=bzip2 --exclude CVS $(VERSION)
 
 rename:
 	if test $(CURNAME) != $(VERSION); then cd .. && mv $(CURNAME) $(VERSION); fi
@@ -332,6 +349,7 @@ ifeq ($(MYARCH),$(ARCH))
 	$(INSTALL) $(OBJDIR)/diet-i $(DESTDIR)$(BINDIR)/diet
 	-$(INSTALL) $(PICODIR)/diet-dyn-i $(DESTDIR)$(BINDIR)/diet-dyn
 endif
+	$(INSTALL) -m 755 $(OBJDIR)/elftrunc $(OBJDIR)/dnsd $(DESTDIR)$(BINDIR)
 	-$(INSTALL) $(OBJDIR)/pstart.o $(OBJDIR)/libgmon.a $(OBJDIR)/dyn_start.o $(OBJDIR)/dyn_stop.o $(DESTDIR)$(ILIBDIR)
 	-$(INSTALL) $(PICODIR)/libc.so $(DESTDIR)$(ILIBDIR)/libc.so
 	-$(INSTALL) $(PICODIR)/libpthread.so $(DESTDIR)$(ILIBDIR)/libpthread.so
@@ -354,10 +372,17 @@ uninstall:
 	-rmdir $(DESTDIR)$(ILIBDIR) $(DESTDIR)$(MAN1DIR) $(DESTDIR)$(BINDIR)
 
 .PHONY: sparc ppc mips arm alpha i386 parisc mipsel powerpc s390 sparc64
-.PHONY: x86_64 ia64
+.PHONY: x86_64 ia64 ppc64 s390x
 
-arm sparc ppc alpha i386 mips parisc s390 sparc64 x86_64 ia64:
+arm sparc ppc alpha mips parisc s390 sparc64 x86_64 ia64 ppc64 s390x:
 	$(MAKE) ARCH=$@ CROSS=$@-linux- all
+
+i386:
+ifeq ($(MYARCH),x86_64)
+	$(MAKE) ARCH=$@ CC="$(CC) -m32" all
+else
+	$(MAKE) ARCH=$@ CROSS=$@-linux- all
+endif
 
 # Cross compile for little endian MIPS
 mipsel:
@@ -451,6 +476,9 @@ $(OBJDIR)/stat64.o $(OBJDIR)/fstat64.o $(OBJDIR)/lstat64.o: include/sys/stat.h
 
 # these depend on dietfeatures.h for WANT_INET_ADDR_DNS
 $(OBJDIR)/gethostbyname_r.o: dietfeatures.h
+
+# WANT_PLUGPLAY_DNS
+$(OBJDIR)/getaddrinfo.o: dietfeatures.h
 
 $(OBJDIR)/strsignal.o: include/signal.h
 

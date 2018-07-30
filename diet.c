@@ -26,8 +26,8 @@ static void error(const char *message) {
 
 static const char* Os[] = {
   "i386","-Os","-mpreferred-stack-boundary=2",
-	 "-malign-functions=1","-malign-jumps=1",
-	 "-malign-loops=1","-fomit-frame-pointer",0,
+	 "-falign-functions=1","-falign-jumps=1",
+	 "-falign-loops=1","-fomit-frame-pointer",0,
   "x86_64","-Os","-fno-omit-frame-pointer",0,
   "sparc","-Os","-mcpu=supersparc",0,
   "sparc64","-Os","-m64","-mhard-quad-float",0,
@@ -81,7 +81,9 @@ int main(int argc,char *argv[]) {
   char dashstatic[]="-static";
   int i;
   int mangleopts=0;
+  int printpath=0;
   char manglebuf[1024];
+  int m;
 
   if (!(diethome = getenv("DIETHOME")))
     diethome=DIETHOME;
@@ -108,11 +110,22 @@ int main(int argc,char *argv[]) {
     if (!strcmp(argv[1],"-v")) {
       ++argv; --argc;
       verbose=1;
-    } else if (argv[1] && !strcmp(argv[1],"-Os")) {
+    } else if (!strcmp(argv[1],"-Os")) {
       ++argv; --argc;
       mangleopts=1;
+    } else if (!strcmp(argv[1],"-L")) {
+      ++argv; --argc;
+      printpath=1;
     } else break;
   } while (1);
+  {
+    int i;
+    m=0;
+    for (i=1; i<argc; ++i) {
+      if (!strcmp(argv[i],"-m32")) m=32; else
+      if (!strcmp(argv[i],"-m64")) m=64;
+    }
+  }
   {
     char *cc=argv[1];
     char *tmp=strchr(cc,0)-2;
@@ -137,7 +150,7 @@ int main(int argc,char *argv[]) {
       shortplatform="sparc";
 #endif
 #endif
-#ifdef powerpc
+#ifdef __powerpc__
       shortplatform="ppc";
 #endif
 #ifdef __powerpc64__
@@ -169,10 +182,10 @@ int main(int argc,char *argv[]) {
       shortplatform="parisc";
 #endif
 #ifdef __x86_64__
-      shortplatform="x86_64";
+      shortplatform=(m==32?"i386":"x86_64");
 #endif
 #ifdef __ia64__
-	  shortplatform="ia64";
+      shortplatform="ia64";
 #endif
       {
 	char *tmp=platform+strlen(platform);
@@ -187,6 +200,10 @@ int main(int argc,char *argv[]) {
       for (i=1; i<argc; ++i)
 	if (!strcmp(argv[i],"-EL"))
 	  strcpy(shortplatform,"mipsel");
+    }
+    if (printpath) {
+      write(1,platform,strlen(platform));
+      return 0;
     }
     strcat(dashL,platform);
     if (strcmp(tmp,"ld")) {
@@ -268,6 +285,16 @@ pp:
 
       dest=newargv;
       *dest++=argv[1];
+      if (!strcmp(argv[2],"-V")) {
+	*dest++=argv[2];
+	*dest++=argv[3];
+	argv+=2;
+	argc-=2;
+      } else if (!memcmp(argv[2],"-V",2)) {
+	*dest++=argv[2];
+	++argv;
+	--argc;
+      }
 #ifndef __DYN_LIB
       if (_link) { *dest++=(char*)nostdlib; *dest++=dashstatic; *dest++=dashL; }
 #else
@@ -287,7 +314,8 @@ pp:
 #endif
       for (i=2; i<argc; ++i) {
 	if (mangleopts)
-	  if (argv[i][0]=='-' && (argv[i][1]=='O' || argv[i][1]=='f' || argv[i][1]=='m')) {
+	  if (argv[i][0]=='-' && (argv[i][1]=='O' || argv[i][1]=='f' ||
+				  (argv[i][1]=='m' && argv[i][2]!='3' && argv[i][2]!='6'))) {
 	    if (strcmp(argv[i],"-fpic") && strcmp(argv[i],"-fno-pic"))
 	      continue;
 	  }

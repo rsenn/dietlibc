@@ -7,18 +7,18 @@
 __BEGIN_DECLS
 
 struct winsize {
-  unsigned short ws_row;
-  unsigned short ws_col;
-  unsigned short ws_xpixel;
-  unsigned short ws_ypixel;
+  uint16_t ws_row;
+  uint16_t ws_col;
+  uint16_t ws_xpixel;
+  uint16_t ws_ypixel;
 };
 
 #define NCC 8
 struct termio {
-  unsigned short c_iflag;		/* input mode flags */
-  unsigned short c_oflag;		/* output mode flags */
-  unsigned short c_cflag;		/* control mode flags */
-  unsigned short c_lflag;		/* local mode flags */
+  uint16_t c_iflag;		/* input mode flags */
+  uint16_t c_oflag;		/* output mode flags */
+  uint16_t c_cflag;		/* control mode flags */
+  uint16_t c_lflag;		/* local mode flags */
   unsigned char c_line;		/* line discipline */
   unsigned char c_cc[NCC];	/* control characters */
 };
@@ -75,8 +75,8 @@ struct termio {
 #define N_HCI		15	/* Bluetooth HCI UART */
 
 typedef unsigned char	cc_t;
-typedef unsigned int	speed_t;
-typedef unsigned int	tcflag_t;
+typedef uint32_t	speed_t;
+typedef uint32_t	tcflag_t;
 
 #define _POSIX_VDISABLE '\0'
 
@@ -103,7 +103,7 @@ struct termios {
 	cc_t c_line;			/* line discipline */
 	cc_t c_cc[NCCS];		/* control characters */
 };
-#elif defined(powerpc) || defined(__powerpc64__) || defined(__alpha__)
+#elif defined(__powerpc__) || defined(__powerpc64__) || defined(__alpha__)
 #define NCCS	19
 struct termios {
 	tcflag_t c_iflag;		/* input mode flags */
@@ -167,7 +167,7 @@ struct termios {
 #define VLNEXT	15
 #define VEOF	16
 #define VEOL	17
-#elif defined(powerpc) || defined(__powerpc64__)
+#elif defined(__powerpc__) || defined(__powerpc64__)
 #define VINTR	0
 #define VQUIT	1
 #define VERASE	2

@@ -81,9 +81,10 @@
  * against glibc fail?  This may fail with older binutils. */
 #define WANT_SAFEGUARD
 
-/* this enables an experimental DNS hack of mine.
- * See http://www.fefe.de/ipv6pnpdns.html */
-// #define WANT_IPV6_PLUGPLAY_DNS
+/* This enables zeroconf DNS aka Rendezvous aka Bonjour. */
+/* This code will try zeroconf DNS if you ask for host.local or if you
+ * ask for an unqualified hostname */
+#define WANT_PLUGPLAY_DNS
 
 /* do you want that malloc(0) return a pointer to a "zero-length" object
  * that is realloc-able; means realloc(..,size) gives a NEW object (like a
@@ -98,7 +99,7 @@
 /* WARNING: this appears to break with some binutils versions.  Works
  * for me with binutils 2.15.  The symptom is an error message that
  * `main' can not be found. */
-#define WANT_STACKGAP
+/* #define WANT_STACKGAP */
 
 /* stop uncommenting here ;-) */
 #ifndef WANT_FASTER_STRING_ROUTINES

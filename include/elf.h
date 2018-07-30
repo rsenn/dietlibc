@@ -4,6 +4,7 @@
 /* Standard ELF types.  */
 
 #include <inttypes.h>
+#include <endian.h>
 
 __BEGIN_DECLS
 
@@ -869,7 +870,7 @@ typedef struct
 
 typedef struct
 {
-  int a_type;			/* Entry type */
+  int32_t a_type;		/* Entry type */
   union
     {
       long int a_val;		/* Integer value */
@@ -2420,6 +2421,14 @@ typedef Elf32_Addr Elf32_Conflict;
 #define R_X86_64_TPOFF32	23	/* Offset in initial TLS block */
 
 #define R_X86_64_NUM		24
+
+#if defined(__alpha__) || defined(__s390__)
+typedef uint64_t Elf_Symndx;
+#else
+typedef uint32_t Elf_Symndx;
+#endif
+
+#define __ELF_NATIVE_CLASS __WORDSIZE
 
 __END_DECLS
 

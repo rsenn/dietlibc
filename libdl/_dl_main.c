@@ -37,15 +37,26 @@ static unsigned long at_egid;
 static unsigned long at_pagesize;
 
 /* this are the "local syscalls" */
+__attribute__((noreturn,visibility("hidden")))
 void _dl_sys_exit(int val);
+__attribute__((visibility("hidden")))
 int _dl_sys_read(int fd,char*buf,unsigned long len);
+__attribute__((visibility("hidden")))
 int _dl_sys_write(int fd,char*buf,unsigned long len);
+__attribute__((visibility("hidden")))
 int _dl_sys_open(const char*filename,int flags,int mode);
+__attribute__((visibility("hidden")))
 int _dl_sys_close(int fd);
+__attribute__((visibility("hidden")))
 void*_dl_sys_mmap(void*start,unsigned long length,int prot,int flags,int fd,unsigned long offset);
+__attribute__((visibility("hidden")))
 int _dl_sys_munmap(void*start,unsigned long length);
+__attribute__((visibility("hidden")))
 int _dl_sys_mprotect(const void*addr,unsigned long len,int prot);
+__attribute__((visibility("hidden")))
 int _dl_sys_fstat(int filedes, struct stat *buf);
+__attribute__((visibility("hidden")))
+void _dl_jump(void);
 
 extern char*strdup(const char*s);
 extern void free(void*p);
@@ -169,8 +180,6 @@ static inline unsigned long* get_got(void) {
 }
 
 static inline int work_on_pltgot(struct _dl_handle*dh) {
-  /* declare _dl_jump static otherwise we have a GOT access BEFOR we have the resolver */
-  static void _dl_jump(void);
   if ((dh->plt_rel)&&(!(dh->flags&RTLD_NOW))) {
     unsigned long*tmp=dh->pltgot;
     /* GOT */
@@ -289,8 +298,6 @@ static inline unsigned long* get_got(void) {
 }
 
 static inline int work_on_pltgot(struct _dl_handle*dh) {
-  /* declare _dl_jump static otherwise we have a GOT access BEFOR we have the resolver */
-  static void _dl_jump(void);
   if ((dh->plt_rel)&&(!(dh->flags&RTLD_NOW))) {
     unsigned long*tmp=dh->pltgot;
     /* GOT */
@@ -402,8 +409,6 @@ static inline unsigned long* get_got(void) {
 }
 
 static inline int work_on_pltgot(struct _dl_handle*dh) {
-  /* declare _dl_jump static otherwise we have a GOT access BEFOR we have the resolver */
-  static void _dl_jump(void);
   if ((dh->plt_rel)&&(!(dh->flags&RTLD_NOW))) {
     unsigned long*tmp=dh->pltgot;
     /* GOT */
@@ -416,12 +421,14 @@ static inline int work_on_pltgot(struct _dl_handle*dh) {
 
 #elif defined(__sparc__)
 
-#warning "sparc is not tested yet... AND HAS NO RESOLVER !!!"
+#warning "sparc is not working !!! AND HAS NO RESOLVER !!!"
 
 /* ARG... sparc has EVERY variable (even static) only addressable through the GOT */
 
 asm(".text \n"
 ".align 16 \n"
+".global _start \n"
+".hidden _start \n"
 ".type _start,@function \n"
 "_start: \n"
 /* save some later needed values */
@@ -450,7 +457,8 @@ asm(".text \n"
 "	sub	%o7, %o4, %o4 \n"
 /* get 'relocated' address of _DYNAMIC (%o3) // call the dynamic linker */
 "	ld	[ %l7 ], %o3 \n"
-"	call	_dl_main \n"
+//"	call	_dl_main \n"
+"	call	_pr_ping \n"
 "	add	%o4, %o3, %o3 \n"
 /* put entry point to the return register */
 "	mov	%o0, %o7 \n"
@@ -465,13 +473,14 @@ asm(".text \n"
 "_pr_ping: \n"
 "	save \n"
 "1:	call	1f \n"
-"	mov	_pr_ping_str-1b, %o1 \n"
-"1:	add	%o7, %o1, %o1 \n"
+"	mov	_pr_ping_str-1b, %i1 \n"
+"1:	add	%o7, %i1, %i1 \n"
 "	restore \n"
-"	mov	2, %o0 \n"
 "	mov	6, %o2 \n"
-"	b	_dl_sys_call3 \n"
-"	mov	4, %g1 \n"
+"	call	_dl_sys_write \n"
+"	mov	2, %o0 \n"
+"	call	_dl_sys_exit \n"
+"	mov	0, %o0 \n"
 
 
 ".type _dl_sys_exit,@function \n"
@@ -480,7 +489,8 @@ asm(".text \n"
 ".type _dl_sys_call3,@function \n"
 "_dl_sys_call3: \n"
 "	ta	0x10 \n"
-"	ret \n"
+"	retl \n"
+"	nop \n"
 ".type _dl_sys_read,@function \n"
 "_dl_sys_read: \n"
 "	b	_dl_sys_call3 \n"
@@ -525,8 +535,6 @@ static inline unsigned long* get_got(void) {
 }
 
 static inline int work_on_pltgot(struct _dl_handle*dh) {
-  /* declare _dl_jump static otherwise we have a GOT access BEFOR we have the resolver */
-  static void _dl_jump(void);
   if ((dh->plt_rel)&&(!(dh->flags&RTLD_NOW))) {
     unsigned long*tmp=dh->pltgot;
     /* GOT */
@@ -545,7 +553,7 @@ static void*_dl_load(const char*fn,const char*pathname,int fd,int flags);
 /* here do the code includes */
 
 /* strncpy */
-static char*strncpy(register char*s,register const char*t,register unsigned long n) {
+static char*_dl_lib_strncpy(register char*s,register const char*t,register unsigned long n) {
   char *dest=s;
   for(;n;--n) {
     char ch=*t;
@@ -557,7 +565,7 @@ static char*strncpy(register char*s,register const char*t,register unsigned long
 }
 
 /* strlen.c */
-static unsigned long strlen(register const char*s) {
+static unsigned long _dl_lib_strlen(register const char*s) {
   register unsigned long i;
   if (!s) return 0;
   for (i=0; *s; ++s) ++i;
@@ -565,7 +573,7 @@ static unsigned long strlen(register const char*s) {
 }
 
 /* strcmp.c */
-static int strcmp(register const unsigned char*s,register const unsigned char*t) {
+static int _dl_lib_strcmp(register const unsigned char*s,register const unsigned char*t) {
   register char x;
   for (;;) {
     x = *s; if (x != *t) break; if (!x) break; ++s; ++t;
@@ -574,9 +582,9 @@ static int strcmp(register const unsigned char*s,register const unsigned char*t)
 }
 
 /* strcspn.c */
-static unsigned long strcspn(const char*s,const char*reject) {
+static unsigned long _dl_lib_strcspn(const char*s,const char*reject) {
   unsigned long l=0;
-  int a=1,i,al=strlen(reject);
+  int a=1,i,al=_dl_lib_strlen(reject);
   while((a)&&(*s)) {
     for(i=0;(a)&&(i<al);++i) if (*s==reject[i]) a=0;
     if (a) ++l;
@@ -586,7 +594,7 @@ static unsigned long strcspn(const char*s,const char*reject) {
 }
 
 /* memcpy.c */
-static void*memcpy(void*dst,const void*src,unsigned long count) {
+static void*_dl_lib_memcpy(void*dst,const void*src,unsigned long count) {
   register char *d=dst;
   register const char *s=src;
   ++count;
@@ -598,7 +606,7 @@ static void*memcpy(void*dst,const void*src,unsigned long count) {
 }
 
 /* memset.c */
-static void*memset(void*dst,int ch,unsigned long count) {
+static void*_dl_lib_memset(void*dst,int ch,unsigned long count) {
   register char *d=dst;
   ++count;
   while (--count) {
@@ -609,7 +617,7 @@ static void*memset(void*dst,int ch,unsigned long count) {
 }
 
 /* memcmp.c */
-static int memcmp(register const unsigned char*s,register const unsigned char*t,unsigned long count) {
+static int _dl_lib_memcmp(register const unsigned char*s,register const unsigned char*t,unsigned long count) {
   register int r;
   ++count;
   while(--count) {
@@ -622,16 +630,16 @@ static int memcmp(register const unsigned char*s,register const unsigned char*t,
 
 /* getenv.c */
 static char*getenv(const char*env) {
-  unsigned int i,len=strlen(env);
+  unsigned int i,len=_dl_lib_strlen(env);
   for (i=0;_dl_environ[i];++i) {
-    if ((memcmp(_dl_environ[i],env,len)==0) && (_dl_environ[i][len]=='='))
+    if ((_dl_lib_memcmp(_dl_environ[i],env,len)==0) && (_dl_environ[i][len]=='='))
       return _dl_environ[i]+len+1;
   }
   return 0;
 }
 
 /* basic debug output functions */
-static void pf(const char*s) { _dl_sys_write(2,(void*)s,strlen(s)); }
+static void pf(const char*s) { _dl_sys_write(2,(void*)s,_dl_lib_strlen(s)); }
 static void ph(unsigned long l) {
   const int max=(sizeof(unsigned long)<<1);
   unsigned char buf[16];
@@ -649,14 +657,14 @@ static unsigned long _dl_lib_strdup_len=0;
 static char*_dl_lib_strdup_str;
 static char*_dl_lib_strdup(const char*s) {
   char*ret=_dl_lib_strdup_str;
-  unsigned long l=strlen(s)+1;
+  unsigned long l=_dl_lib_strlen(s)+1;
   if (_dl_lib_strdup_len<l) {
     ret=(char*)_dl_sys_mmap(0,at_pagesize,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS,-1,0);
     _dl_lib_strdup_len=at_pagesize;
   }
   _dl_lib_strdup_str=ret+l;
   _dl_lib_strdup_len-=l;
-  memcpy(ret,s,l);
+  _dl_lib_memcpy(ret,s,l);
   return ret;
 }
 
@@ -707,6 +715,7 @@ static void tt_fini(void) {
 }
 
 /* exit ! */
+__attribute__((noreturn))
 static void _DIE_() { _dl_sys_exit(213); }
 
 /* lazy function resolver */
@@ -802,7 +811,7 @@ err_out_close:
     if (m==MAP_FAILED) goto err_out_free;
     /* zero pad bss */
     l=ld[0]->p_offset+ld[0]->p_filesz;
-    memset(m+l,0,length-l);
+    _dl_lib_memset(m+l,0,length-l);
 
     ret->mem_base=m;
     ret->mem_size=length;
@@ -845,7 +854,7 @@ err_out_free:
 
     /* zero pad bss */
     l=data_off+ld[1]->p_filesz;
-    memset(d+l,0,data_fsize-l);
+    _dl_lib_memset(d+l,0,data_fsize-l);
     /* more bss ? */
     if (data_size>data_fsize) {
       l=data_size-data_fsize;
@@ -902,7 +911,7 @@ static struct _dl_handle* _dl_dyn_scan(struct _dl_handle*dh,Elf_Dyn*_dynamic) {
 
       /* BASIC DYNAMIC STUFF */
     case DT_HASH:
-      dh->hash_tab = (unsigned long*)(dh->mem_base+_dynamic[i].d_un.d_ptr);
+      dh->hash_tab = (unsigned int*)(dh->mem_base+_dynamic[i].d_un.d_ptr);
 #ifdef DEBUG
       pf(__FUNCTION__); pf(": have hash @ "); ph((long)dh->hash_tab); pf("\n");
 #endif
@@ -1283,7 +1292,7 @@ unsigned long _dl_main(int argc,char*argv[],char*envp[],unsigned long _dynamic) 
     return (unsigned long)_DIE_;
   }
 
-  memset(&my_dh,0,sizeof(my_dh));
+  _dl_lib_memset(&my_dh,0,sizeof(my_dh));
   my_dh.mem_base=(char*)loadaddr;
   my_dh.mem_size=0;
   my_dh.lnk_count=1024;
@@ -1318,7 +1327,7 @@ unsigned long _dl_main(int argc,char*argv[],char*envp[],unsigned long _dynamic) 
   mydh=_dl_get_handle();
   {
     register struct _dl_handle*tmp=mydh->prev;
-    memcpy(mydh,&my_dh,sizeof(struct _dl_handle));
+    _dl_lib_memcpy(mydh,&my_dh,sizeof(struct _dl_handle));
     mydh->prev=tmp;
   }
   got[1]=(unsigned long)mydh;

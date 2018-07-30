@@ -8,6 +8,7 @@ __BEGIN_DECLS
 #define __WANT_POSIX1B_SIGNALS__
 
 #include <sys/types.h>
+#include <endian.h>
 
 #define NSIG		32
 
@@ -31,7 +32,7 @@ __BEGIN_DECLS
 #define SIGALRM		14
 #define SIGTERM		15
 #define SIGUNUSED	31
-#if defined(__i386__) || defined(__x86_64__) || defined(powerpc) || defined(__arm__) \
+#if defined(__i386__) || defined(__x86_64__) || defined(__powerpc__) || defined(__arm__) \
 	|| defined(__s390__) || defined(__ia64__) || defined(__powerpc64__)
 #define SIGBUS		 7
 #define SIGUSR1		10
@@ -241,14 +242,24 @@ typedef union sigval {
 } sigval_t;
 
 #define SI_MAX_SIZE	128
-#define SI_PAD_SIZE	((SI_MAX_SIZE/sizeof(int)) - 3)
+#if __WORDSIZE == 64
+#define SI_PAD_SIZE	((SI_MAX_SIZE/sizeof(int32_t)) - 4)
+#else
+#define SI_PAD_SIZE	((SI_MAX_SIZE/sizeof(int32_t)) - 3)
+#endif
+
+#ifdef __sparc_v9__
+typedef int __band_t;
+#else
+typedef long __band_t;
+#endif
 
 typedef struct siginfo {
-  int si_signo;
-  int si_errno;
-  int si_code;
+  int32_t si_signo;
+  int32_t si_errno;
+  int32_t si_code;
   union {
-    int _pad[SI_PAD_SIZE];
+    int32_t _pad[SI_PAD_SIZE];
     /* kill() */
     struct {
       pid_t _pid;		/* sender's pid */
@@ -279,7 +290,7 @@ typedef struct siginfo {
     } _sigfault;
     /* SIGPOLL */
     struct {
-      int _band;	/* POLL_IN, POLL_OUT, POLL_MSG */
+      __band_t _band;	/* POLL_IN, POLL_OUT, POLL_MSG */
       int _fd;
     } _sigpoll;
   } _sifields;
@@ -536,7 +547,7 @@ int sigtimedwait(const sigset_t *mask, siginfo_t *info, const struct timespec *t
 int sigqueueinfo(int pid, int sig, siginfo_t *info) __THROW;
 int siginterrupt(int sig, int flag) __THROW;
 
-int killpg(int pgrp, int sig) __THROW;
+int killpg(pid_t pgrp, int sig) __THROW;
 
 /* 0 is OK ! kernel puts in MAX_THREAD_TIMEOUT :) */
 #define sigwaitinfo(m, i) sigtimedwait((m),(i),0)

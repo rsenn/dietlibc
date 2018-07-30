@@ -14,25 +14,26 @@ static const char *_dl_search_rpath=0;
 #include <string.h>
 void _dl_set_rpath(const char *path) { _dl_search_rpath=path; }
 const char* _dl_get_rpath() { return _dl_search_rpath; }
+#define _dl_lib_memcpy memcpy
 #endif
 
 /* search a colon (semicolon) seperated path for the libraray "filename" */
 static int _dl_search_path(char*buf,int len,const char*path,const int pathlen,const char*filename) {
-  int fd,i=1,fl=strlen(filename),ml=len-fl;
+  int fd,i=1,fl=_dl_lib_strlen(filename),ml=len-fl;
   const char*c,*pe=path+pathlen;
 
   if (path) {
     for (c=path;c<pe;c+=i) {
       int l=len-1;
       if ((*c==':')||(*c==';')) ++c;
-      i=strcspn(c,":;");
+      i=_dl_lib_strcspn(c,":;");
       if (i) {
 	if (i>ml) continue;	/* if len(path-entry)+len(filename)+2 is greater than the buffer ? SKIP */
-	memcpy(buf,c,i);
+	_dl_lib_memcpy(buf,c,i);
 	buf[i]='/';
 	l-=++i;
       }
-      memcpy(buf+i,filename,fl);
+      _dl_lib_memcpy(buf+i,filename,fl);
       buf[i+fl]=0;
 #ifdef DEBUG
 //      pf(__func__": "); pf(buf); pf("\n");
@@ -81,7 +82,7 @@ int _dl_search(char*buf,int len,const char*filename) {
 
   /* 1. search the LD_RUN_PATH (from the executable) */
   if (_dl_search_rpath) {
-    if ((fd=_dl_search_path(buf,len,_dl_search_rpath,strlen(_dl_search_rpath),filename))!=-1) return fd;
+    if ((fd=_dl_search_path(buf,len,_dl_search_rpath,_dl_lib_strlen(_dl_search_rpath),filename))!=-1) return fd;
   }
 
   /* 2. IF we have a "secure" enviroment THEN search LD_LIBRARY_PATH */
@@ -92,7 +93,7 @@ int _dl_search(char*buf,int len,const char*filename) {
 #endif
     char *p=getenv("LD_LIBRARY_PATH");
     if (p)
-      if ((fd=_dl_search_path(buf,len,p,strlen(p),filename))!=-1) return fd;
+      if ((fd=_dl_search_path(buf,len,p,_dl_lib_strlen(p),filename))!=-1) return fd;
   }
 
   /* 3. search all pathes in the the /etc/diet.ld.conf, a dietlibc extension :) */
@@ -106,6 +107,6 @@ int _dl_search(char*buf,int len,const char*filename) {
   /* default path search */
   {
     const char def_path[]="/usr/lib:/lib";
-    return _dl_search_path(buf,len,def_path,strlen(def_path),filename);
+    return _dl_search_path(buf,len,def_path,_dl_lib_strlen(def_path),filename);
   }
 }
