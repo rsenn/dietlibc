@@ -526,6 +526,10 @@
 
 #ifndef __ASSEMBLER__
 
+#include <sys/cdefs.h>
+
+__BEGIN_DECLS
+
 #ifndef _REENTRANT
 extern int errno;
 #else
@@ -537,9 +541,12 @@ extern int *__errno_location(void);
 #define __set_errno(x) errno=(x)
 
 #ifdef _BSD_SOURCE
-extern const char *const sys_errlist[];
-extern int sys_nerr;
+/* don't use, use strerror() instead! */
+extern const char *const sys_errlist[] __attribute_dontuse__;
+extern int sys_nerr __attribute_dontuse__;
 #endif
+
+__END_DECLS
 
 #endif
 

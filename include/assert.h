@@ -3,10 +3,7 @@
 
 #include <sys/cdefs.h>
 
-/* This prints an "Assertion failed" message and aborts.  */
-extern void __assert_fail (const char *__assertion, const char *__file,
-			   unsigned int __line, const char *__function)
-     __THROW __attribute__ ((__noreturn__));
+__BEGIN_DECLS
 
 #ifdef __PRETTY_FUNCTION__
 #define __ASSERT_FUNCTION __PRETTY_FUNCTION__
@@ -20,11 +17,17 @@ extern void __assert_fail (const char *__assertion, const char *__file,
 
 #undef assert
 #ifdef NDEBUG
-#define assert(expr)
+#define assert(expr) ((void)0)
 #else
+
+/* This prints an "Assertion failed" message and aborts.  */
+extern void __assert_fail (const char *__assertion, const char *__file,
+			   unsigned int __line, const char *__function)
+     __THROW __attribute__ ((__noreturn__));
+
 #ifdef expect
 # define assert(expr)							      \
-  ((void) (expect((int)expr,0) ? 0 :					      \
+  ((void) (expect((long)(expr),0) ? 0 :					      \
 	   (__assert_fail (#expr,				      \
 			   __FILE__, __LINE__, __ASSERT_FUNCTION), 0)))
 #else
@@ -34,5 +37,7 @@ extern void __assert_fail (const char *__assertion, const char *__file,
 			   __FILE__, __LINE__, __ASSERT_FUNCTION), 0)))
 #endif
 #endif
+
+__END_DECLS
 
 #endif

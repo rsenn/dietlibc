@@ -222,3 +222,42 @@ A: The kernel is not linked against any libc.  In fact, the libc is the
    against the diet libc.  Linking user space Linux with the diet libc
    should be possible in theory but I don't think anyone has actually
    tried it.
+
+
+Q: I get errors when cross compiling the diet libc with the Hard Hat
+   compiler chain.
+A: Their compiler and/or binutils is broken.  Compile your own.  At the
+   time of this writing, I am successfully using gcc 3.1.1 and binutils
+   2.12.1 to compile the diet libc 0.22.
+
+
+Q: I can't link this software; it uses functions like ftok and cuserid.
+A: Some obsolete and/or questionable functions have been put into
+   libcompat.a to quarantine them away.  If your software uses these
+   functions, it is broken.  Please go through the code and replace
+   these functions with their POSIX counterparts or get rid of it
+   altogether.
+
+
+Q: Compiling software with "diet -Os gcc..." gives error messages about
+   -malign-loops, -malign-jumps and -malign-functions being obsolete.
+A: diet -Os uses some platform dependant gcc options to create tighter
+   code.  Unfortunately, these options have been renamed on gcc 3.  You
+   can fix this by creating a file ~/.diet/gcc containing this line:
+
+     -Os -fomit-frame-pointer -falign-functions=0 -falign-jumps=0 -falign-loops=0 -mpreferred-stack-boundary=2
+
+   If you get this options not for diet -Os gcc but for diet -Os
+   i386-linux-gcc, put this in ~/.diet/i386-linux-gcc instead.
+
+
+Q: I see lots of uninitialized variables, like "static int foo;".  What gives?
+A: "static" global variables are initialized to 0.  ANSI C guarantees that.
+   Technically speaking, static variables go into the .bss ELF segment,
+   while "static int foo=0" goes into .data.  Because .bss is zero
+   filled by the OS, it does not need to be in the actual binary.  So it
+   is in fact better to not initialize static variables if the desired
+   initialization value is 0 anyway.  The same is true for pointers, by
+   the way.  On all platforms supported by the diet libc, numeric zero
+   is also the pointer value for NULL.  So not initializing a static
+   pointer yields NULL.

@@ -1,6 +1,15 @@
 
 #include <dietfeatures.h>
 
+#ifdef WANT_SYSENTER
+.data
+.type __vsyscall,@object
+.global __vsyscall
+__vsyscall:
+.Lvsyscall:
+.long	.Lcallint80
+#endif
+
 .text
 .global __unified_syscall_256
 .type __unified_syscall_256,@function
@@ -33,7 +42,11 @@ __unified_syscall:
 	movl	0x18(%edi),%edx
 	movl	0x1c(%edi),%esi
 	movl	0x20(%edi),%edi
+#ifdef WANT_SYSENTER
+	call	*.Lvsyscall /* 0xffffe000 */
+#else
 	int	$0x80
+#endif
 	cmp	$-124,%eax
 	jbe	.Lnoerror
 	neg	%eax
@@ -57,3 +70,8 @@ __unified_syscall:
 	ret
 .L3:
 .size __unified_syscall,.L3-__unified_syscall
+#ifdef WANT_SYSENTER
+.Lcallint80:
+	int	$0x80
+	ret
+#endif

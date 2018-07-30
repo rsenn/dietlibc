@@ -5,6 +5,8 @@
 #include <sys/socket.h>
 #include <endian.h>
 
+__BEGIN_DECLS
+
 /* Standard well-defined IP protocols.  */
 enum {
   IPPROTO_IP = 0,		/* Dummy protocol for TCP		*/
@@ -354,10 +356,10 @@ struct ipv6hdr {
 #undef htons
 #undef ntohl
 #undef ntohs
-unsigned long int htonl(unsigned long int hostlong);
-unsigned short int htons(unsigned short int hostshort);
-unsigned long int ntohl(unsigned long int netlong);
-unsigned short int ntohs(unsigned short int netshort);
+uint32_t htonl(uint32_t hostlong);
+uint16_t htons(uint16_t hostshort);
+uint32_t ntohl(uint32_t netlong);
+uint16_t ntohs(uint16_t netshort);
 
 #define IN6_IS_ADDR_UNSPECIFIED(a) \
 	(((__const uint32_t *) (a))[0] == 0				      \
@@ -399,6 +401,28 @@ unsigned short int ntohs(unsigned short int netshort);
 	 && (((__const uint32_t *) (a))[3] == ((__const uint32_t *) (b))[3]))
 
 /* old legacy bullshit */
-int bindresvport(int sd, struct sockaddr_in* sin);
+int bindresvport(int sd, struct sockaddr_in* _sin);
+
+#define IN6_IS_ADDR_MC_NODELOCAL(a) \
+	(IN6_IS_ADDR_MULTICAST(a)					      \
+	 && ((((__const uint8_t *) (a))[1] & 0xf) == 0x1))
+
+#define IN6_IS_ADDR_MC_LINKLOCAL(a) \
+	(IN6_IS_ADDR_MULTICAST(a)					      \
+	 && ((((__const uint8_t *) (a))[1] & 0xf) == 0x2))
+
+#define IN6_IS_ADDR_MC_SITELOCAL(a) \
+	(IN6_IS_ADDR_MULTICAST(a)					      \
+	 && ((((__const uint8_t *) (a))[1] & 0xf) == 0x5))
+
+#define IN6_IS_ADDR_MC_ORGLOCAL(a) \
+	(IN6_IS_ADDR_MULTICAST(a)					      \
+	 && ((((__const uint8_t *) (a))[1] & 0xf) == 0x8))
+
+#define IN6_IS_ADDR_MC_GLOBAL(a) \
+	(IN6_IS_ADDR_MULTICAST(a)					      \
+	 && ((((__const uint8_t *) (a))[1] & 0xf) == 0xe))
+
+__END_DECLS
 
 #endif

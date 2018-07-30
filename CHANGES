@@ -1,3 +1,81 @@
+0.23:
+  update sys/soundcard.h
+  various x86_64 fixes (Gwenole Beauchesne)
+  fix assert for 64-bit platforms (Gwenole Beauchesne)
+  remove many warning from test suite (Gwenole Beauchesne)
+  hopefully fix resolver (again, Gwenole)
+  fix floorl typo (Norbert Wolff)
+  add more BSD brokenness to time.h
+  forward poll.h to sys/poll.h
+  make DNS socket close-on-exec (Felix J. Ogris)
+  add cuserid to libcompat (Andreas Krennmair)
+  add ctermid and ftok to libcompat (those are _really_ ugly)
+  copy some RPC bugfix cruft from glibc
+    warning: I don't use rpc or xdr, I don't actually understand or have
+    a way to test this.  Maybe I should remove this cruft from the
+    diet libc...?
+  make declaration of writev and readv match susv3
+  add finite (Andreas Krennmair)
+  move flock+constants to unistd.h (the Linux man page is wrong on this)
+  fix assert (Andreas Krennmair)
+  add modf, libm fixes (Andreas Krennmair)
+  rename __pure__ to __pure (Laurent Bercot)
+  utmp x86_64 biarch support (Gwenole Beauchesne)
+  add fgetpwent (Alvaro Gomes Sobral Barcellos)
+  add vsyscall support for linux 2.5 on recent CPUs
+  add a few new 2.5 syscalls, adapt to renamed epoll syscalls
+  Olaf: fixing the vsyscall support so that the binaries still work on 2.4
+  remove getline macro, caused problems with GNU sed
+  make assert equal (void)0 under -DNDEBUG (Enrico Scholz)
+  make __attribute_malloc__ #define safe (Matthias Andree)
+  add BSD utimes to libcompat (Andreas Krennmair)
+  remove gcc 3 #ifdef kludgery from include/string.h; it works with gcc
+    3.2.2+, don't know if it's gcc or us (Gerrit Pape)
+  remove _null_auth declaration in librpc/rpc_prot.c (Thayne Harbaugh)
+  fix regex bug with ^$ not matching "" (Anthony de Boer)
+  Olaf: removing "<arch>/mmap.*" where no arch-specific impementation is
+      needed. (added "syscalls.s/mmap.S")
+    - fixing the vsyscall in the dynamic library... (self made problem)
+    - removing warning in "res_query.c"
+    - changing type of stream-mutex to recursive
+    - sparc/sparc64: shrink of the unified syscall and the special syscalls
+      (fork/pipe) to use the "unified_syscall_error_handler"
+  add sendfile64 backwards compatibility glue
+  add __attribute_dontuse__ to declare a few functions as deprecated
+  use above to flag a few BSDisms ;-)
+  include <sys/cdefs.h> in errno.h, fixes __attribute_dontuse__ breakage
+  endmntent now returns 1 (Florian Westphal)
+  strtoul return value fixes (Jan Bobrowski)
+  Olaf: fixing the diet wrapper for sparc and changing the options for mips
+  a few i386/*.S fixes (Hynek Schlawack)
+  remove =0 for static variables (Thomas Ogrisegg)
+  fix strtoul (broke getaddrinfo and ssh)
+  fix segfault in parser
+  Olaf: checkin of the new libpthread implementation & added confstr
+  Make gethostbyname2 case insensitive (Thomas Ogrisegg)
+  RPC 64-bit cleanliness fixes (Gwenole Beauchesne)
+  sysctl fix (Thomas Ogrisegg)
+  make header files C++ compliant (__BEGIN_DECLS and __END_DECLS)
+  remove more warnings (Yuri Kozlov)
+  use expect() in a few strategic places
+  try to add sigcontext and ucontext for x86_64
+  add ffs, ffsl, ffsll
+  Olaf: fixing the error string list and sparc bug (Gerrit Pape)
+  first throw, then attributes (Andreas Jabs)
+  unbuffered fputc was broken on big endian (big oops, thanks Gerrit Pape)
+  fix parisc struct stat (Gerrit Pape)
+  add vasprintf (for elinks)
+  fnmatch used [^e] instead of [!e] for negation (Heiko Berges)
+  add sparc and parisc assembly routines (Thomas Ogrisegg)
+  add swab (Johannes Stezenbach)
+  make a{4} match exactly and not at least 4 times a (Ingo Oeser)
+  Olaf: fixed a libdl ref-counter bug (Thomas Walpuski)
+  All hail to the busybox chiefs!  Instead of reporting bugs they find,
+    they put a #error in their source code.  Is Erik seeing the diet
+    libc as uClibc competition that needs to be squashed even with
+    unfair methods?  People, if you find bugs, tell us!
+  Fixed fputc and freopen (found in busybox comments)
+
 0.22:
   fix i386 libm
   fix netinet/ip_icmp.h (Rui Prior)

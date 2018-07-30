@@ -34,11 +34,11 @@ void dumparray() {
 void isort(void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *));
 void isort(void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *)) {
   size_t i;
-  while (expect(nmemb>1,1)) {
+  while (__likely(nmemb>1)) {
     char *min=base;
     char *tmp=min+size;
     for (i=1; i<nmemb; ++i) {
-      if (expect(compar(tmp,min)<0,0))
+      if (__unlikely(compar(tmp,min)<0))
 	min=tmp;
       tmp+=size;
     }
@@ -54,7 +54,7 @@ void qsort(void *base, size_t nmemb, size_t size, int (*compar)(const void *, co
   char *dmax=base+(nmemb-1)*size;
   char dmemb=nmemb;
 #endif
-  static int level=0;
+//  static int level=0;
   char* v;	/* pivot */
   char* mid, *max, *min;
   size_t lmemb;
@@ -69,7 +69,7 @@ void qsort(void *base, size_t nmemb, size_t size, int (*compar)(const void *, co
   assert(left>=0 && right<=1000);
 #endif
   if (nmemb<=8) {
-    --level;
+//    --level;
     return isort(base,nmemb,size,compar);
   }
   {
@@ -99,8 +99,8 @@ void qsort(void *base, size_t nmemb, size_t size, int (*compar)(const void *, co
   v=max;
   min=base; lmemb=0;
   for (;;) {
-    while (expect(compar(min,v)<0,1)) { min+=size; ++lmemb; }
-    while (expect(compar(max-=size,v)>0,1)) ;
+    while (__likely(compar(min,v)<0)) { min+=size; ++lmemb; }
+    while (__likely(compar(max-=size,v)>0)) ;
     if (min>=max) break;
     iswap(min,max,size);
   }
@@ -123,5 +123,5 @@ void qsort(void *base, size_t nmemb, size_t size, int (*compar)(const void *, co
 //    printf("+-right %d [%d..%d] of [%d..%d]\n",level+1,left+lmemb,right,left,right);
     qsort(min+size,nmemb-lmemb-1,size,compar);
   }
-  --level;
+//  --level;
 }

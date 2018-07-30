@@ -12,16 +12,17 @@ _exit:
 .global __unified_syscall
 __unified_syscall:
 	ta	0x10
+	bcs	1f
+	nop
 
-	bcc	1f
-	save	%sp, -104, %sp
+/* here we go and "reuse" the return for weak-void functions */
+#include "dietuglyweaks.h"
+	retl
+	nop
 
-	neg	%i0, %i0
-1:
-	add	%i0, 0xff, %l2
-	cmp	%l2, 0xfe
-	bgu	2f
-	neg	%i0, %l3
+.global __unified_syscall_error_handler
+__unified_syscall_error_handler:
+1:	save	%sp, -96, %sp
 #ifdef WANT_THREAD_SAFE
 	call	__errno_location
 	nop
@@ -29,8 +30,7 @@ __unified_syscall:
 	sethi	%hi(errno), %o0
 	or	%o0, %lo(errno), %o0
 #endif
-	st	%l3, [ %o0 ]
-	mov	-1, %i0
-2:
+	st	%i0, [ %o0 ]
 	ret
-	restore
+	restore %g0, -1, %o0
+

@@ -7,8 +7,10 @@
 #include <sys/stat.h>
 #include <sys/fsuid.h>
 
-extern int optind,opterr;
-extern char *optarg;
+__BEGIN_DECLS
+
+int optind,opterr;
+char *optarg;
 int getopt(int argc, char *const argv[], const char *options);
 
 /* Values for the second argument to access.
@@ -19,7 +21,7 @@ int getopt(int argc, char *const argv[], const char *options);
 #define F_OK 0 /* Test for existence.  */
 
 /* Test for access to NAME using the real UID and real GID.  */
-extern int access (const char *__name, int __type) __THROW;
+int access (const char *__name, int __type) __THROW;
 
 #ifndef SEEK_SET
 #define SEEK_SET 0
@@ -116,7 +118,7 @@ int isatty(int desc) __THROW;
 
 void _exit(int status) __THROW __attribute__((noreturn));
 
-extern int daemon(int nochdir,int noclose) __THROW;
+int daemon(int nochdir,int noclose) __THROW;
 
 int pause(void) __THROW;
 
@@ -128,7 +130,7 @@ int pause(void) __THROW;
 #define getdents getdents64
 #endif
 
-extern char* getlogin(void) __THROW;
+char* getlogin(void) __THROW;
 /* warning: the diet libc getlogin() simply returns getenv("LOGNAME") */
 
 int chroot(const char *path) __THROW;
@@ -158,7 +160,7 @@ int select(int n, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct t
 
 int nice(int inc) __THROW;
 
-extern char **__environ;
+char **__environ;
 
 char *crypt(const char *key, const char *salt) __THROW;
 void encrypt(char block[64], int edflag) __THROW;
@@ -179,6 +181,9 @@ int llseek(int fildes, unsigned long hi, unsigned long lo, loff_t* result,int wh
 /* include <linux/sysctl.h> to get all the definitions! */
 struct __sysctl_args;
 int _sysctl(struct __sysctl_args *args) __THROW;
+
+#define _CS_PATH 1
+size_t confstr(int name,char*buf,size_t len) __THROW;
 
 #define _SC_CLK_TCK 1
 #define _SC_ARG_MAX 2
@@ -223,11 +228,29 @@ int setresuid32(uid32_t ruid, uid32_t euid, uid32_t suid) __THROW;
 int setresgid32(gid32_t rgid, gid32_t egid, gid32_t sgid) __THROW;
 
 #ifdef _BSD_SOURCE
-char *getusershell(void);
-void setusershell(void);
-void endusershell(void);
+char *getusershell(void) __attribute_dontuse__;
+void setusershell(void) __attribute_dontuse__;
+void endusershell(void) __attribute_dontuse__;
 #endif
 
+/* this is so bad, we moved it to -lcompat */
+#define   L_cuserid   17
+char * cuserid(char * string); /* ugh! */
+
 #define   _POSIX_VERSION  199506L
+
+#define F_ULOCK 0	/* Unlock a previously locked region.  */
+#define F_LOCK  1	/* Lock a region for exclusive use.  */
+#define F_TLOCK 2	/* Test and lock a region for exclusive use.  */
+#define F_TEST  3	/* Test a region for other processes locks.  */
+
+int lockf (int __fd, int __cmd, off_t __len) __THROW;
+int lockf64 (int __fd, int __cmd, off64_t __len) __THROW;
+
+void swab(const void *src, void *dest, ssize_t nbytes) __THROW;
+
+int vhangup(void) __THROW;
+
+__END_DECLS
 
 #endif

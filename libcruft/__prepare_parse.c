@@ -15,5 +15,8 @@ void __prepare_parse(const char* filename,struct state* s) {
     if (s->buffirst==(const unsigned char*)-1)
       s->buffirst=0;
     close(fd);
+  } else {
+    s->buflen=0;
+    s->buffirst=0;
   }
 }

@@ -3,6 +3,8 @@
 
 #include <sys/cdefs.h>
 
+__BEGIN_DECLS
+
 #define __WANT_POSIX1B_SIGNALS__
 
 #include <sys/types.h>
@@ -124,13 +126,13 @@
 #endif
 
 #define SIGCLD		SIGCHLD
-#define SIGLOST		SIGPWR
 #define SIGPOLL		SIGIO
 
 /* These should not be considered constants from userland.  */
 #ifdef __hppa__
 #define SIGRTMIN	37
 #else
+#define SIGLOST		SIGPWR
 #define SIGRTMIN	32
 #endif
 #define SIGRTMAX	(_NSIG-1)
@@ -496,5 +498,9 @@ int killpg(int pgrp, int sig) __THROW;
 #define sigwaitinfo(m, i) sigtimedwait((m),(i),0)
 
 extern const char *const sys_siglist[];
+
+#include <sys/ucontext.h>
+
+__END_DECLS
 
 #endif

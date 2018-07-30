@@ -1,6 +1,10 @@
 #ifndef _SYS_SELECT_H
 #define _SYS_SELECT_H
 
+#include <string.h>
+
+__BEGIN_DECLS
+
 typedef long int fd_mask;
 
 #define NFDBITS	(8 * sizeof(unsigned long))
@@ -18,5 +22,7 @@ typedef struct {
 #define FD_ISSET(d, set)	(((set)->fds_bits[__FDELT(d)] & __FDMASK(d)) != 0)
 #define FD_ZERO(set)	\
   ((void) memset ((void*) (set), 0, sizeof (fd_set)))
+
+__END_DECLS
 
 #endif

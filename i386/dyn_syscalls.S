@@ -10,6 +10,20 @@
 #include "syscalls.h"
 #include "PIC.h"
 
+#ifdef WANT_SYSENTER
+.data
+.type __vsyscall,@object
+.global __vsyscall
+__vsyscall:
+.Lvsyscall:
+.long	.Lcallint80
+
+.text
+.Lcallint80:
+	int	$0x80
+	ret
+#endif
+
 /* ok now include all syscalls.s (*.S) and sysdep *.S */
 
 #include "mmap.S"
@@ -60,10 +74,9 @@
 .text
 .type __unified_syscall_256,@function
 __unified_syscall_256:
-	movzwl %ax, %eax
-	jmp .L23
-.L22:
-.size __unified_syscall_256,.L22-__unified_syscall_256
+	movzwl	%ax, %eax
+	jmp	1f
+.size __unified_syscall_256,.-__unified_syscall_256
 .type exit,@function
 .weak exit
 exit:
@@ -74,24 +87,39 @@ __exit:
 	mov $__NR_exit, %al
 __unified_syscall:
 	movzbl	%al, %eax
-.L23:
+1:
 	push	%edi
 	push	%esi
 	push	%ebx
 	movl	%esp,%edi
+#ifdef WANT_SYSENTER
+	/* PIC-code ... */
+	pushl	%ebp
+	PIC_INIT
+	movl	.Lvsyscall@GOTOFF(%ebx),%ebp
+	pushl	%ebx
+#endif
 	movl	0x10(%edi),%ebx
 	movl	0x14(%edi),%ecx
 	movl	0x18(%edi),%edx
 	movl	0x1c(%edi),%esi
 	movl	0x20(%edi),%edi
+#ifdef WANT_SYSENTER
+	call	*%ebp
+	popl	%ebx
+	popl	%ebp
+#else
 	int	$0x80
+#endif
 	cmp	$-124,%eax
 	jbe	.Lnoerror
 	neg	%eax
 
 	/* PIC-code Ohhhhh My. */
 	push	%eax
+#ifndef WANT_SYSENTER
 	PIC_INIT
+#endif
 	call	__errno_location@PLT
 	popl	%ebx
 	movl	%ebx,(%eax)
@@ -216,6 +244,7 @@ __unified_syscall:
 #include "../syscalls.s/unlink.S"
 #include "../syscalls.s/utime.S"
 #include "../syscalls.s/vhangup.S"
+#include "../syscalls.s/msync.S"
 
 #include "../syscalls.s/chown32.S"
 #include "../syscalls.s/fchown32.S"
@@ -240,6 +269,8 @@ __unified_syscall:
 #include "../syscalls.s/epoll_create.S"
 #include "../syscalls.s/epoll_ctl.S"
 #include "../syscalls.s/epoll_wait.S"
+#include "../syscalls.s/sendfile64.S"
+#include "../syscalls.s/sysfs.S"
 
 #undef __PIC__
 #undef __socketcall

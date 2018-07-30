@@ -26,14 +26,14 @@ static void error(const char *message) {
 
 static const char* Os[] = {
   "i386","-Os","-mpreferred-stack-boundary=2",
-	 "-malign-functions=0","-malign-jumps=0",
-	 "-malign-loops=0","-fomit-frame-pointer",0,
+	 "-malign-functions=1","-malign-jumps=1",
+	 "-malign-loops=1","-fomit-frame-pointer",0,
   "x86_64","-Os","-fno-omit-frame-pointer",0,
   "sparc","-Os","-mcpu=supersparc",0,
   "sparc64","-Os","-m64",0,
   "alpha","-Os","-fomit-frame-pointer",0,
   "arm","-Os","-fomit-frame-pointer",0,
-  "mips","-Os","-fomit-frame-pointer","-mno-abicalls","-G","8","-fno-pic",0,
+  "mips","-Os","-fomit-frame-pointer","-mno-abicalls","-fno-pic","-G","0",0,
   "ppc","-Os","-fomit-frame-pointer","-mpowerpc-gpopt","-mpowerpc-gfxopt",0,
   "s390","-Os","-fomit-frame-pointer",0,
   "sh","-Os","-fomit-frame-pointer",0,
@@ -325,10 +325,9 @@ pp:
 incorporated:
       if (_link) {
 	if (profile) *dest++="-lgmon";
+	*dest++=c; *dest++=(char*)libgcc;
 	if (!strcmp(shortplatform,"sparc") || !strcmp(shortplatform,"sparc64")) {
-	  *dest++=(char*)libgcc; *dest++=c;
-	} else {
-	  *dest++=c; *dest++=(char*)libgcc;
+	  *dest++=c;
 	}
       }
 #ifdef WANT_DYNAMIC

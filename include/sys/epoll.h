@@ -5,6 +5,8 @@
 #include <sys/types.h>
 #include <sys/poll.h>
 
+__BEGIN_DECLS
+
 /* Valid opcodes ( "op" parameter ) to issue to epoll_ctl() */
 #define EPOLL_CTL_ADD 1	/* Add a file decriptor to the interface */
 #define EPOLL_CTL_DEL 2	/* Remove a file decriptor from the interface */
@@ -36,8 +38,11 @@ enum EPOLL_EVENTS {
 
 	EPOLLERR = 0x008,
 #define EPOLLERR EPOLLERR
-	EPOLLHUP = 0x010
+	EPOLLHUP = 0x010,
 #define EPOLLHUP EPOLLHUP
+
+	EPOLLET = (1<<31)
+#define EPOLLET EPOLLET
 };
 
 typedef union epoll_data {
@@ -56,5 +61,7 @@ int epoll_create(int size) __THROW;
 int epoll_ctl(int epfd, int op, int fd, struct epoll_event* event) __THROW;
 int epoll_wait(int epfd, struct epoll_event *events, int maxevents,
 	       int timeout) __THROW;
+
+__END_DECLS
 
 #endif

@@ -4,11 +4,13 @@
 #include <sys/cdefs.h>
 #include <sys/time.h>
 
+__BEGIN_DECLS
+
 extern int __isleap(int year);
 
 int nanosleep(const struct timespec *req, struct timespec *rem) __THROW;
 
-time_t mktime(struct tm *timeptr) __THROW __pure__;
+time_t mktime(struct tm *timeptr) __THROW __pure;
 
 char *asctime(const struct tm *timeptr) __THROW;
 char *asctime_r(const struct tm *timeptr, char *buf) __THROW;
@@ -36,5 +38,7 @@ struct tm* localtime_r(const time_t* t, struct tm* r) __THROW;
 struct tm* gmtime_r(const time_t* t, struct tm* r) __THROW;
 
 clock_t clock(void);
+
+__END_DECLS
 
 #endif

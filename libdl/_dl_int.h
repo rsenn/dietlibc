@@ -62,14 +62,16 @@
 #define LDSO_FLAGS	(RTLD_LAZY|RTLD_GLOBAL|RTLD_NOSONAME)
 
 struct _dl_handle {
+  /* the next fields HAVE to be in this order for GDB */
   char *	mem_base;	/* base address of maped *.so / or zero if program | Elf_Addr l_addr */
   char *	l_name;		/* Abloslute filename of this object */
   Elf_Dyn*	dynamic;	/* _DYNAMIC */
 
   struct _dl_handle *next;
   struct _dl_handle *prev;
+  /* ok last GDB used part was prev */
 
-  unsigned int flags;		/* FLAGS */
+  unsigned long flags;		/* FLAGS */
 
   char *	name;		/* name of shared object */
 
@@ -87,6 +89,7 @@ struct _dl_handle {
   _dl_rel_t*	plt_rel;	/* PLT relocation table */
 
   /* INIT / FINI */
+  void (*init)(void);
   void (*fini)(void);
 };
 

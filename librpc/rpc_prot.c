@@ -50,8 +50,6 @@ static char sccsid[] = "@(#)rpc_prot.c 1.36 87/08/11 Copyr 1984 Sun Micro";
 
 /* * * * * * * * * * * * * * XDR Authentication * * * * * * * * * * * */
 
-struct opaque_auth _null_auth;
-
 /*
  * XDR an opaque authentication struct
  * (see auth.h)
@@ -82,7 +80,7 @@ register des_block *blkp;
 /*
  * XDR the MSG_ACCEPTED part of a reply message union
  */
-bool_t xdr_accepted_reply(xdrs, ar)
+static bool_t xdr_accepted_reply(xdrs, ar)
 register XDR *xdrs;
 register struct accepted_reply *ar;
 {
@@ -108,7 +106,7 @@ register struct accepted_reply *ar;
 /*
  * XDR the MSG_DENIED part of a reply message union
  */
-bool_t xdr_rejected_reply(xdrs, rr)
+static bool_t xdr_rejected_reply(xdrs, rr)
 register XDR *xdrs;
 register struct rejected_reply *rr;
 {

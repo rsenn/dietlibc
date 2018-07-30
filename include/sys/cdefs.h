@@ -17,9 +17,9 @@
 #endif
 
 #if (__GNUC__ > 2) || ((__GNUC__ == 2) && (__GNUC_MINOR__ >= 96))
-#define __pure__ __attribute__ ((__pure__))
+#define __pure __attribute__ ((__pure__))
 #else
-#define __pure__
+#define __pure
 #endif
 
 #if (__GNUC__ == 2) && (__GNUC_MINOR__ < 95)
@@ -31,10 +31,14 @@
 #define __builtin_expect(foo,bar) (foo)
 #define expect(foo,bar) (foo)
 #else
-#define expect(foo,bar) __builtin_expect(foo,bar)
-#define __attribute_malloc__ __attribute__((malloc))
+#define expect(foo,bar) __builtin_expect((long)(foo),bar)
+#define __attribute_malloc__ __attribute__((__malloc__))
 #endif
 #endif
+
+/* idea for these macros taken from Linux kernel */
+#define __likely(foo) expect((foo),1)
+#define __unlikely(foo) expect((foo),0)
 
 #ifndef __attribute_malloc__
 #define __attribute_malloc__
@@ -50,6 +54,13 @@
 
 #ifndef __i386__
 #define regparm(x)
+#endif
+
+#if (__GNUC__ > 3) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 2))
+#define __attribute_dontuse__ __attribute__((__deprecated__))
+#else
+#define __attribute_dontuse__
+#define __deprecated__
 #endif
 
 #endif

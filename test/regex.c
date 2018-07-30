@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <regex.h>
 #include <assert.h>
+#include <string.h>
 
 int main() {
   regex_t r;
@@ -9,6 +10,23 @@ int main() {
   regmatch_t matches[10];
   memset(buf,'a',sizeof buf);
   strcpy(buf+sizeof(buf)-100," foo . .. bar\n");
+
+  assert(regcomp(&r,"(|-.*)@fefe.de",REG_EXTENDED)==0);
+  assert(regexec(&r,"@fefe.de",0,0,0)==0);
+  regfree(&r);
+
+  assert(regcomp(&r,"usenet-[0-9]{8}@fefe.de",REG_EXTENDED)==0);
+  assert(regexec(&r,"usenet-12345678@fefe.de",0,0,0)==0);
+  regfree(&r);
+
+  assert(regcomp(&r,"(abuse|borland|bounceok|cdb|clickbank|der|dnscache|dsniff|gilda|myspace|password|postmaster|publicfile|qmail|qmaill|rfc2460|spam|stackguard|staroffice|susewindows|tdsl|true|vmware|web|yadocfaq|zeroseek)@fefe.de",REG_EXTENDED)==0);
+  assert(regexec(&r,"abuse@fefe.de",0,0,0)==0);
+  regfree(&r);
+
+  assert(regcomp(&r,"^$",REG_EXTENDED)==0);
+  assert(regexec(&r,"",0,0,0)==0);
+  assert(matches[0].rm_so==0 && matches[0].rm_eo==0);
+  regfree(&r);
 
   assert(regcomp(&r,"abracadabra$",REG_EXTENDED)==0);
   assert(regexec(&r,"abracadabracadabra",10,matches,0)==0);
@@ -60,7 +78,7 @@ int main() {
   assert(matches[0].rm_so==0 && matches[0].rm_eo==1);
   regfree(&r);
 
-  assert(regcomp(&r,"{",REG_EXTENDED)==0);
+  assert(regcomp(&r,"{",0)==0);
   assert(regexec(&r,"{",10,matches,0)==0);
   assert(matches[0].rm_so==0 && matches[0].rm_eo==1);
   regfree(&r);

@@ -131,6 +131,7 @@ __unified_syscall:
 #include "../syscalls.s/sched_yield.S"
 #include "../syscalls.s/select.S"
 #include "../syscalls.s/sendfile.S"
+#include "../syscalls.s/sendfile64.S"
 #include "../syscalls.s/setdomainname.S"
 #include "../syscalls.s/setfsgid.S"
 #include "../syscalls.s/setfsuid.S"
@@ -161,6 +162,7 @@ __unified_syscall:
 #include "../syscalls.s/sysctl.S"
 #include "../syscalls.s/sysinfo.S"
 #include "../syscalls.s/syslog.S"
+#include "../syscalls.s/sysfs.S"
 #include "../syscalls.s/time.S"
 #include "../syscalls.s/times.S"
 #include "../syscalls.s/truncate.S"
@@ -175,6 +177,7 @@ __unified_syscall:
 #include "../syscalls.s/waitpid.S"
 #include "../syscalls.s/write.S"
 #include "../syscalls.s/writev.S"
+#include "../syscalls.s/msync.S"
 
 #include "../syscalls.s/chown32.S"
 #include "../syscalls.s/fchown32.S"

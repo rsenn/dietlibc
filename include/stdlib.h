@@ -7,12 +7,14 @@
 #include <sys/types.h>
 #include <alloca.h>
 
-void *calloc(size_t nmemb, size_t size) __attribute_malloc__ __THROW;
-void *malloc(size_t size) __attribute_malloc__ __THROW;
-void free(void *ptr) __THROW;
-void *realloc(void *ptr, size_t size) __attribute_malloc__ __THROW;
+__BEGIN_DECLS
 
-char *getenv(const char *name) __THROW __pure__;
+void *calloc(size_t nmemb, size_t size) __THROW __attribute_malloc__;
+void *malloc(size_t size)  __THROW __attribute_malloc__;
+void free(void *ptr) __THROW;
+void *realloc(void *ptr, size_t size) __THROW __attribute_malloc__;
+
+char *getenv(const char *name) __THROW __pure;
 int putenv(const char *string) __THROW;
 int setenv(const char *name, const char *value, int overwrite) __THROW;
 void unsetenv(const char *name) __THROW;
@@ -46,8 +48,8 @@ extern int rand(void) __THROW;
 extern int rand_r(unsigned int *seed) __THROW;
 extern void srand(unsigned int seed) __THROW;
 #ifdef _BSD_SOURCE
-extern int random(void) __THROW;
-extern void srandom(unsigned int seed) __THROW;
+extern int random(void) __THROW __attribute_dontuse__;
+extern void srandom(unsigned int seed) __THROW __attribute_dontuse__;
 #endif
 
 typedef unsigned short randbuf[3];
@@ -96,5 +98,7 @@ char *ptsname (int fd) __THROW;
 #define RAND_MAX 	((1<<31) -2)
 
 #define MB_CUR_MAX 1
+
+__END_DECLS
 
 #endif

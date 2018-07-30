@@ -1,5 +1,12 @@
 #ifdef __OD_CLEAN_ROOM
 
+/* work around...
+ * don't include <string.h> or <stdlib.h>
+ */
+#define _STRING_H
+#define _STDLIB_H
+
+/* we are the libdl.so so tell all included functiuons to be static. */
 #define __DIET_LD_SO__
 
 /*
@@ -41,8 +48,9 @@ int _dl_sys_mprotect(const void*addr,unsigned long len,int prot);
 int _dl_sys_fstat(int filedes, struct stat *buf);
 
 extern char*strdup(const char*s);
+extern void free(void*p);
 
-#ifdef __i386__
+#if defined(__i386__)
 
 asm(".text \n"
 ".type _start,@function \n"
@@ -51,48 +59,50 @@ asm(".text \n"
 "	movl	(%ebp), %ecx		# argc \n"
 "	leal	4(%ebp), %esi		# argv \n"
 "	leal	4(%esi,%ecx,4), %eax	# envp \n"
-
-"# PIC code \n"
+/* PIC code */
 "	call	getpic \n"
 "	addl	$_GLOBAL_OFFSET_TABLE_, %ebx \n"
-
-"# for calculation of load addr, get 'relocated' address of _DYNAMIC \n"
+/* for calculation of load addr, get 'relocated' address of _DYNAMIC */
 "	leal	_DYNAMIC@GOTOFF(%ebx), %edx \n"
-
-"# put parameter on stack and call _dl_main \n"
+/* get load-address */
+"	movl	%edx, %edi \n"
+"	subl	(%ebx), %edi		# 'unrelocated' address of _DYNAMIC \n"
+"	pushl	%edi \n"
+/* put parameter on stack and call _dl_main */
 "	pushl	%edx \n"
 "	pushl	%eax \n"
 "	pushl	%esi \n"
 "	pushl	%ecx \n"
 "	call	_dl_main \n"
-
-"# restore stack \n"
+/* restore stack */
 "	movl	%ebp, %esp \n"
-
-"# get fini pointer \n"
+/* get fini pointer */
 "	movl	fini_entry@GOTOFF(%ebx), %edx \n"
-
-"# clear callee-save-register like kernel \n"
+/* clear callee-save-register like kernel */
 "	xorl	%ebx, %ebx \n"
 "	xorl	%ebp, %ebp \n"
 "	xorl	%edi, %edi \n"
 "	xorl	%esi, %esi \n"
-
-"# jump to program entry point \n"
+/* jump to program entry point */
 "	jmp	*%eax \n"
 
+".type	_dl_sys_read,@function \n"
 "_dl_sys_read: \n"
 "	movb	$3,%al \n"
 "	jmp	_dl_sys_call3 \n"
+".type	_dl_sys_write,@function \n"
 "_dl_sys_write: \n"
 "	movb	$4,%al \n"
 "	jmp	_dl_sys_call3 \n"
+".type	_dl_sys_open,@function \n"
 "_dl_sys_open: \n"
 "	movb	$5,%al \n"
 "	jmp	_dl_sys_call3 \n"
+".type	_dl_sys_close,@function \n"
 "_dl_sys_close: \n"
 "	movb	$6,%al \n"
 "	jmp	_dl_sys_call3 \n"
+".type	_dl_sys_mmap,@function \n"
 "_dl_sys_mmap: \n"
 "	movb	$90,%al \n"
 "	leal	4(%esp),%edx \n"
@@ -100,17 +110,22 @@ asm(".text \n"
 "	call	_dl_sys_call3 \n"
 "	popl	%ecx \n"
 "	ret \n"
+".type	_dl_sys_munmap,@function \n"
 "_dl_sys_munmap: \n"
 "	movb	$91,%al \n"
 "	jmp	_dl_sys_call3 \n"
+".type	_dl_sys_fstat,@function \n"
 "_dl_sys_fstat: \n"
 "	movb	$108,%al \n"
 "	jmp	_dl_sys_call3 \n"
+".type	_dl_sys_mprotect,@function \n"
 "_dl_sys_mprotect: \n"
 "	movb	$125,%al \n"
 "	jmp	_dl_sys_call3 \n"
+".type _dl_sys_exit,@function \n"
 "_dl_sys_exit: \n"
 "	movb	$1,%al \n"
+".type	_dl_sys_call3,@function \n"
 "_dl_sys_call3: \n"
 "	movzbl	%al,%eax \n"
 "	pushl	%ebx \n"
@@ -124,21 +139,22 @@ asm(".text \n"
 
 ".type	_dl_jump,@function \n"
 "_dl_jump: \n"
-"	pushl	%eax		# save register args... \n"
+/* save temp-register (posible reg-args) */
+"	pushl	%eax \n"
 "	pushl	%ecx \n"
 "	pushl	%edx \n"
-
+/* call resolve */
 "	push	16(%esp)	# 2. arg from plt \n"
 "	push	16(%esp)	# 1. arg from plt \n"
 "	call	do_resolve \n"
 "	add	$8, %esp \n"
-
-"	popl	%edx		# restore register args... \n"
+/* restore temp-register */
+"	popl	%edx \n"
 "	popl	%ecx \n"
 "	xchgl	%eax, (%esp)	# restore eax and save function pointer (for return) \n"
 "	ret	$8		# remove arguments from plt and jump to REAL function \n"
 
-"# GET Position In Code :) \n"
+/* GET Position In Code :) */
 "getpic:	movl	(%esp), %ebx \n"
 "	ret");
 
@@ -160,70 +176,211 @@ static inline int work_on_pltgot(struct _dl_handle*dh) {
   return 0;
 }
 
-#elif __arm__
+#elif defined(__x86_64__)
+
+#warning "x86_64 is not tested yet..."
+
+static unsigned long*x86_64__got=0;
+static unsigned long __start=(unsigned long)&_start;
+
+asm(".text \n"
+".type _start,@function \n"
+"_start: \n"
+"	movq	%rsp,%rbp		# save stack \n"
+"	movq	(%rbp), %rdi		# argc \n"
+"	leaq	4(%rbp),%rsi		# argv \n"
+"	leaq	8(%rsi,%rdi,8),%rdx	# envp \n"
+/* get 'relocated' address of _DYNAMIC */
+"	leaq	_DYNAMIC@GOTPCREL(%rip), %rcx \n"
+"	subq	_DYNAMIC@GOT, %rcx \n"
+"	movq	%rcx, x86_64__got(%rip) # save got address \n"
+"	movq	(%rcx), %rcx \n"
+/* %rcx still needs the load-address added... */
+"	leaq	_start(%rip), %r8	#   relocated _start address \n"
+"	subq	__start(%rip), %r8	# unrelocated _start address \n"
+//"	movq	%r8, __loadaddr(%rip)	# save base address \n"
+"	addq	%r8, %rcx \n"
+/* call _dl_main */
+"	call	_dl_main \n"
+/* restore stack */
+"	movq	%rbp, %rsp \n"
+/* get fini pointer */
+"	movq	fini_entry(%rip), %rdx \n"
+/* clear callee-save-register like kernel */
+"	xorq	%rbp,%rbp \n"
+/* jump to program entry point */
+"	jmpq	*%rax \n"
+
+
+".type _dl_sys_read,@function \n"
+"_dl_sys_read: \n"
+"	movb	$0,%al \n"
+"	jmp	_dl_sys_call3 \n"
+".type _dl_sys_write,@function \n"
+"_dl_sys_write: \n"
+"	movb	$1,%al \n"
+"	jmp	_dl_sys_call3 \n"
+".type _dl_sys_open,@function \n"
+"_dl_sys_open: \n"
+"	movb	$2,%al \n"
+"	jmp	_dl_sys_call3 \n"
+".type _dl_sys_close,@function \n"
+"_dl_sys_close: \n"
+"	movb	$3,%al \n"
+"	jmp	_dl_sys_call3 \n"
+".type _dl_sys_fstat,@function \n"
+"_dl_sys_fstat: \n"
+"	movb	$5,%al \n"
+"	jmp	_dl_sys_call3 \n"
+".type _dl_sys_mmap,@function \n"
+"_dl_sys_mmap: \n"
+"	movb	$9,%al \n"
+"	jmp	_dl_sys_call3 \n"
+".type _dl_sys_mprotect,@function \n"
+"_dl_sys_mprotect: \n"
+"	movb	$10,%al \n"
+"	jmp	_dl_sys_call3 \n"
+".type _dl_sys_munmap,@function \n"
+"_dl_sys_munmap: \n"
+"	movb	$11,%al \n"
+"	jmp	_dl_sys_call3 \n"
+".type _dl_sys_exit,@function \n"
+"_dl_sys_exit: \n"
+"	movb	$60,%al \n"
+".type _dl_sys_call3,@function \n"
+"_dl_sys_call3: \n"
+"	movzbq	%al,%rax \n"
+"	movq	%rcx,%r10 \n"
+"	syscall \n"
+"	retq \n"
+
+".type	_dl_jump,@function \n"
+"_dl_jump: \n"
+/* save register arguments */
+"	pushq	%rax \n"
+"	pushq	%rdi \n"
+"	pushq	%rsi \n"
+"	pushq	%rdx \n"
+"	pushq	%rcx \n"
+"	pushq	%r8 \n"
+"	pushq	%r9 \n"
+/* dynlib handle */
+"	movq	56(%rsp),%rdi \n"
+/* dyntab entry = 24*(index) */
+"	movq	64(%rsp),%rsi \n"
+"	leaq	(%rsi,%rsi,2),%rsi \n"
+"	shlq	$3,%rsi \n"
+/* call resolver */
+"	call	do_resolve \n"
+/* save return value */
+"	movq	%rax,%r11 \n"
+/* restore register args */
+"	popq	%r9 \n"
+"	popq	%r8 \n"
+"	popq	%rcx \n"
+"	popq	%rdx \n"
+"	popq	%rsi \n"
+"	popq	%rdi \n"
+"	popq	%rax \n"
+/* remove arguments from plt */
+"	addq	$16,%rsp \n"
+/* jump to REAL function */
+"	jmpq	*%r11 \n"
+
+   );
+
+static inline unsigned long* get_got(void) {
+  return x86_64__got;
+}
+
+static inline int work_on_pltgot(struct _dl_handle*dh) {
+  /* declare _dl_jump static otherwise we have a GOT access BEFOR we have the resolver */
+  static void _dl_jump(void);
+  if ((dh->plt_rel)&&(!(dh->flags&RTLD_NOW))) {
+    unsigned long*tmp=dh->pltgot;
+    /* GOT */
+    tmp[0]+=(unsigned long)dh->mem_base;	/* reloc dynamic pointer */
+    tmp[1] =(unsigned long)dh;			/* the handle */
+    tmp[2] =(unsigned long)(_dl_jump);		/* sysdep jump to do_resolve */
+  }
+  return 0;
+}
+
+#elif defined(__arm__)
 
 asm(".text \n"
 ".type _start,function \n"
 "_start: \n"
-"	mov	r4, sp \n"
+/* common startup */
+"	mov	r4, sp			@ save stack pointer \n"
 "	mov	fp, #0			@ start new stack frame \n"
-
 "	ldr	a1, [sp], #4		@ argc \n"
 "	mov	a2, sp			@ argv \n"
-
 "	add	a3, a2, a1, lsl #2	@ envp \n"
 "	add	a3, a3, #4 \n"
-
+/* PIC code startup */
 "	ldr	sl, .L_got		@ PIC code \n"
 "1:	add	sl, pc, sl \n"
-
-"	ldr	a4, .L_la		@ get 'relocated' address of _DYNAMIC \n"
+/* get loadaddress */
+"	ldr	a4, [sl] \n"
+"	sub	a4, sl, a4 \n"
+"	str	a4, [sp,#-4]! \n"
+/* get 'relocated' address of _DYNAMIC */
+"	ldr	a4, .L_dy \n"
 "	add	a4, a4, sl \n"
-
-"	bl	_dl_main		@ call _dl_main \n"
-
+/* call _dl_main */
+"	bl	_dl_main \n"
+/* restore stack pointer */
 "	mov	sp, r4 \n"
-
-"	mov	lr, a1			@ save program entry point \n"
-
-"	ldr	a1, [pc, #.L_fe-(.+8)]	@ agrument 1: global fini entry \n"
+/* save program entry point */
+"	mov	lr, a1 \n"
+/* abi: agrument 1: global fini entry */
+"	ldr	a1, [pc, #.L_fe-(.+8)] \n"
 "	ldr	a1, [sl, a1] \n"
-
+/* jump to program entry point */
 "	mov	pc, lr \n"
-
+/* startup-code data */
 ".L_got: .long	_GLOBAL_OFFSET_TABLE_-(1b+8) \n"
-".L_la:	.long	_DYNAMIC(GOTOFF) \n"
+".L_dy:	.long	_DYNAMIC(GOTOFF) \n"
 ".L_fe:	.long	fini_entry(GOTOFF) \n"
 
+".type	_dl_sys_exit,function \n"
 "_dl_sys_exit: \n"
 "	swi	#0x900001		@ exit \n"
 "	eor	pc, lr, lr		@ OR DIE ! \n"
 "	mov	pc, lr \n"
-
+".type	_dl_sys_read,function \n"
 "_dl_sys_read: \n"
 "	swi	#0x900003		@ read \n"
 "	mov	pc, lr \n"
+".type	_dl_sys_write,function \n"
 "_dl_sys_write: \n"
 "	swi	#0x900004		@ write \n"
 "	mov	pc, lr \n"
+".type	_dl_sys_open,function \n"
 "_dl_sys_open: \n"
 "	swi	#0x900005		@ open \n"
 "	mov	pc, lr \n"
+".type	_dl_sys_close,function \n"
 "_dl_sys_close: \n"
 "	swi	#0x900006		@ close \n"
 "	mov	pc, lr \n"
+".type	_dl_sys_mmap,function \n"
 "_dl_sys_mmap: \n"
 "	stmdb	sp!,{r0,r1,r2,r3} \n"
 "	mov	r0, sp \n"
 "	swi	#0x900090		@ mmap \n"
 "	add	sp, sp, #16 \n"
 "	mov	pc, lr \n"
+".type	_dl_sys_munmap,function \n"
 "_dl_sys_munmap: \n"
 "	swi	#0x900091		@ munmap \n"
 "	mov	pc, lr \n"
+".type	_dl_sys_fstat,function \n"
 "_dl_sys_fstat: \n"
 "	swi	#0x900108		@ fstat \n"
 "	mov	pc, lr \n"
+".type	_dl_sys_mprotect,function \n"
 "_dl_sys_mprotect: \n"
 "	swi	#0x900125		@ mprotect \n"
 "	mov	pc, lr \n"
@@ -262,6 +419,128 @@ static inline int work_on_pltgot(struct _dl_handle*dh) {
   return 0;
 }
 
+#elif defined(__sparc__)
+
+#warning "sparc is not tested yet... AND HAS NO RESOLVER !!!"
+
+/* ARG... sparc has EVERY variable (even static) only addressable through the GOT */
+
+asm(".text \n"
+".align 16 \n"
+".type _start,@function \n"
+"_start: \n"
+/* save some later needed values */
+"	mov	%sp, %l0 \n"
+"	mov	%g1, %l1 \n"
+/* close frame / make room for some arguments */
+"	mov	%g0, %fp \n"
+"	sub	%sp, 6*4, %sp \n"
+/* extrace argc(%o0), argv(%o1), envp(%o2) */
+"	ld	[%sp+22*4], %o0 \n"
+"	add	%sp, 23*4, %o1 \n"
+"	add	%o1, %o0, %o2 \n"
+"	add	%o2, %o0, %o2 \n"
+"	add	%o2, %o0, %o2 \n"
+"	add	%o2, %o0, %o2 \n"
+"	add	%o2, 4, %o2 \n"
+/* PIC code / startup */
+"	sethi	%hi(_GLOBAL_OFFSET_TABLE_-4), %l7 \n"
+".L0:	call	.L1 \n"
+"	add	%l7, %lo(_GLOBAL_OFFSET_TABLE_+4), %l7 \n"
+".L1:	add	%o7, %l7, %l7 \n"
+/* get load-address (%o4) */
+"	sethi	%hi(.L0), %o4 \n"
+"	add	%o4, %lo(.L0), %o4 \n"
+"	ld	[ %l7 + %o4 ], %o4 \n"
+"	sub	%o7, %o4, %o4 \n"
+/* get 'relocated' address of _DYNAMIC (%o3) // call the dynamic linker */
+"	ld	[ %l7 ], %o3 \n"
+"	call	_dl_main \n"
+"	add	%o4, %o3, %o3 \n"
+/* put entry point to the return register */
+"	mov	%o0, %o7 \n"
+/* restore some values // 'jump' to entry point */
+"	mov	%l1, %g1 \n"
+"	retl \n"
+"	mov	%l0, %sp \n"
+
+"_pr_ping_str: \n"
+"	.asciz \"ping.\\n\" \n"
+".align 4 \n"
+"_pr_ping: \n"
+"	save \n"
+"1:	call	1f \n"
+"	mov	_pr_ping_str-1b, %o1 \n"
+"1:	add	%o7, %o1, %o1 \n"
+"	restore \n"
+"	mov	2, %o0 \n"
+"	mov	6, %o2 \n"
+"	b	_dl_sys_call3 \n"
+"	mov	4, %g1 \n"
+
+
+".type _dl_sys_exit,@function \n"
+"_dl_sys_exit: \n"
+"	mov	1, %g1 \n"
+".type _dl_sys_call3,@function \n"
+"_dl_sys_call3: \n"
+"	ta	0x10 \n"
+"	ret \n"
+".type _dl_sys_read,@function \n"
+"_dl_sys_read: \n"
+"	b	_dl_sys_call3 \n"
+"	mov	3, %g1 \n"
+".type _dl_sys_write,@function \n"
+"_dl_sys_write: \n"
+"	b	_dl_sys_call3 \n"
+"	mov	4, %g1 \n"
+".type _dl_sys_open,@function \n"
+"_dl_sys_open: \n"
+"	b	_dl_sys_call3 \n"
+"	mov	5, %g1 \n"
+".type _dl_sys_close,@function \n"
+"_dl_sys_close: \n"
+"	b	_dl_sys_call3 \n"
+"	mov	6, %g1 \n"
+".type _dl_sys_mmap,@function \n"
+"_dl_sys_mmap: \n"
+"	b	_dl_sys_call3 \n"
+"	mov	71, %g1 \n"
+".type _dl_sys_munmap,@function \n"
+"_dl_sys_munmap: \n"
+"	b	_dl_sys_call3 \n"
+"	mov	73, %g1 \n"
+".type _dl_sys_fstat,@function \n"
+"_dl_sys_fstat: \n"
+"	b	_dl_sys_call3 \n"
+"	mov	62, %g1 \n"
+".type _dl_sys_mprotect,@function \n"
+"_dl_sys_mprotect: \n"
+"	b	_dl_sys_call3 \n"
+"	mov	74, %g1 \n"
+
+".type	_dl_jump,@function \n"
+"_dl_jump: \n"
+"	ret \n"
+   );
+
+static inline unsigned long* get_got(void) {
+  register unsigned long *got asm ("%l7");
+  return got;
+}
+
+static inline int work_on_pltgot(struct _dl_handle*dh) {
+  /* declare _dl_jump static otherwise we have a GOT access BEFOR we have the resolver */
+  static void _dl_jump(void);
+  if ((dh->plt_rel)&&(!(dh->flags&RTLD_NOW))) {
+    unsigned long*tmp=dh->pltgot;
+    /* GOT */
+    tmp[0]+=(unsigned long)dh->mem_base;	/* reloc dynamic pointer */
+    tmp[1] =(unsigned long)dh;			/* the handle */
+    tmp[2] =(unsigned long)(_dl_jump);		/* sysdep jump to do_resolve */
+  }
+  return 0;
+}
 #else
 #error "libdl: arch not supported"
 #endif
@@ -518,11 +797,12 @@ err_out_close:
   }
 
   if (ld_nr==1) {
+    unsigned long addr  =_ELF_DWN_ROUND(at_pagesize,ld[0]->p_vaddr);
     unsigned long offset=_ELF_DWN_ROUND(at_pagesize,ld[0]->p_offset);
     unsigned long off   =_ELF_RST_ROUND(at_pagesize,ld[0]->p_offset);
     unsigned long length=_ELF_UP_ROUND(at_pagesize,ld[0]->p_memsz+off);
     ret=_dl_get_handle();
-    m=(char*)do_map_in(0,length,ld[0]->p_flags,fd,offset);
+    m=(char*)do_map_in((void*)addr,length,ld[0]->p_flags,fd,offset);
     if (m==MAP_FAILED) goto err_out_free;
     /* zero pad bss */
     l=ld[0]->p_offset+ld[0]->p_filesz;
@@ -532,7 +812,7 @@ err_out_close:
     ret->mem_size=length;
   }
   else if (ld_nr==2) { /* aem... yes Quick & Really Dirty / for the avarage 99% */
-//    unsigned long text_addr = _ELF_DWN_ROUND(at_pagesize,ld[0]->p_vaddr);	/* do we need this ? */
+    unsigned long text_addr = _ELF_DWN_ROUND(at_pagesize,ld[0]->p_vaddr);
     unsigned long text_offset=_ELF_DWN_ROUND(at_pagesize,ld[0]->p_offset);
     unsigned long text_off   =_ELF_RST_ROUND(at_pagesize,ld[0]->p_offset);
     unsigned long text_size  =_ELF_UP_ROUND(at_pagesize,ld[0]->p_memsz+text_off);
@@ -543,14 +823,22 @@ err_out_close:
     unsigned long data_size  =_ELF_UP_ROUND(at_pagesize,ld[1]->p_memsz+data_off);
     unsigned long data_fsize =_ELF_UP_ROUND(at_pagesize,ld[1]->p_filesz+data_off);
 
+    /* handle data_addr relative to text_addr */
+    data_addr-=text_addr;
+
     ret=_dl_get_handle();
     /* mmap all mem_blocks for *.so */
-    m=(char*)do_map_in(0,text_size+data_size,ld[0]->p_flags,fd,text_offset);
+    m=(char*)do_map_in((void*)text_addr,text_size+data_size,ld[0]->p_flags,fd,text_offset);
     if (m==MAP_FAILED) {
 err_out_free:
       _dl_free_handle(ret);
       _dl_sys_close(fd);
       return 0;
+    }
+    /* are we loaded where we wanna be ? */
+    if (text_addr && (m!=(void*)text_addr)) {
+      _dl_sys_munmap(m,text_size+data_size);
+      goto err_out_free;
     }
 
     /* release data,bss part */
@@ -952,6 +1240,9 @@ static void _dl_elfaux(register unsigned long*ui) {
 #endif
       break;
 #endif
+
+    case AT_SYSINFO:
+      /* TODO: rewrite unified syscall to use this value */
 
     default:
       break;

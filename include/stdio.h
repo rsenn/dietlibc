@@ -5,6 +5,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+__BEGIN_DECLS
+
 typedef struct __stdio_file FILE;
 
 FILE *fopen (const char *path, const char *mode) __THROW;
@@ -130,18 +132,19 @@ FILE* tmpfile(void) __THROW;
 #define FILENAME_MAX 4095
 #define FOPEN_MAX 16
 
-#ifdef _POSIX_SOURCE
+/* this is so bad, we moved it to -lcompat */
 #define L_ctermid 9
-#define L_cuserid 9
-#endif
+char* ctermid(char* s); /* returns "/dev/tty" */
 
 void flockfile(FILE* f) __THROW;
 void funlockfile(FILE* f) __THROW;
 
 #ifdef _GNU_SOURCE
+int vasprintf(char **strp, const char *fmt, va_list ap);
 ssize_t getline(char **lineptr, size_t *n, FILE *stream);
 ssize_t getdelim(char **lineptr, size_t *n, int delim, FILE *stream);
-#define getline(lineptr,n,stream) getdelim(lineptr,n,'\n',stream)
 #endif
+
+__END_DECLS
 
 #endif

@@ -5,6 +5,8 @@
 #include <sys/types.h>
 #include <limits.h>
 
+__BEGIN_DECLS
+
 struct dirent {
   long		d_ino;
   off_t		d_off;
@@ -51,7 +53,7 @@ int alphasort64(const struct dirent64 **a, const struct dirent64 **b) __THROW __
 #define MAXNAMLEN NAME_MAX
 
 #ifdef _BSD_SOURCE
-extern int dirfd(DIR *dirp) __THROW;
+extern int dirfd(DIR *dirp) __THROW __attribute_dontuse__;
 #endif
 
 #if defined _FILE_OFFSET_BITS && _FILE_OFFSET_BITS == 64
@@ -60,5 +62,7 @@ extern int dirfd(DIR *dirp) __THROW;
 #define scandir scandir64
 #define alphasort alphasort64
 #endif
+
+__END_DECLS
 
 #endif

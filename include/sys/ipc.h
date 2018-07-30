@@ -4,6 +4,8 @@
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
+__BEGIN_DECLS
+
 #define SEMOP		 1
 #define SEMGET		 2
 #define SEMCTL		 3
@@ -45,5 +47,10 @@ struct ipc_perm {
   mode_t	mode; 
   unsigned short	seq;
 };
+
+/* this is so bad, we moved it to -lcompat */
+key_t ftok(const char *pathname, int proj_id);
+
+__END_DECLS
 
 #endif

@@ -300,7 +300,8 @@ static const char* parsepiece(struct piece*__restrict__ p,const char*__restrict_
 	  p->max=*tmp-'0';
 	  while (isdigit(*++tmp)) p->max=p->max*10+*tmp-'0';
 	}
-      }
+      } else
+	p->max=p->min;
       if (*tmp!='}') return s;
       ++tmp;
     }
@@ -329,6 +330,10 @@ static int matchbranch(void*__restrict__ x,const char*__restrict__ s,int ofs,str
   return -1;
 }
 
+static int matchempty(void*__restrict__ x,const char*__restrict__ s,int ofs,struct __regex_t*__restrict__ preg,int plus,int eflags) {
+  return 0;
+}
+
 static const char* parsebranch(struct branch*__restrict__ b,const char*__restrict__ s,regex_t*__restrict__ rx,int*__restrict__ pieces) {
   struct piece p;
   const char *tmp;	/* the gcc warning here is bogus */
@@ -339,7 +344,9 @@ static const char* parsebranch(struct branch*__restrict__ b,const char*__restric
       if (b->num==0) {
 	tmp=s+1;
 	p.a.type=EMPTY;
+	p.a.m=matchempty;
 	p.min=p.max=1;
+	p.m=matchpiece;
       }
     } else {
       tmp=parsepiece(&p,s,rx);
@@ -450,7 +457,7 @@ int regexec(const regex_t*__restrict__ preg, const char*__restrict__ string, siz
   printf("alloca(%d)\n",sizeof(regmatch_t)*(preg->brackets+3));
 #endif
   ((regex_t*)preg)->l=alloca(sizeof(regmatch_t)*(preg->brackets+3));
-  while (*string) {
+  while (1) {
     matched=preg->r.m((void*)&preg->r,string,string-orig,(regex_t*)preg,0,eflags);
 //    printf("ebp on stack = %x\n",stack[1]);
     if (matched>=0) {
@@ -459,6 +466,7 @@ int regexec(const regex_t*__restrict__ preg, const char*__restrict__ string, siz
       if ((preg->cflags&REG_NOSUB)==0) memcpy(pmatch,preg->l,nmatch*sizeof(regmatch_t));
       return 0;
     }
+    if (!*string) break;
     ++string; eflags|=REG_NOTBOL;
   }
   return REG_NOMATCH;
