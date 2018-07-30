@@ -643,31 +643,28 @@ long vmsplice(int fd, const struct iovec *iov, unsigned long nr_segs, unsigned i
 long splice(int fd_in, loff_t *off_in, int fd_out, loff_t *off_out, size_t len, unsigned int flags) __THROW;
 
 int sync_file_range(int fd, off64_t offset, off64_t nbytes, unsigned int flags) __THROW;
+
+#define FALLOC_FL_KEEP_SIZE 1
+
+int fallocate(int fd, int mode, loff_t offset, loff_t len) __THROW;
 #endif
 
-#ifdef _ATFILE_SOURCE
+#if defined(_ATFILE_SOURCE) || ((_XOPEN_SOURCE + 0) >= 700) || ((_POSIX_C_SOURCE + 0) >= 200809L)
 #define AT_FDCWD		-100    /* Special value used to indicate openat should use the current working directory. */
 #define AT_SYMLINK_NOFOLLOW	0x100   /* Do not follow symbolic links.  */
 #define AT_REMOVEDIR		0x200   /* Remove directory instead of unlinking file.  */
 #define AT_SYMLINK_FOLLOW	0x400   /* Follow symbolic links.  */
 
-int openat(int dirfd, const char *pathname, int flags, ...);
-int faccessat(int dirfd, const char *pathname, int mode, int flags);
-int fchmodat(int dirfd, const char *pathname, mode_t mode, int flags);
-int fchownat(int dirfd, const char *pathname, uid_t owner, gid_t group, int flags);
-int fstatat(int dirfd, const char *pathname, struct stat *buf, int flags);
-int futimesat(int dirfd, const char *pathname, const struct timeval times[2]);
-int linkat(int olddirfd, const char *oldpath, int newdirfd, const char *newpath, int flags);
-int mkdirat(int dirfd, const char *pathname, mode_t mode);
-int mknodat(int dirfd, const char *pathname, mode_t mode, dev_t dev);
-int readlinkat(int dirfd, const char *pathname, char *buf, size_t bufsiz);
-int renameat(int olddirfd, const char *oldpath, int newdirfd, const char *newpath);
-int symlinkat(const char *oldpath, int newdirfd, const char *newpath);
-int unlinkat(int dirfd, const char *pathname, int flags);
-int mkfifoat(int dirfd, const char *pathname, mode_t mode);
-int utimensat(int dirfd, const char *pathname, struct timespec* t);
+int openat(int dirfd, const char *pathname, int flags, ...) __THROW;
+int futimesat(int dirfd, const char *pathname, const struct timeval times[2]) __THROW;
+int unlinkat(int dirfd, const char *pathname, int flags) __THROW;
 #endif
 
+#if defined(_XOPEN_SOURCE) && (_XOPEN_SOURCE - 0) >= 600
+#include "linux/fadvise.h"
+int posix_fallocate(int fd, off64_t offset, off64_t len) __THROW;
+int posix_fadvise(int fd, off64_t offset, off64_t len, int advice) __THROW;
+#endif
 
 __END_DECLS
 

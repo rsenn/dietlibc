@@ -23,10 +23,18 @@ typedef struct
   dtv_t *dtv;
   void *self;           /* Pointer to the thread descriptor.  */
   int multiple_threads;
+#ifdef __x86_64__
+  int gscope_flag;
+#endif
   uintptr_t sysinfo;
   uintptr_t stack_guard;
   uintptr_t pointer_guard;
+#ifdef __i386__
+  int gscope_flag;
+#endif
 } tcbhead_t;
+
+tcbhead_t* __get_cur_tcb(void) __THROW;
 
 #if defined(__i386__)
 

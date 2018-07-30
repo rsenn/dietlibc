@@ -16,12 +16,16 @@ __exit:
 	movb	$__NR_exit,%al
 
 .global __unified_syscall
+.global __unified_syscall_16bit
 __unified_syscall:
 _unified_syscall:
-	movzbl	%al, %eax
+	mov	$0, %al
+__unified_syscall_16bit:
+	movzwl	%ax, %eax
 	mov	%rcx, %r10
 	syscall
-	cmpq	$-128, %rax
+__error_unified_syscall:
+	cmpq	$-132, %rax
 	jbe	.Lnoerror
 	negl	%eax
 	pushq	%rax
@@ -158,6 +162,8 @@ _unified_syscall:
 #include "../syscalls.s/rt_sigqueueinfo.S"
 #include "../syscalls.s/rt_sigsuspend.S"
 #include "../syscalls.s/rt_sigtimedwait.S"
+#include "../syscalls.s/sched_getaffinity.S"
+#include "../syscalls.s/sched_setaffinity.S"
 #include "../syscalls.s/sched_get_priority_max.S"
 #include "../syscalls.s/sched_get_priority_min.S"
 #include "../syscalls.s/sched_getparam.S"
@@ -290,6 +296,29 @@ _unified_syscall:
 
 #include "../syscalls.s/timerfd.S"
 #include "../syscalls.s/__signalfd.S"
+
+#include "../syscalls.s/fallocate.S"
+#include "../syscalls.s/utimes.S"
+
+#include "syscalls.s/__socket.S"
+#include "syscalls.s/__bind.S"
+#include "syscalls.s/__setsockopt.S"
+#include "syscalls.s/__getsockopt.S"
+#include "syscalls.s/__sendto.S"
+#include "syscalls.s/__recvmsg.S"
+#include "syscalls.s/__accept.S"
+#include "syscalls.s/__connect.S"
+#include "syscalls.s/__getpeername.S"
+#include "syscalls.s/__getsockname.S"
+#include "syscalls.s/__listen.S"
+#include "syscalls.s/__recv.S"
+#include "syscalls.s/__recvfrom.S"
+#include "syscalls.s/__send.S"
+#include "syscalls.s/__sendmsg.S"
+#include "syscalls.s/__shutdown.S"
+#include "syscalls.s/__socketpair.S"
+
+#include "syscalls.s/umount2.S"
 
 #define _exit __exit
 #include "clone.S"

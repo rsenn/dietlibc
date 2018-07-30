@@ -1,4 +1,4 @@
-all: direnttest inet stdiotests stdlibtests stringtests timetests \
+all: direnttest inettest stdiotests stdlibtests stringtests timetests \
 test ffs getdelim stdlib 
 
 DIET=diet
@@ -7,14 +7,14 @@ CFLAGS=-nostdinc -Wall
 
 LCOMPAT=-lcompat
 
-TESTPROGRAMS=adjtime argv asprintf atexit bsearch byteswap calloc confstr cycles empty flush fnmatch \
+TESTPROGRAMS=adjtime alarm argv asprintf atexit bsearch byteswap calloc confstr cycles empty fadvise flush fnmatch \
 fputc ftw fwrite getaddrinfo getenv getgrnam gethostbyaddr gethostbyname \
 gethostbyname_r getmntent getopt getpass getpwnam getservbyname getservbyport getusershell \
 glob grent hasmntopt hello iconv if_nameindex ltostr malloc-debugger md5_testharness \
 memccpy memchr memcmp memrchr memusage mktime mmap_test pipe printf printftest \
 protoent prototypes putenv pwent rand48 read1 readdir regex select sendfile servent siglist \
 speed spent sprintf sscanf stdarg strcasecmp strcmp strncat strncpy strptime strrchr \
-strstr strtol sysenter ungetc waitpid
+strstr strtol sysenter ungetc utime waitpid
 
 test: $(TESTPROGRAMS)
 

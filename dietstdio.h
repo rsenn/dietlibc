@@ -39,6 +39,7 @@ struct __stdio_file {
 #define FDPIPE 64
 #define CANREAD 128
 #define CANWRITE 256
+#define CHECKLINEWISE 512
 
 #define _IONBF 0
 #define _IOLBF 1
@@ -75,7 +76,7 @@ int __fflush_stdout(void);
 int __fflush_stderr(void);
 
 FILE* __stdio_init_file(int fd,int closeonerror,int mode);
-int __stdio_parse_mode(const char *mode);
+int __stdio_parse_mode(const char *mode) __attribute__((__pure__));
 void __stdio_flushall(void);
 
 #ifndef __THREAD_INTERNAL_H__

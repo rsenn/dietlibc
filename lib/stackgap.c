@@ -1,3 +1,12 @@
+/* Warning: this code sets up the machine registers and segments needed
+ * for -fstack-protector to work.  If you compile this function with
+ * -fstack-protector, it will reference those registers before they are
+ * set up properly, causing a segmentation fault.  Ubuntu adds
+ * -fstack-protector to their gcc default options, so this breaks.  I
+ * added a workaround to the Makefile to make sure this code is always
+ * compiled with -fno-stack-protector for this reason.  Or, as a friend
+ * put it: yo dawg. I herd u liek stack protektion. :-)
+ */
 #include <unistd.h>
 #include <fcntl.h>
 #include <alloca.h>
@@ -5,12 +14,28 @@
 #include <sys/tls.h>
 #include <endian.h>
 #include <elf.h>
+#include <stdlib.h>
 #include "dietfeatures.h"
+
+#ifdef WANT_GNU_STARTUP_BLOAT
+char* program_invocation_name;
+char* program_invocation_short_name;
+#endif
+
+void* __vdso;
 
 extern int main(int argc,char* argv[],char* envp[]);
 
 #if defined(WANT_SSP)
 extern unsigned long __guard;
+#endif
+
+#if defined(WANT_VALGRIND_SUPPORT)
+int __valgrind=1;
+#endif
+
+#ifdef __i386__
+int __modern_linux;
 #endif
 
 #ifdef WANT_TLS
@@ -29,19 +54,19 @@ static void findtlsdata(long* auxvec) {
 #else
   Elf32_Phdr* x=0;
 #endif
-  size_t i,n;
+  size_t i,n=0;
   while (*auxvec) {
-    if (auxvec[0]==3) {
+    if (auxvec[0]==3) {	/* AT_PHDR */
       x=(void*)auxvec[1];
-      break;
+      if (n) break;
+    } else if (auxvec[0]==5) { /* AT_PHNUM */
+      n=auxvec[1];
+      if (x) break;
     }
     auxvec+=2;
   } /* if we don't find the entry, the kernel let us down */
-  if (!x) return;	/* a kernel this old does not support thread local storage anyway */
-  if (x->p_type!=PT_PHDR) return;	/* should start with PT_PHDR */
-  /* if it doesn't, assume there is no thread local storage */
-  n=x->p_memsz/sizeof(*x);
-  for (i=1; i<n; ++i)
+  if (!x || !n) return;	/* a kernel this old does not support thread local storage anyway */
+  for (i=0; i<n; ++i)
     if (x[i].p_type==PT_TLS) {
       __tdataptr=(void*)x[i].p_vaddr;
       __tdatasize=x[i].p_filesz;
@@ -54,11 +79,15 @@ static void findtlsdata(long* auxvec) {
 #endif
 
 #if defined(WANT_SSP) || defined(WANT_TLS)
-static tcbhead_t mainthread;
+tcbhead_t* __tcb_mainthread;
 
-static void setup_tls(tcbhead_t* mainthread) {
-  mainthread->tcb=&mainthread;
-  mainthread->self=&mainthread;
+void __setup_tls(tcbhead_t*);
+
+void __setup_tls(tcbhead_t* mainthread) {
+  mainthread->tcb=mainthread;
+  mainthread->dtv=0;
+  mainthread->self=0;
+  mainthread->multiple_threads=0;
 #if defined(WANT_SSP)
   mainthread->stack_guard=__guard;
 #endif
@@ -69,13 +98,17 @@ static void setup_tls(tcbhead_t* mainthread) {
 
 #elif defined(__i386__)
 
-  static unsigned int sd[4];
+  unsigned int sd[4];
   sd[0]=-1;
   sd[1]=(unsigned long int)mainthread;
   sd[2]=0xfffff; /* 4 GB limit */
   sd[3]=0x51; /* bitfield, see struct user_desc in asm-i386/ldt.h */
-  if (set_thread_area((struct user_desc*)(void*)&sd)==0) {
-    asm volatile ("movw %w0, %%gs" :: "q" (sd[0]*8+3));
+  if (__modern_linux>=0) {
+    if (set_thread_area((struct user_desc*)(void*)&sd)==0) {
+      asm volatile ("movw %w0, %%gs" :: "q" (sd[0]*8+3));
+      __modern_linux=1;
+    } else
+      __modern_linux=-1;
   }
 
 #elif defined(__alpha__) || defined(__s390__)
@@ -92,9 +125,9 @@ static void setup_tls(tcbhead_t* mainthread) {
 }
 #endif
 
-static void* find_rand(long* x) {
+static void* find_in_auxvec(long* x,long what) {
   while (*x) {
-    if (*x==25)
+    if (*x==what)
       return (void*)x[1];
     x+=2;
   }
@@ -103,8 +136,8 @@ static void* find_rand(long* x) {
 
 int stackgap(int argc,char* argv[],char* envp[]);
 int stackgap(int argc,char* argv[],char* envp[]) {
-#if defined(WANT_STACKGAP) || defined(WANT_SSP) || defined(WANT_TLS)
   long* auxvec=(long*)envp;
+#if defined(WANT_STACKGAP) || defined(WANT_SSP) || defined(WANT_TLS)
   char* rand;
   char* tlsdata;
   while (*auxvec) ++auxvec; ++auxvec;	/* skip envp to get to auxvec */
@@ -113,7 +146,7 @@ int stackgap(int argc,char* argv[],char* envp[]) {
 #endif
 #if defined(WANT_STACKGAP) || defined(WANT_SSP)
   volatile char* gap;
-  rand=find_rand(auxvec);
+  rand=find_in_auxvec(auxvec,25);
   if (!rand) {
     char myrand[10];
     int fd=open("/dev/urandom",O_RDONLY);
@@ -133,12 +166,38 @@ int stackgap(int argc,char* argv[],char* envp[]) {
 #endif
 #endif
 
-#if defined(WANT_SSP) || defined(WANT_TLS)
+  __vdso=find_in_auxvec(auxvec,33);	// AT_SYSINFO_EHDR -> vdso start address
+#ifdef __x86_64__
+  if (!__vdso) __vdso=(char*)0xffffffffff600000;
+#endif
+
+#ifdef WANT_TLS
   findtlsdata(auxvec);
+  if (__unlikely(__tmemsize+sizeof(tcbhead_t)<sizeof(tcbhead_t)) ||
+      __unlikely(__tmemsize>512*1024*1024) ||
+      __unlikely(__tmemsize<__tdatasize))
+    return 111;
   tlsdata=alloca(__tmemsize+sizeof(tcbhead_t));
   memcpy(tlsdata,__tdataptr,__tdatasize);
   memset(tlsdata+__tdatasize,0,__tmemsize-__tdatasize);
-  setup_tls((tcbhead_t*)(tlsdata+__tmemsize));
+  __setup_tls(__tcb_mainthread=(tcbhead_t*)(tlsdata+__tmemsize));
+#elif defined(WANT_SSP)
+  tlsdata=alloca(sizeof(tcbhead_t));
+  __setup_tls(__tcb_mainthread=(tcbhead_t*)(tlsdata));
+#endif
+#if defined(WANT_VALGRIND_SUPPORT)
+  {
+    const char* v=getenv("LD_PRELOAD");
+    __valgrind=(v && strstr(v,"valgrind"));
+  }
+#endif
+#ifdef WANT_GNU_STARTUP_BLOAT
+  program_invocation_name=argv[0];
+  {
+    char* c;
+    for (c=program_invocation_short_name=program_invocation_name; *c; ++c)
+      if (*c=='/') program_invocation_short_name=c+1;
+  }
 #endif
   return main(argc,argv,envp);
 }

@@ -32,13 +32,9 @@ static const char* Os[] = {
   "sparc","-Os","-mcpu=supersparc",0,
   "sparc64","-Os","-m64","-mhard-quad-float",0,
   "alpha","-Os","-fomit-frame-pointer",0,
-#ifdef __ARM_EABI__
-  "arm","-Os","-fomit-frame-pointer","-mfloat-abi=soft","-meabi=4",0,
-#else
   "arm","-Os","-fomit-frame-pointer",0,
-#endif 
-  "mips","-Os","-fomit-frame-pointer","-mno-abicalls","-fno-pic","-G","0",0,
-  "mipsel","-Os","-fomit-frame-pointer","-mno-abicalls","-fno-pic","-G","0",0,
+  "mips","-Os","-fomit-frame-pointer","-march=mips2",0,
+  "mipsel","-Os","-fomit-frame-pointer","-march=mips2",0,
   "ppc","-Os","-fomit-frame-pointer","-mpowerpc-gpopt","-mpowerpc-gfxopt",0,
   "ppc64","-Os","-fomit-frame-pointer","-mpowerpc-gpopt","-mpowerpc-gfxopt",0,
   "s390","-Os","-fomit-frame-pointer",0,
@@ -128,6 +124,7 @@ int main(int argc,char *argv[]) {
     m=0;
     for (i=1; i<argc; ++i) {
       if (!strcmp(argv[i],"-m32")) m=32; else
+      if (!strcmp(argv[i],"-mx32")) m=33; else
       if (!strcmp(argv[i],"-m64")) m=64;
     }
   }
@@ -136,7 +133,7 @@ int main(int argc,char *argv[]) {
     char *tmp=strchr(cc,0)-2;
     char *tmp2,*tmp3;
     if (tmp<cc) goto donttouch;
-    if (!strstr(cc,"cc")) goto donttouch;
+    if (!strstr(cc,"cc") && !strstr(cc,"clang")) goto donttouch;
     if ((tmp2=strstr(cc,"linux-"))) {	/* cross compiling? */
       int len=strlen(platform);
       --tmp2;
@@ -170,7 +167,10 @@ int main(int argc,char *argv[]) {
 #ifdef __arm__
       shortplatform="arm";
 #endif
-#ifdef __mips__
+#ifdef __MIPSEL__
+      shortplatform="mipsel";
+#endif
+#ifdef __MIPSEB__
       shortplatform="mips";
 #endif
 #ifdef __s390x__
@@ -187,7 +187,7 @@ int main(int argc,char *argv[]) {
       shortplatform="parisc";
 #endif
 #ifdef __x86_64__
-      shortplatform=(m==32?"i386":"x86_64");
+      shortplatform=(m==32?"i386":(m==33?"x32":"x86_64"));
 #endif
 #ifdef __ia64__
       shortplatform="ia64";

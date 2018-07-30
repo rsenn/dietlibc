@@ -44,7 +44,11 @@ loff_t lseek64(int fildes, loff_t offset, int whence) __THROW;
 int chdir(const char *path) __THROW;
 int fchdir(int fd) __THROW;
 int rmdir(const char *pathname) __THROW;
-char *getcwd(char *buf, size_t size) __THROW;
+char *getcwd(char *buf, size_t size) __THROW __attribute__((__warn_unused_result__));
+
+#ifdef _GNU_SOURCE
+char *get_current_dir_name (void) __THROW __attribute_dontuse__;
+#endif
 
 int open(const char* pathname,int flags, ...) __THROW;
 int open64(const char* pathname,int flags, ...) __THROW;
@@ -156,7 +160,7 @@ char *crypt(const char *key, const char *salt) __THROW;
 void encrypt(char block[64], int edflag) __THROW;
 void setkey(const char *key) __THROW;
 
-size_t getpagesize(void) __THROW __attribute__((__const__));
+size_t getpagesize(void) __THROW __attribute__((__const__,__pure__));
 
 int getdomainname(char *name, size_t len) __THROW;
 int setdomainname(const char *name, size_t len) __THROW;
@@ -268,6 +272,15 @@ int tgkill(pid_t tgid, pid_t tid, int sig) __THROW;
 /* see linux/fadvise.h */
 long fadvise64(int fd,off64_t offset,size_t len,int advice);
 long fadvise64_64(int fd,off64_t offset,off64_t len,int advice);
+#endif
+
+#if defined(_ATFILE_SOURCE) || ((_XOPEN_SOURCE + 0) >= 700) || ((_POSIX_C_SOURCE + 0) >= 200809L)
+/* also include fcntl.h for the AT_* constants */
+
+int faccessat(int dirfd, const char *pathname, int mode, int flags) __THROW;
+int fchownat(int dirfd, const char *pathname, uid_t owner, gid_t group, int flags) __THROW;
+int linkat(int olddirfd, const char *oldpath, int newdirfd, const char *newpath, int flags) __THROW;
+int readlinkat(int dirfd, const char *pathname, char *buf, size_t bufsiz) __THROW;
 #endif
 
 __END_DECLS
