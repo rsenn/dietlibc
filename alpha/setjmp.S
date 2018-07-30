@@ -1,17 +1,16 @@
 #include <setjmp.h>
 
 .text
+.weak setjmp
+.type setjmp,@function
+setjmp:
+.weak __setjmp
+.type __setjmp,@function
+__setjmp:
+	mov	0, $17
 .global __sigsetjmp
 .type __sigsetjmp,@function
 __sigsetjmp:
-1:
-	ldgp	$gp,  0($gp)
-
-	mov	$sp, $1
-	lda	$sp, -16($sp)
-
-	stq	$26, 0($sp)	/* save ra */
-
 	stq	 $9, (JB_S0*8) ($16)	/* s0 */
 	stq	$10, (JB_S1*8) ($16)	/* s1 */
 	stq	$11, (JB_S2*8) ($16)	/* s2 */
@@ -21,7 +20,7 @@ __sigsetjmp:
 
 	stq	$26, (JB_PC*8) ($16)	/* ra */
 	stq	$fp, (JB_FP*8) ($16)	/* fp */
-	stq	 $1, (JB_SP*8) ($16)	/* sp */
+	stq	$sp, (JB_SP*8) ($16)	/* sp */
 
 	stt	$f2, (JB_F2*8) ($16)	/* f2 */
 	stt	$f3, (JB_F3*8) ($16)	/* f3 */
@@ -32,19 +31,5 @@ __sigsetjmp:
 	stt	$f8, (JB_F8*8) ($16)	/* f8 */
 	stt	$f9, (JB_F9*8) ($16)	/* f9 */
 
-	br	$26, __sigjmp_save	/* call __sigjmp_save */
+	br	$31, __sigjmp_save	/* jmp  __sigjmp_save */
 
-	ldq	$26, 0($sp)	/* restore ra */
-
-	lda	$sp, 16($sp)
-	ret	$31, ($26), 1	/* back to caller */
-
-.weak setjmp
-.type setjmp,@function
-setjmp:
-.weak __setjmp
-.type __setjmp,@function
-__setjmp:
-	ldgp	$gp,  0($gp)
-	mov	0, $17
-	br	1b

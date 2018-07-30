@@ -7,14 +7,14 @@
 #include "dietwarning.h"
 
 static inline unsigned int skip_to(const unsigned char *format) {
-  int unsigned nr;
+  unsigned int nr;
   for (nr=0; format[nr] && (format[nr]!='%'); ++nr);
   return nr;
 }
 
 #define A_WRITE(fn,buf,sz)	((fn)->put((void*)(buf),(sz),(fn)->data))
 
-static char* pad_line[16]= { "                ", "0000000000000000", };
+static const char pad_line[2][16]= { "                ", "0000000000000000", };
 static inline int write_pad(struct arg_printf* fn, int len, int padwith) {
   int nr=0;
   for (;len>15;len-=16,nr+=16) {
@@ -67,7 +67,7 @@ inn_printf:
 
       /* FLAGS */
       case '#':
-	flag_hash=1;
+	flag_hash=-1;
       case 'z':
 	goto inn_printf;
 
@@ -141,6 +141,7 @@ inn_printf:
 #endif
 	sz = strlen(s);
 	if (flag_dot && sz>preci) sz=preci;
+	flag_dot^=flag_dot;
 
 print_out:
 	if (width && (!flag_left)) {
@@ -148,6 +149,11 @@ print_out:
 	    A_WRITE(fn,s,1); ++len;
 	    ++s; --sz;
 	    --width;
+	  }
+	  if (flag_hash>0) {
+	    A_WRITE(fn,s,flag_hash); len+=flag_hash;
+	    s+=flag_hash; sz-=flag_hash;
+	    width-=flag_hash;
 	  }
 //	  len+=write_pad(fn,(signed int)width-(signed int)sz,padwith);
 	  if (flag_dot) {
@@ -168,7 +174,7 @@ print_out:
 	sz=0;
 	goto num_printf;
       case 'p':
-	flag_hash=1;
+	flag_hash=2;
 	ch='x';
       case 'X':
 	flag_upcase=(ch=='X');
@@ -178,6 +184,7 @@ print_out:
 	if (flag_hash) {
 	  buf[1]='0';
 	  buf[2]=ch;
+	  flag_hash=2;
 	  sz=2;
 	}
 	goto num_printf;
@@ -193,6 +200,7 @@ print_out:
 	sz=0;
 	if (flag_hash) {
 	  buf[1]='0';
+	  flag_hash=1;
 	  ++sz;
 	}
 

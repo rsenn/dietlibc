@@ -23,18 +23,20 @@
 #define SIGTRAP		 5
 #define SIGABRT		 6
 #define SIGIOT		 6
-#define SIGBUS		 7
 #define SIGFPE		 8
 #define SIGKILL		 9
-#define SIGUSR1		10
 #define SIGSEGV		11
-#define SIGUSR2		12
 #define SIGPIPE		13
 #define SIGALRM		14
 #define SIGTERM		15
+#define SIGUNUSED	31
+#if defined(__i386__) || defined(__x86_64__) || defined(__powerpc__) || defined(__arm__) \
+	|| defined(__s390__) || defined(__ia64__)
+#define SIGBUS		 7
+#define SIGUSR1		10
+#define SIGUSR2		12
 #define SIGSTKFLT	16
 #define SIGCHLD		17
-#define SIGCLD		SIGCHLD
 #define SIGCONT		18
 #define SIGSTOP		19
 #define SIGTSTP		20
@@ -47,25 +49,149 @@
 #define SIGPROF		27
 #define SIGWINCH	28
 #define SIGIO		29
-#define SIGPOLL		SIGIO
 #define SIGPWR		30
 #define SIGSYS		31
+#elif defined(__alpha__) || defined(__sparc__)
+#define SIGEMT		 7
+#define SIGBUS		10
+#define SIGSYS		12
+#define SIGURG		16
+#define SIGSTOP		17
+#define SIGTSTP		18
+#define SIGCONT		19
+#define SIGCHLD		20
+#define SIGTTIN		21
+#define SIGTTOU		22
+#define SIGIO		23
+#define SIGXCPU		24
+#define SIGXFSZ		25
+#define SIGVTALRM	26
+#define SIGPROF		27
+#define SIGWINCH	28
+#define SIGPWR		29
+#define SIGUSR1		30
+#define SIGUSR2		31
+#if defined(__alpha__)
+#define SIGINFO		SIGPWR
+#endif
+#elif defined(__mips__)
+#define SIGEMT		 7
+#define SIGBUS		10
+#define SIGSYS		12
+#define SIGUSR1		16
+#define SIGUSR2		17
+#define SIGCHLD		18
+#define SIGPWR		19
+#define SIGWINCH	20
+#define SIGURG		21
+#define SIGIO		22
+#define SIGSTOP		23
+#define SIGTSTP		24
+#define SIGCONT		25
+#define SIGTTIN		26
+#define SIGTTOU		27
+#define SIGVTALRM	28
+#define SIGPROF		29
+#define SIGXCPU		30
+#define SIGXFSZ		31
+#elif defined(__hppa__)
+#define SIGEMT		 7
+#define SIGBUS		10
+#define SIGSYS		12
+#define SIGUSR1		16
+#define SIGUSR2		17
+#define SIGCHLD		18
+#define SIGPWR		19
+#define SIGVTALRM	20
+#define SIGPROF		21
+#define SIGIO		22
+#define SIGWINCH	23
+#define SIGSTOP		24
+#define SIGTSTP		25
+#define SIGCONT		26
+#define SIGTTIN		27
+#define SIGTTOU		28
+#define SIGURG		29
+#define SIGLOST		30
 #define SIGUNUSED	31
+#define SIGRESERVE	SIGUNUSE
+#define SIGXCPU		33
+#define SIGXFSZ		34
+#define SIGSTKFLT	36
+
+#else
+#error signal layout not yet known
+#endif
+
+#define SIGCLD		SIGCHLD
+#define SIGLOST		SIGPWR
+#define SIGPOLL		SIGIO
 
 /* These should not be considered constants from userland.  */
+#ifdef __hppa__
+#define SIGRTMIN	37
+#else
 #define SIGRTMIN	32
+#endif
 #define SIGRTMAX	(_NSIG-1)
 
 /* SA_FLAGS values: */
+#if defined(__alpha__)
+#define SA_ONSTACK	0x00000001
+#define SA_RESTART	0x00000002
+#define SA_NOCLDSTOP	0x00000004
+#define SA_NODEFER	0x00000008
+#define SA_RESETHAND	0x00000010
+#define SA_NOCLDWAIT	0x00000020 /* not supported yet */
+#define SA_SIGINFO	0x00000040
+#define SA_INTERRUPT	0x20000000 /* dummy -- ignored */
+#elif defined(__hppa__)
+#define SA_ONSTACK	0x00000001
+#define SA_RESETHAND	0x00000004
+#define SA_NOCLDSTOP	0x00000008
+#define SA_SIGINFO	0x00000010
+#define SA_NODEFER	0x00000020
+#define SA_RESTART	0x00000040
+#define SA_NOCLDWAIT	0x00000080 /* not supported yet */
+#define _SA_SIGGFAULT	0x00000100 /* HPUX */
+#define SA_INTERRUPT	0x20000000 /* dummy -- ignored */
+#define SA_RESTORER	0x04000000 /* obsolete -- ignored */
+#elif defined (__sparc__)
+#define SV_SSTACK	1	/* This signal handler should use sig-stack */
+#define SV_INTR		2	/* Sig return should not restart system call */
+#define SV_RESET	4	/* Set handler to SIG_DFL upon taken signal */
+#define SV_IGNCHILD	8	/* Do not send SIGCHLD */
+
+#define SA_NOCLDSTOP	SV_IGNCHILD
+#define SA_STACK	SV_SSTACK
+#define SA_ONSTACK	SV_SSTACK
+#define SA_RESTART	SV_INTR
+#define SA_RESETHAND	SV_RESET
+#define SA_INTERRUPT	0x10
+#define SA_DEFER	0x20
+#define SA_SHIRQ	0x40
+#define SA_NOCLDWAIT	0x100»··/* not supported yet */
+#define SA_SIGINFO	0x200
+#else
+#if defined (__mips__)
+#define SA_NOCLDSTOP	0x00000001
+#define SA_SIGINFO	0x00000008
+#define SA_NOCLDWAIT	0x00010000 /* Not supported yet */
+#else
 #define SA_NOCLDSTOP	0x00000001
 #define SA_NOCLDWAIT	0x00000002 /* not supported yet */
 #define SA_SIGINFO	0x00000004
+#endif
+#if defined(__arm__)
+#define SA_THIRTYTWO	0x02000000
+#endif
 #define SA_RESTORER	0x04000000
 #define SA_ONSTACK	0x08000000
 #define SA_RESTART	0x10000000
 #define SA_INTERRUPT	0x20000000 /* dummy -- ignored */
 #define SA_NODEFER	0x40000000
 #define SA_RESETHAND	0x80000000
+#endif
 
 /* ugh, historic Linux legacy, for gpm :-( */
 #define SA_NOMASK	SA_NODEFER
@@ -159,6 +285,126 @@ typedef struct siginfo {
 #define si_band		_sifields._sigpoll._band
 #define si_fd		_sifields._sigpoll._fd
 
+/* Values for `si_code'.  Positive values are reserved for kernel-generated
+   signals.  */
+enum {
+  SI_ASYNCNL = -6,		/* Sent by asynch name lookup completion.  */
+# define SI_ASYNCNL	SI_ASYNCNL
+  SI_SIGIO,			/* Sent by queued SIGIO. */
+# define SI_SIGIO	SI_SIGIO
+  SI_ASYNCIO,			/* Sent by AIO completion.  */
+# define SI_ASYNCIO	SI_ASYNCIO
+  SI_MESGQ,			/* Sent by real time mesq state change.  */
+# define SI_MESGQ	SI_MESGQ
+  SI_TIMER,			/* Sent by timer expiration.  */
+# define SI_TIMER	SI_TIMER
+  SI_QUEUE,			/* Sent by sigqueue.  */
+# define SI_QUEUE	SI_QUEUE
+  SI_USER,			/* Sent by kill, sigsend, raise.  */
+# define SI_USER	SI_USER
+  SI_KERNEL = 0x80		/* Send by kernel.  */
+#define SI_KERNEL	SI_KERNEL
+};
+
+
+/* `si_code' values for SIGILL signal.  */
+enum {
+  ILL_ILLOPC = 1,		/* Illegal opcode.  */
+# define ILL_ILLOPC	ILL_ILLOPC
+  ILL_ILLOPN,			/* Illegal operand.  */
+# define ILL_ILLOPN	ILL_ILLOPN
+  ILL_ILLADR,			/* Illegal addressing mode.  */
+# define ILL_ILLADR	ILL_ILLADR
+  ILL_ILLTRP,			/* Illegal trap. */
+# define ILL_ILLTRP	ILL_ILLTRP
+  ILL_PRVOPC,			/* Privileged opcode.  */
+# define ILL_PRVOPC	ILL_PRVOPC
+  ILL_PRVREG,			/* Privileged register.  */
+# define ILL_PRVREG	ILL_PRVREG
+  ILL_COPROC,			/* Coprocessor error.  */
+# define ILL_COPROC	ILL_COPROC
+  ILL_BADSTK			/* Internal stack error.  */
+# define ILL_BADSTK	ILL_BADSTK
+};
+
+/* `si_code' values for SIGFPE signal.  */
+enum {
+  FPE_INTDIV = 1,		/* Integer divide by zero.  */
+# define FPE_INTDIV	FPE_INTDIV
+  FPE_INTOVF,			/* Integer overflow.  */
+# define FPE_INTOVF	FPE_INTOVF
+  FPE_FLTDIV,			/* Floating point divide by zero.  */
+# define FPE_FLTDIV	FPE_FLTDIV
+  FPE_FLTOVF,			/* Floating point overflow.  */
+# define FPE_FLTOVF	FPE_FLTOVF
+  FPE_FLTUND,			/* Floating point underflow.  */
+# define FPE_FLTUND	FPE_FLTUND
+  FPE_FLTRES,			/* Floating point inexact result.  */
+# define FPE_FLTRES	FPE_FLTRES
+  FPE_FLTINV,			/* Floating point invalid operation.  */
+# define FPE_FLTINV	FPE_FLTINV
+  FPE_FLTSUB			/* Subscript out of range.  */
+# define FPE_FLTSUB	FPE_FLTSUB
+};
+
+/* `si_code' values for SIGSEGV signal.  */
+enum {
+  SEGV_MAPERR = 1,		/* Address not mapped to object.  */
+# define SEGV_MAPERR	SEGV_MAPERR
+  SEGV_ACCERR			/* Invalid permissions for mapped object.  */
+# define SEGV_ACCERR	SEGV_ACCERR
+};
+
+/* `si_code' values for SIGBUS signal.  */
+enum {
+  BUS_ADRALN = 1,		/* Invalid address alignment.  */
+# define BUS_ADRALN	BUS_ADRALN
+  BUS_ADRERR,			/* Non-existant physical address.  */
+# define BUS_ADRERR	BUS_ADRERR
+  BUS_OBJERR			/* Object specific hardware error.  */
+# define BUS_OBJERR	BUS_OBJERR
+};
+
+/* `si_code' values for SIGTRAP signal.  */
+enum {
+  TRAP_BRKPT = 1,		/* Process breakpoint.  */
+# define TRAP_BRKPT	TRAP_BRKPT
+  TRAP_TRACE			/* Process trace trap.  */
+# define TRAP_TRACE	TRAP_TRACE
+};
+
+/* `si_code' values for SIGCHLD signal.  */
+enum {
+  CLD_EXITED = 1,		/* Child has exited.  */
+# define CLD_EXITED	CLD_EXITED
+  CLD_KILLED,			/* Child was killed.  */
+# define CLD_KILLED	CLD_KILLED
+  CLD_DUMPED,			/* Child terminated abnormally.  */
+# define CLD_DUMPED	CLD_DUMPED
+  CLD_TRAPPED,			/* Traced child has trapped.  */
+# define CLD_TRAPPED	CLD_TRAPPED
+  CLD_STOPPED,			/* Child has stopped.  */
+# define CLD_STOPPED	CLD_STOPPED
+  CLD_CONTINUED			/* Stopped child has continued.  */
+# define CLD_CONTINUED	CLD_CONTINUED
+};
+
+/* `si_code' values for SIGPOLL signal.  */
+enum {
+  POLL_IN = 1,			/* Data input available.  */
+# define POLL_IN	POLL_IN
+  POLL_OUT,			/* Output buffers available.  */
+# define POLL_OUT	POLL_OUT
+  POLL_MSG,			/* Input message available.   */
+# define POLL_MSG	POLL_MSG
+  POLL_ERR,			/* I/O error.  */
+# define POLL_ERR	POLL_ERR
+  POLL_PRI,			/* High priority input available.  */
+# define POLL_PRI	POLL_PRI
+  POLL_HUP			/* Device disconnected.  */
+# define POLL_HUP	POLL_HUP
+};
+
 #define _NSIG_WORDS	((_NSIG/sizeof(long))>>3)
 
 typedef struct {
@@ -166,6 +412,30 @@ typedef struct {
 } sigset_t;
 
 struct sigaction {
+#if defined(__alpha__)
+  union {
+    sighandler_t _sa_handler;
+    void (*_sa_sigaction)(int, siginfo_t*, void*);
+  } _u;
+  sigset_t sa_mask;
+  unsigned long sa_flags;
+#elif defined(__ia64__) || defined(__hppa__)
+  union {
+    sighandler_t _sa_handler;
+    void (*_sa_sigaction)(int, siginfo_t*, void*);
+  } _u;
+  unsigned long sa_flags;
+  sigset_t sa_mask;
+#elif defined(__mips__)
+  unsigned long sa_flags;
+  union {
+    sighandler_t _sa_handler;
+    void (*_sa_sigaction)(int, siginfo_t*, void*);
+  } _u;
+  sigset_t sa_mask;
+  void (*sa_restorer)(void);
+  int sa_resv[1];
+#else	/* arm, i386, ppc, s390, sparc, saprc64, x86_64 */
   union {
     sighandler_t _sa_handler;
     void (*_sa_sigaction)(int, siginfo_t*, void*);
@@ -173,15 +443,22 @@ struct sigaction {
   unsigned long sa_flags;
   void (*sa_restorer)(void);
   sigset_t sa_mask;
+#endif
 };
 
 #define sa_handler	_u._sa_handler
 #define sa_sigaction	_u._sa_sigaction
 
 typedef struct sigaltstack {
+#if defined(__mips__)
+  void *ss_sp;
+  size_t ss_size;
+  int ss_flags;
+#else
   void *ss_sp;
   int ss_flags;
   size_t ss_size;
+#endif
 } stack_t;
 
 int sigaltstack(const struct sigaltstack *newstack, struct sigaltstack *oldstack) __THROW;

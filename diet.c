@@ -1,5 +1,6 @@
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <write12.h>
@@ -32,7 +33,7 @@ static const char* Os[] = {
   "sparc64","-Os","-m64",0,
   "alpha","-Os","-fomit-frame-pointer",0,
   "arm","-Os","-fomit-frame-pointer",0,
-  "mips","-Os","-fomit-frame-pointer","-mno-abicalls","-G","0","-fno-pic",0,
+  "mips","-Os","-fomit-frame-pointer","-mno-abicalls","-G","8","-fno-pic",0,
   "ppc","-Os","-fomit-frame-pointer","-mpowerpc-gpopt","-mpowerpc-gfxopt",0,
   "s390","-Os","-fomit-frame-pointer",0,
   "sh","-Os","-fomit-frame-pointer",0,
@@ -62,6 +63,7 @@ int main(int argc,char *argv[]) {
   char dashstatic[]="-static";
   int i;
   int mangleopts=0;
+  char manglebuf[1024];
 
 #ifdef INSTALLVERSION
   strcpy(platform,DIETHOME "/lib-");
@@ -102,12 +104,14 @@ usage:
   if (!argv[1]) goto usage;
   {
     char *tmp=strchr(argv[1],0)-2;
-    char *tmp2;
+    char *tmp2,*tmp3;
     char *cc=argv[1];
     if (tmp<cc) goto donttouch;
     if ((tmp2=strstr(cc,"linux-"))) {	/* cross compiling? */
       int len=strlen(platform);
       --tmp2;
+      tmp3=strchr(cc,'-');
+      if (tmp3<tmp2) tmp2=tmp3;
       if (tmp2-cc>90) error("platform name too long!\n");
       shortplatform=platform+len;
       memmove(shortplatform,argv[1],(size_t)(tmp2-cc));
@@ -201,7 +205,7 @@ pp:
 	if (!strcmp(argv[i],"-o"))
 	  if (!compile) _link=1;
 #endif
-      newargv=alloca(sizeof(char*)*(argc+22));
+      newargv=alloca(sizeof(char*)*(argc+100));
       a=alloca(strlen(diethome)+20);
       b=alloca(strlen(platform)+20);
       c=alloca(strlen(platform)+20);
@@ -217,11 +221,7 @@ pp:
 #endif
 #else
       strcpy(b,platform); strcat(b,"/dstart.o");
-#ifdef INSTALLVERSION
       strcpy(c,"-lc");
-#else
-      strcpy(c,"-ldietc");
-#endif
 #endif
 
 #ifdef WANT_DYNAMIC
@@ -280,6 +280,34 @@ pp:
       *dest++="-D__dietlibc__";
       if (mangleopts) {
 	const char **o=Os;
+
+	{
+	  int fd;
+	  char* tmp=getenv("HOME");
+	  if (tmp) {
+	    if (strlen(tmp)+strlen(cc)<900) {
+	      strcpy(manglebuf,tmp);
+	      strcat(manglebuf,"/.diet/");
+	      strcat(manglebuf,cc);
+	      if ((fd=open(manglebuf,O_RDONLY))>=0) {
+		int len=read(fd,manglebuf,1023);
+		if (len>0) {
+		  int i;
+		  manglebuf[len]=0;
+		  *dest++=manglebuf;
+		  for (i=1; i<len; ++i) {
+		    if (manglebuf[i]==' ' || manglebuf[i]=='\n') {
+		      manglebuf[i]=0;
+		      if (i+1<len)
+			*dest++=manglebuf+i+1;
+		    }
+		  }
+		  goto incorporated;
+		}
+	      }
+	    }
+	  }
+	}
 	for (o=Os;*o;++o) {
 	  if (!strcmp(*o,shortplatform)) {
 	    ++o;
@@ -292,6 +320,7 @@ pp:
 	    while (*o) ++o;
 	}
       }
+incorporated:
       if (_link) {
 	if (profile) *dest++="-lgmon";
 	*dest++=c; *dest++=(char*)libgcc;
@@ -301,17 +330,14 @@ pp:
 #endif
 #ifdef __DYN_LIB
       if (shared){ *dest++=c; }
-#ifdef INSTALLVERSION
       f=alloca(strlen(platform)+100);
       if (_link) {
 	strcpy(f,"-Wl,-dynamic-linker=");
 	strcat(f,platform);
-	strcat(f,"/diet-linux.so");
+//	strcat(f,"/diet-linux.so");
+	strcat(f,"/libdl.so");
 	*dest++=f;
       }
-#else
-      if (_link) { *dest++="-Wl,-dynamic-linker=" DIETHOME "/dynlinker/diet-linux.so"; }
-#endif
 #endif
       *dest=0;
       if (verbose) {

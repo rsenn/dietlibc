@@ -10,7 +10,8 @@
 */
 
 .text
-.globl memccpy
+.global memccpy
+.type   memccpy,@function
 memccpy:
 		pushl %esi
 		pushl %edi
@@ -34,3 +35,5 @@ memccpy:
 		popl %edi
 		popl %esi
 		ret
+.Lende:
+.size    memccpy,.Lende-memccpy

@@ -231,7 +231,9 @@ wsym: ; \
 .global sym; \
 sym: \
 	movb $__NR_##name,%al; \
-	jmp __unified_syscall
+	jmp __unified_syscall; \
+.Lend##sym: ; \
+.size sym,.Lend##sym-sym
 
 #define syscall(name,sym) \
 .text; \
@@ -239,5 +241,22 @@ sym: \
 .global sym; \
 sym: \
 	movb $__NR_##name,%al; \
-	jmp __unified_syscall
+	jmp __unified_syscall; \
+.Lend##sym: ; \
+.size sym,.Lend##sym-sym
 
+#ifndef __PIC__
+#define __socketcall(name,NAME) \
+.text; \
+.type name,@function; \
+.weak name; \
+name: ; \
+.global __libc_##name; \
+__libc_##name: ; \
+	movb $SYS_##NAME,%al; \
+	jmp socketcall; \
+.Lend##name:; \
+.size name,.Lend##name-name
+#else
+#define __socketcall(name,NAME)
+#endif

@@ -1,3 +1,21 @@
+0.21:
+  use gcc's size_t, ptrdiff_t and wchar_t types (Olaf)
+  use -G 8 on MIPS to reduce code size (Johannes Stezenbach)
+  add munlock (Jens Låås)
+  argh, atexit fell victim to bit rot (or maybe Olaf)
+  add WANT_INET_ADDR_DNS to make gethostbyname not look up IP numbers
+    but use them to fill in the struct hostent directly.
+  signal is now a correct signal (Olaf)
+  read optimizer cflags for diet -Os gcc from ~/.diet/gcc, overriding
+    the built-in defaults.
+  add file "SECURITY".  I will document design tradeoffs that have
+    security implications there.
+  fixed regex LINEEND condition
+  add .size directive to i386 syscalls
+  shove a few more bytes off the i386 socket calls
+  setjmp, longjmp and clone for x86_64 are now implemented but not tested (Olaf)
+  fix sparc signals
+
 0.20:
   calloc was botched
   umount and stime for x86_64 (Gwenole Beauchesne)
@@ -5,6 +23,7 @@
   x86_64 unified syscall did not preserve rbx violating ABI (Gwenole)
   realpath fix if path did not contain a slash (Gwenole)
   add ucontext
+  add asm/statfs.h to work around people using <linux/fs.h>
 
 0.19:
   current gcc cvs makes __thread a keyword (Eric Troan)

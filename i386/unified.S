@@ -5,11 +5,11 @@
 .weak exit
 exit:
 .global _exit
+.type	_exit,@function
 _exit:
 	movb	$1,%al
-#ifndef __DYN_LIB
 .global __unified_syscall
-#endif
+.type	__unified_syscall,@function
 __unified_syscall:
 	movzbl	%al, %eax
 	push	%edi

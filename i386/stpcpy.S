@@ -1,5 +1,6 @@
 .text
-.globl stpcpy
+.global stpcpy
+.type	stpcpy,@function
 stpcpy:
 	pushl %edi
 	pushl %esi
@@ -17,3 +18,5 @@ stpcpy:
 	popl %esi
 	popl %edi
 	ret
+.Lende:
+.size stpcpy,.Lende-stpcpy
