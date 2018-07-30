@@ -8,7 +8,7 @@ LIBDIR=${prefix}/lib
 BINDIR=${prefix}/bin
 MAN1DIR=${prefix}/man/man1
 
-MYARCH:=$(shell uname -m | sed -e 's/i[4-9]86/i386/' -e 's/armv[3-6][lb]/arm/')
+MYARCH:=$(shell uname -m | sed -e 's/i[4-9]86/i386/' -e 's/armv[3-6]t\?e\?[lb]/arm/')
 
 # This extra-ugly cruft is here so make will not run uname and sed each
 # time it looks at $(OBJDIR).  This alone sped up running make when
@@ -60,7 +60,11 @@ else
 ifeq ($(MYARCH),ia64)
 ARCH=ia64
 else
+ifeq ($(MYARCH),armeb)
+ARCH=arm
+else
 $(error unknown architecture, please fix Makefile)
+endif
 endif
 endif
 endif
@@ -100,6 +104,7 @@ CFLAGS=-pipe -nostdinc
 CROSS=
 
 CC=gcc
+INC=-I. -isystem include
 
 VPATH=lib:libstdio:libugly:libcruft:libcrypt:libshell:liblatin1:libcompat:libdl:librpc:libregex:libm:profiling
 
@@ -150,19 +155,28 @@ $(OBJDIR) $(PICODIR):
 
 % :: %,v
 
+ifeq ($(CC),tcc)
+$(OBJDIR)/%.o: %.S $(ARCH)/syscalls.h
+	$(CROSS)cpp $(INC) $< | $(CROSS)as -o $@
+
+$(OBJDIR)/%.o: %.c
+	tcc -I. -Iinclude -c $< -o $@
+	$(COMMENT) -$(CROSS)strip -x -R .comment -R .note $@
+else
 $(OBJDIR)/pstart.o: start.S
-	$(CROSS)$(CC) -I. -isystem include $(CFLAGS) -DPROFILING -c $< -o $@
+	$(CROSS)$(CC) $(INC) $(CFLAGS) -DPROFILING -c $< -o $@
 
 $(OBJDIR)/%.o: %.S $(ARCH)/syscalls.h
-	$(CROSS)$(CC) -I. -isystem include $(CFLAGS) -c $< -o $@
+	$(CROSS)$(CC) $(INC) $(CFLAGS) -c $< -o $@
 
 $(OBJDIR)/pthread_%.o: libpthread/pthread_%.c
-	$(CROSS)$(CC) -I. -isystem include $(CFLAGS) -c $< -o $@
+	$(CROSS)$(CC) $(INC) $(CFLAGS) -c $< -o $@
 	$(COMMENT) -$(CROSS)strip -x -R .comment -R .note $@
 
 $(OBJDIR)/%.o: %.c
-	$(CROSS)$(CC) -I. -isystem include $(CFLAGS) -c $< -o $@
+	$(CROSS)$(CC) $(INC) $(CFLAGS) -c $< -o $@ -D__dietlibc__
 	$(COMMENT) -$(CROSS)strip -x -R .comment -R .note $@
+endif
 
 ifeq ($(shell $(CC) -v 2>&1 | grep "gcc version"),gcc version 4.0.0)
 SAFE_CFLAGS=$(shell echo $(CFLAGS)|sed 's/-Os/-O2/')
@@ -173,7 +187,7 @@ SAFER_CFLAGS=$(CFLAGS)
 endif
 
 $(OBJDIR)/crypt.o: libcrypt/crypt.c
-	$(CROSS)$(CC) -I. -isystem include $(SAFER_CFLAGS) -c $< -o $@
+	$(CROSS)$(CC) $(INC) $(SAFER_CFLAGS) -c $< -o $@
 
 DIETLIBC_OBJ = $(OBJDIR)/unified.o \
 $(SYSCALLOBJ) $(LIBOBJ) $(LIBSTDIOOBJ) $(LIBUGLYOBJ) \
@@ -228,21 +242,21 @@ dyn_lib: $(PICODIR) $(PICODIR)/libc.so $(PICODIR)/dstart.o \
 	$(PICODIR)/libm.so $(PICODIR)/diet-dyn $(PICODIR)/diet-dyn-i
 
 $(PICODIR)/%.o: %.S $(ARCH)/syscalls.h
-	$(CROSS)$(CC) -I. -isystem include $(CFLAGS) -fPIC -D__DYN_LIB -c $< -o $@
+	$(CROSS)$(CC) $(INC) $(CFLAGS) -fPIC -D__DYN_LIB -c $< -o $@
 
 $(PICODIR)/pthread_%.o: libpthread/pthread_%.c
-	$(CROSS)$(CC) -I. -isystem include $(CFLAGS) -fPIC -D__DYN_LIB -c $< -o $@
+	$(CROSS)$(CC) $(INC) $(CFLAGS) -fPIC -D__DYN_LIB -c $< -o $@
 	$(COMMENT) $(CROSS)strip -x -R .comment -R .note $@
 
 $(PICODIR)/%.o: %.c
-	$(CROSS)$(CC) -I. -isystem include $(CFLAGS) -fPIC -D__DYN_LIB -c $< -o $@
+	$(CROSS)$(CC) $(INC) $(CFLAGS) -fPIC -D__DYN_LIB -c $< -o $@
 	$(COMMENT) $(CROSS)strip -x -R .comment -R .note $@
 
 $(PICODIR)/dstart.o: start.S
-	$(CROSS)$(CC) -I. -isystem include $(CFLAGS) -fPIC -D__DYN_LIB -c $< -o $@
+	$(CROSS)$(CC) $(INC) $(CFLAGS) -fPIC -D__DYN_LIB -c $< -o $@
 
 $(PICODIR)/dyn_so_start.o: dyn_start.c
-	$(CROSS)$(CC) -I. -isystem include $(CFLAGS) -fPIC -D__DYN_LIB -D__DYN_LIB_SHARED -c $< -o $@
+	$(CROSS)$(CC) $(INC) $(CFLAGS) -fPIC -D__DYN_LIB -D__DYN_LIB_SHARED -c $< -o $@
 	$(COMMENT) $(CROSS)strip -x -R .comment -R .note $@
 
 DYN_LIBC_PIC = $(LIBOBJ) $(LIBSTDIOOBJ) $(LIBUGLYOBJ) \
@@ -267,7 +281,7 @@ $(PICODIR)/libpthread.so: $(DYN_PTHREAD_OBJS) dietfeatures.h
 
 $(PICODIR)/libdl.so: libdl/_dl_main.c dietfeatures.h
 	$(LD_UNSET) $(CROSS)$(CC) -D__OD_CLEAN_ROOM -DNODIETREF -fPIC -nostdlib -shared -Bsymbolic -Wl,-Bsymbolic \
-		-o $@ $(SAFE_CFLAGS) -I. -isystem include libdl/_dl_main.c -Wl,-soname=libdl.so
+		-o $@ $(SAFE_CFLAGS) $(INC) libdl/_dl_main.c -Wl,-soname=libdl.so
 
 #$(PICODIR)/libdl.so: $(DYN_LIBDL_OBJS) dietfeatures.h
 #	$(CROSS)$(CC) -nostdlib -shared -o $@ $(CFLAGS) -fPIC $(DYN_LIBDL_OBJS) -L$(PICODIR) -ldietc -Wl,-soname=libdl.so
@@ -374,11 +388,18 @@ uninstall:
 .PHONY: sparc ppc mips arm alpha i386 parisc mipsel powerpc s390 sparc64
 .PHONY: x86_64 ia64 ppc64 s390x
 
-arm sparc ppc alpha mips parisc s390 sparc64 x86_64 ia64 ppc64 s390x:
+arm sparc alpha mips parisc s390 sparc64 x86_64 ia64 ppc64 s390x:
 	$(MAKE) ARCH=$@ CROSS=$@-linux- all
 
 i386:
 ifeq ($(MYARCH),x86_64)
+	$(MAKE) ARCH=$@ CC="$(CC) -m32" all
+else
+	$(MAKE) ARCH=$@ CROSS=$@-linux- all
+endif
+
+ppc:
+ifeq ($(MYARCH),ppc64)
 	$(MAKE) ARCH=$@ CC="$(CC) -m32" all
 else
 	$(MAKE) ARCH=$@ CROSS=$@-linux- all
@@ -405,7 +426,7 @@ cross:
 
 
 # these depend on dietfeatures.h for large file backward compatibility
-$(OBJDIR)/__fstat64.o $(OBJDIR)/__lstat64.o $(OBJDIR)/__stat64.o $(OBJDIR)/lseek64.o $(OBJDIR)/readdir64.o $(OBJDIR)/stat64.o $(OBJDIR)/lstat64.o $(OBJDIR)/fstat64.o $(OBJDIR)/truncate64.o $(OBJDIR)/__truncate64.o $(OBJDIR)/ftruncate64.o $(OBJDIR)/__ftruncate64.o $(OBJDIR)/sendfile64.o $(OBJDIR)/__sendfile64.o $(PICODIR)/dyn_syscalls.o $(PICODIR)/__truncate64.o $(PICODIR)/__ftruncate64.o $(PICODIR)/__stat64.o $(PICODIR)/__lstat64.o $(PICODIR)/__fstat64.o $(OBJDIR)/__sendfile64.o: dietfeatures.h
+$(OBJDIR)/__fstat64.o $(OBJDIR)/__lstat64.o $(OBJDIR)/__stat64.o $(OBJDIR)/lseek64.o $(OBJDIR)/readdir64.o $(OBJDIR)/stat64.o $(OBJDIR)/lstat64.o $(OBJDIR)/fstat64.o $(OBJDIR)/truncate64.o $(OBJDIR)/__truncate64.o $(OBJDIR)/ftruncate64.o $(OBJDIR)/__ftruncate64.o $(OBJDIR)/sendfile64.o $(OBJDIR)/__sendfile64.o $(PICODIR)/dyn_syscalls.o $(PICODIR)/__truncate64.o $(PICODIR)/__ftruncate64.o $(PICODIR)/__stat64.o $(PICODIR)/__lstat64.o $(PICODIR)/__fstat64.o $(OBJDIR)/__sendfile64.o $(OBJDIR)/fstatfs64.o $(OBJDIR)/statfs64.o: dietfeatures.h
 
 # these depend on dietfeatures.h for thread support
 $(OBJDIR)/alloc.o $(OBJDIR)/perror.o $(OBJDIR)/logging.o $(OBJDIR)/unified.o $(OBJDIR)/clone.o $(OBJDIR)/set_errno.o: dietfeatures.h
@@ -426,7 +447,7 @@ $(OBJDIR)/strncpy.o: dietfeatures.h
 $(OBJDIR)/ttyname.o $(OBJDIR)/sysconf_cpus.o: dietfeatures.h
 
 # these depend on dietfeatures.h for WANT_TZFILE_PARSER
-$(OBJDIR)/localtime_r.o $(OBJDIR)/strftime.o: dietfeatures.h
+$(OBJDIR)/localtime_r.o $(OBJDIR)/strftime.o $(OBJDIR)/tzfile.o: dietfeatures.h
 
 # these depend on dietfeatures.h for WANT_SMALL_STDIO_BUFS
 $(LIBSTDIOOBJ): dietfeatures.h include/stdio.h dietstdio.h
@@ -465,7 +486,7 @@ $(OBJDIR)/fgetc_unlocked.o $(OBJDIR)/fread.o $(OBJDIR)/ungetc.o: dietstdio.h
 
 # these depend on dietfeatures.h for WANT_LINKER_WARNINGS
 $(OBJDIR)/setlinebuf.o $(OBJDIR)/bzero.o $(OBJDIR)/setegid.o \
-$(OBJDIR)/seteuid.o: dietfeatures.h
+$(OBJDIR)/seteuid.o $(OBJDIR)/toascii.o: dietfeatures.h
 
 # these depend on dietfeatures.h for WANT_FULL_POSIX_COMPAT
 $(OBJDIR)/strncpy.o: dietfeatures.h
@@ -485,3 +506,9 @@ $(OBJDIR)/strsignal.o: include/signal.h
 $(LIBPTHREAD_OBJS): include/pthread.h
 
 # CFLAGS+=-W -Wshadow -Wid-clash-31 -Wpointer-arith -Wcast-align -Wstrict-prototypes -Wwrite-strings
+
+# WANT_LARGEFILE_BACKCOMPAT
+$(OBJDIR)/fcntl64.o: dietfeatures.h
+
+# WANT_SSP
+$(OBJDIR)/stackgap.o: dietfeatures.h

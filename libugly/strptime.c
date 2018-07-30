@@ -14,7 +14,7 @@ static int getint(const char** s,int max) {
     if (!isdigit(**s)) {
       if (j==0) return -1; else break;
     }
-    i=**s-'0';
+    i=i*10+**s-'0';
     ++*s;
   }
   return i;
@@ -79,8 +79,8 @@ char* strptime(const char* s,const char* format, struct tm* tm) {
 	break;
       case 'm':
 	i=getint(&s,2);
-	if (i==-1 || i>12) return (char*)s;
-	tm->tm_mon=i;
+	if (i<=0 || i>12) return (char*)s;
+	tm->tm_mon=i-1;
 	break;
       case 'M':
 	i=getint(&s,2);
@@ -123,13 +123,13 @@ char* strptime(const char* s,const char* format, struct tm* tm) {
 	break;
       case 'y':
 	i=getint(&s,2);
-	if (i==-1) return (char*)s;
-	tm->tm_year=(tm->tm_year/100)*100+i;
+	if (i<0) return (char*)s;
+	tm->tm_year=(i<69)?i+100:i;
 	break;
       case 'Y':
 	i=getint(&s,5);
 	if (i==-1) return (char*)s;
-	tm->tm_year=i;
+	tm->tm_year=i-1900;
 	break;
       }
       ++format;

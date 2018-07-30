@@ -45,6 +45,8 @@
 #include <features.h>
 #include <sys/ioctl.h>
 #include <pty.h>
+#include <sys/statfs.h>
+#include <mqueue.h>
 #ifdef __dietlibc__
 #include <md5.h>
 #include <write12.h>
@@ -104,9 +106,31 @@ extern char* strcpy2(char*a,char*b);
      __asm__ __volatile__ ("rdtsc" : "=a" (low) : : "edx")
 
 int main(int argc,char *argv[]) {
+  struct stat s;
+  time_t t=time(0);
+  struct tm* T;
+  stat("/tmp/nyt.html",&s);
+  T=gmtime(&s.st_mtime);
+#if 0
+  static struct mq_attr x;
+  mqd_t a=mq_open("fnord",O_WRONLY|O_CREAT,0600,&x);
+  mqd_t b=mq_open("fnord",O_RDONLY);
+#endif
+#if 0
+  struct statfs s;
+  if (statfs("/tmp",&s)!=-1) {
+    printf("%llu blocks, %llu free\n",(unsigned long long)s.f_blocks,(unsigned long long)s.f_bfree);
+  }
+#endif
+#if 0
+  char* c=strndupa("fnord",3);
+  puts(c);
+#endif
+#if 0
   char buf[100];
   __write2("foo!\n");
   memset(buf,0,200);
+#endif
 #if 0
   printf("%+05d\n",500);
 #endif

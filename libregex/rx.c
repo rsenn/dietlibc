@@ -56,7 +56,7 @@ struct piece {
   matcher m;
   void* next;
   struct atom a;
-  unsigned char min,max;
+  unsigned int min,max;
 };
 
 struct branch {
@@ -107,14 +107,14 @@ static int matchatom(void*__restrict__ x,const unsigned char*__restrict__ s,int 
   switch (a->type) {
   case EMPTY:
 #ifdef DEBUG
-    printf("matching atom EMPTY against \"%s\"\n",s);
+    printf("matching atom EMPTY against \"%.20s\"\n",s);
     printf("a->bnum is %d\n",a->bnum);
 #endif
     if (a->bnum>=0) preg->l[a->bnum].rm_so=preg->l[a->bnum].rm_eo=ofs;
     goto match;
   case REGEX:
 #ifdef DEBUG
-    printf("matching atom REGEX against \"%s\"\n",s);
+    printf("matching atom REGEX against \"%.20s\"\n",s);
     printf("a->bnum is %d\n",a->bnum);
 #endif
     if ((matchlen=a->u.r.m(&a->u.r,(const char*)s,ofs,preg,0,eflags))>=0) {
@@ -126,7 +126,7 @@ static int matchatom(void*__restrict__ x,const unsigned char*__restrict__ s,int 
     break;
   case BRACKET:
 #ifdef DEBUG
-    printf("matching atom BRACKET against \"%s\"\n",s);
+    printf("matching atom BRACKET against \"%.20s\"\n",s);
 #endif
     matchlen=1;
     if (*s=='\n' && (preg->cflags&REG_NEWLINE)) break;
@@ -135,7 +135,7 @@ static int matchatom(void*__restrict__ x,const unsigned char*__restrict__ s,int 
     break;
   case ANY:
 #ifdef DEBUG
-    printf("matching atom ANY against \"%s\"\n",s);
+    printf("matching atom ANY against \"%.20s\"\n",s);
 #endif
     if (*s=='\n' && (preg->cflags&REG_NEWLINE)) break;
     matchlen=1;
@@ -143,7 +143,7 @@ static int matchatom(void*__restrict__ x,const unsigned char*__restrict__ s,int 
     break;
   case LINESTART:
 #ifdef DEBUG
-    printf("matching atom LINESTART against \"%s\"\n",s);
+    printf("matching atom LINESTART against \"%.20s\"\n",s);
 #endif
     if (ofs==0 && (eflags&REG_NOTBOL)==0) {
       goto match;
@@ -151,27 +151,27 @@ static int matchatom(void*__restrict__ x,const unsigned char*__restrict__ s,int 
     break;
   case LINEEND:
 #ifdef DEBUG
-    printf("matching atom LINEEND against \"%s\"\n",s);
+    printf("matching atom LINEEND against \"%.20s\"\n",s);
 #endif
     if ((*s && *s!='\n') || (eflags&REG_NOTEOL)) break;
     goto match;
   case WORDSTART:
 #ifdef DEBUG
-    printf("matching atom WORDSTART against \"%s\"\n",s);
+    printf("matching atom WORDSTART against \"%.20s\"\n",s);
 #endif
     if ((ofs==0 || !isalnum(s[-1])) && isalnum(*s))
       goto match;
     break;
   case WORDEND:
 #ifdef DEBUG
-    printf("matching atom WORDEND against \"%s\"\n",s);
+    printf("matching atom WORDEND against \"%.20s\"\n",s);
 #endif
     if (ofs>0 && isalnum(s[-1]) && !isalnum(*s))
       goto match;
     break;
   case CHAR:
 #ifdef DEBUG
-    printf("matching atom CHAR %c against \"%s\"\n",a->u.c,s);
+    printf("matching atom CHAR %c against \"%.20s\"\n",a->u.c,s);
 #endif
     matchlen=1;
     if (((preg->cflags&REG_ICASE)?tolower(*s):*s)==a->u.c) goto match;
@@ -252,7 +252,7 @@ static int matchpiece(void*__restrict__ x,const char*__restrict__ s,int ofs,stru
   /* first, try to match the atom as often as possible, up to a->max times */
   if (a->max == 1 && a->min == 1)
     return a->a.m(&a->a,s+matchlen,ofs+matchlen,preg,0,eflags);
-  while (num<a->max) {
+  while ((unsigned int)num<a->max) {
     void* save=a->a.next;
     a->a.next=0;
     if ((tmp=a->a.m(&a->a,s+matchlen,ofs+matchlen,preg,0,eflags))>=0) {
@@ -266,7 +266,7 @@ static int matchpiece(void*__restrict__ x,const char*__restrict__ s,int ofs,stru
       break;
     }
   }
-  if (num<a->min) return -1;		/* already at minimum matches; signal mismatch */
+  if ((unsigned int)num<a->min) return -1;		/* already at minimum matches; signal mismatch */
   /* then, while the rest does not match, back off */
   for (;num>=0;) {
     if (a->next)
@@ -315,7 +315,7 @@ static int matchbranch(void*__restrict__ x,const char*__restrict__ s,int ofs,str
   register struct branch* a=(struct branch*)x;
   int tmp;
 #ifdef DEBUG
-  printf("%08p matching branch against \"%s\"\n",a,s);
+  printf("%08p matching branch against \"%.20s\"\n",a,s);
   printf("%p %p\n",&a->p->m,a->p->m);
 #endif
   assert(a->p->m==matchpiece);
@@ -371,7 +371,7 @@ static int matchregex(void*__restrict__ x,const char*__restrict__ s,int ofs,stru
   register struct regex* a=(struct regex*)x;
   int i,tmp;
 #ifdef DEBUG
-  printf("%08p matching regex against \"%s\"\n",a,s);
+  printf("%08p matching regex against \"%.20s\"\n",a,s);
 #endif
   for (i=0; i<a->num; ++i) {
     assert(a->b[i].m==matchbranch);
@@ -414,7 +414,9 @@ static const char* parseregex(struct regex*__restrict__ r,const char*__restrict_
       return s;
     }
 //    printf("assigned branch %d at %p\n",r->num-1,r->b);
-    s=tmp; if (*s=='|') ++s;
+    s=tmp;
+    if (*s==')') return s;
+    if (*s=='|') ++s;
   }
   return tmp;
 }
@@ -473,6 +475,8 @@ int regexec(const regex_t*__restrict__ preg, const char*__restrict__ string, siz
   int matched;
   const char *orig=string;
   assert(preg->brackets+1>0 && preg->brackets<1000);
+  for (matched=0; (unsigned int)matched<nmatch; ++matched)
+    pmatch[matched].rm_so=-1;
 #ifdef DEBUG
   printf("alloca(%d)\n",sizeof(regmatch_t)*(preg->brackets+3));
 #endif

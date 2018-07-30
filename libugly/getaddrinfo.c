@@ -33,6 +33,7 @@ int getaddrinfo(const char *node, const char *service, const struct addrinfo *hi
       h.h_addr_list=(char**)buf+16;
       if (node) {
 	if ((interface=strchr(node,'%'))) ++interface;
+	if (family==PF_INET6 && inet_pton(AF_INET,node,buf)) continue;
 	if (inet_pton(family,node,buf)>0) {
 	  h.h_name=(char*)node;
 	  h.h_addr_list[0]=buf;
@@ -82,8 +83,11 @@ int getaddrinfo(const char *node, const char *service, const struct addrinfo *hi
 	}
 	foo->ip.ip6.sin6_family=foo->ai.ai_family=family;
 #ifdef WANT_PLUGPLAY_DNS
-	if (family==AF_INET6)
-	  foo->ip.ip6.sin6_scope_id=__dns_plugplay_interface;
+	if (family==AF_INET6 && node) {
+	  int l=strlen(node);
+	  if (!strcmp(node-6,".local"))
+	    foo->ip.ip6.sin6_scope_id=__dns_plugplay_interface;
+	}
 #endif
 	if (h.h_name) {
 	  foo->ai.ai_canonname=foo->name;
@@ -97,7 +101,7 @@ int getaddrinfo(const char *node, const char *service, const struct addrinfo *hi
 	    struct servent* se;
 	    if ((se=getservbyname(service,"tcp"))) {	/* found a service. */
 	      port=se->s_port;
-  blah1:
+blah1:
 	      if (family==PF_INET6)
 		foo->ip.ip6.sin6_port=port;
 	      else

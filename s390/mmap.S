@@ -38,10 +38,10 @@ mmap:
 	j	__unified_syscall
 
         /* check gpr 2 for error */
-//        lhi     %r0,-4096
-//        clr     %r2,%r0
-//        jnl     SYSCALL_ERROR_LABEL
+        lhi     %r0,-4096
+        clr     %r2,%r0
+        jnl     1b
 
         /* Successful; return the syscall's value.  */
-//        br      %r14
+        br      %r14
 

@@ -64,15 +64,10 @@ long jrand48(randbuf buf) __THROW;
 long nrand48(randbuf buf) __THROW;
 double erand48(randbuf buf) __THROW;
 
-void qsort(void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *)) __THROW;
-void *bsearch(const void *key, const void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *)) __THROW;
+void qsort(void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *));
+void *bsearch(const void *key, const void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *));
 
 extern char **environ;
-
-/* now this function is the greatest bullshit I have ever seen.
- * The ISO people must be out of their minds. */
-typedef struct { int quot,rem; } div_t;
-div_t div(int numer, int denom) __THROW __attribute__((__const__));
 
 char *realpath(const char *path, char *resolved_path) __THROW;
 
@@ -96,9 +91,25 @@ char *ptsname (int fd) __THROW;
 #define EXIT_FAILURE 1
 #define EXIT_SUCCESS 0
 
-#define RAND_MAX 	((1<<31) -2)
+#define RAND_MAX 	0x7ffffffe
 
 #define MB_CUR_MAX 1
+
+/* now these functions are the greatest bullshit I have ever seen.
+ * The ISO people must be out of their minds. */
+
+typedef struct { int quot,rem; } div_t;
+typedef struct { long quot,rem; } ldiv_t;
+
+div_t div(int numerator, int denominator);
+ldiv_t ldiv(long numerator, long denominator);
+
+#ifdef _GNU_SOURCE
+typedef struct { long long quot,rem; } lldiv_t;
+lldiv_t lldiv(long long numerator, long long denominator);
+
+int clearenv(void);
+#endif
 
 __END_DECLS
 

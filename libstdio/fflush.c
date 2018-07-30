@@ -33,7 +33,7 @@ int fflush_unlocked(FILE *stream) {
     }
     stream->bs=stream->bm=0;
   } else {
-    if (stream->bm && write(stream->fd,stream->buf,stream->bm)!=(int)stream->bm) {
+    if (stream->bm && write(stream->fd,stream->buf,stream->bm)!=(ssize_t)stream->bm) {
       stream->flags|=ERRORINDICATOR;
       return -1;
     }
@@ -52,7 +52,7 @@ int __fflush4(FILE *stream,int next) {
     stream->flags=(stream->flags&~BUFINPUT)|next;
     return res;
   }
-  if (stream->fd==0) __fflush_stdout();
+  if (stream->fd==0 && __stdin_is_tty()) __fflush_stdout();
   return 0;
 }
 

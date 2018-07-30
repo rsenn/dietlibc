@@ -79,7 +79,7 @@ static int parsesockaddr(const char* c,void* x) {
 }
 
 #ifdef WANT_FULL_RESOLV_CONF
-int __dns_search;
+unsigned int __dns_search;
 char *__dns_domains[8];
 #endif
 
@@ -124,7 +124,8 @@ void __dns_readstartfiles(void) {
 	}
       }
 #ifdef WANT_FULL_RESOLV_CONF
-      else if (!strncmp(buf,"search",6) || !strncmp(buf,"domain",6)) {
+      else if ((!strncmp(buf,"search",6) || !strncmp(buf,"domain",6)) &&
+	       (__dns_search < sizeof(__dns_domains)/sizeof(__dns_domains[0]))) {
 	buf+=6;
 	while (buf<last && *buf!='\n') {
 	  char save;

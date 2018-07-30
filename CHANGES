@@ -1,4 +1,71 @@
-0.29
+0.30:
+  put exception handling frames in read-only section on AMD64 and S/390
+  make sys/stat.h ILP64 compatible
+    (both Markus Oberhumer)
+  whoops, strptime was completely broken, and noone noticed :-)
+  fix DNS resolver to only use shorter timeout for .local queries
+  remove throw() statements for functions taking function pointer
+    arguments (qsort, besearch, ftw)
+  fix embarassing bug in pclose (Juergen Sawinski, René Rebe)
+  when asking for an IPv6 address and there is an IPv4 address in
+    /etc/hosts but not an IPv6 address, return NO_DATA without
+    querying DNS.  This is how glibc does it, and it means you can use
+    e.g. elinks to browse http://localhost/ without being connected to
+    the internet / a DNS server.
+  make libcrypt/crypt.c to work when compiled with gcc 4
+  provide toascii and ustat (Reynir Stefansson)
+  change size of struct sigaction.sa_flags from long to int on alpha.
+  beginnings of wide char string routines
+  fix regex match bug ("@(a|b)" would also match "x@z")
+  ARM big-endian support (Paul Clifford)
+  support %s in strftime, so date in embutils does :-)
+  fix two strptime bugs (Gernot Tenchio)
+  add strnlen and clearenv (for udev)
+  #define IOV_MAX in limits.h behind _XOPEN_SOURCE (for opennntpd)
+  tzfile fix (Nikola Vladov)
+  lots of fixes from Markus FX Oberhumer:
+    * better signal handling error detection
+    * setjmp.S on i386
+    * getenv on i386
+    * sys/stat.h -malign-double fix
+    * update fcntl.h for MIPS to 2.6.13 version
+    * jmp_buf is 40*8 instead of 58*8 on ppc64.
+    * This patch fixes the section of the TOC entries on ppc64
+    * libstdc++ updates for gcc 4
+    * remove cstddef and cwchar (no longer needed)
+    * int -> ssize_t for read and write
+    * sigjmp.c: __mask_was_saved was not set in all cases!
+    * another round of ILP64 cleanups
+  add ngettext, dngettext (for glib)
+  add strdupa and strndupa (for directfb)
+  add extended attribute, thread, and misc syscalls
+  Olaf: fixed my libdl code to run with gcc-4.0.x
+  support optstring starting with '-' extension in getopt_long (Jens Låås)
+  make sure ftw returns in the directory it was called from
+  Olaf: fixing a bug in timegm (an off by ONE array access)...
+  tzfile fix for recent gcc
+  make resolv.conf more glibcish so openssh 4.3p1 compiles
+  add linux/* glue to make openssh compile with tun/tap support
+  fix putenv (René Rebe, Thomas Ogrisegg)
+  limit search/domain entries in /etc/resolv.conf (Gernot Tenchio)
+  fix unlockpt (Gernot Tenchio)
+  Olaf: fixing putenv for the situation that environ is NULL
+    (situation after a clearenv)
+  HP-PA fixes (Micah Anderson, Hubert Poetzl)
+  syscall() for ppc/64
+  make __kernel_size_t more like the real thing (Rene Rebe)
+  fix __exec_shell (execv and execvp) (Gernot Tenchio)
+  fix mmap and provide mmap64 on S/390 (Bastian Blank)
+  fix telldir, seekdir (Gernot Tenchio)
+  also add -lc after -lgcc for gcc 4.1 on arm (Enrico Scholz)
+  update SSP (ProPolice) support (with help from Eduardo Tongson)
+  fix buffer underflow in strncpy if n==0 and WANT_FULL_POSIX_COMPAT
+    is defined (it's normally not) (Ilja van Sprundel)
+  reading from stdin used to flush stdout.  Now it only does that
+    if stdin is a tty.
+  sparc64 fixes for ioctls, includes and sigaction (Rene Rebe)
+
+0.29:
   oops, fix LD_RUN_PATH unsetting (Enrico Scholz)
   Markus Oberhumer sent the following diffs:
     dl_iterate_phdr for libgcc_eh

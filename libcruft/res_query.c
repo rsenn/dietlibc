@@ -29,10 +29,10 @@ int __dns_plugplay_interface;
 int res_query(const char *dname, int class, int type, unsigned char *answer, int anslen) {
   unsigned char packet[512];
   int size;
+  struct pollfd duh[2];
 #ifndef WANT_IPV6_DNS
   __dns_make_fd();
 #endif
-  struct pollfd duh[2];
 
   __dns_readstartfiles();
   if ((size=res_mkquery(QUERY,dname,class,type,0,0,0,(char*)packet,512))<0) { h_errno=NO_RECOVERY; return -1; }
@@ -116,7 +116,7 @@ int res_query(const char *dname, int class, int type, unsigned char *answer, int
       }
       /* if it doesn't work, we don't care */
 #endif
-      for (j=120; j>0; --j) {
+      for (j=20; j>0; --j) {
 	gettimeofday(&now,0);
 	if (now.tv_sec-last.tv_sec>10) {
 #ifdef WANT_IPV6_DNS
@@ -133,8 +133,10 @@ int res_query(const char *dname, int class, int type, unsigned char *answer, int
 	  if (duh[0].fd!=-1) {
 #endif
 	  duh[0].fd=tmpfd;
-	  if (sendto(tmpfd,packet,size,0,s,sizeof(struct sockaddr_in6))==0)
+	  if (sendto(tmpfd,packet,size,0,s,sizeof(struct sockaddr_in6))!=-1)
 	    gettimeofday(&last,0);
+	  else
+	    goto nxdomain;
 #ifdef WANT_PLUGPLAY_DNS
 	  }
 #endif
@@ -147,7 +149,7 @@ int res_query(const char *dname, int class, int type, unsigned char *answer, int
 	}
 	if (++i >= _res.nscount) i=0;
 #ifdef WANT_PLUGPLAY_DNS
-	if (now.tv_sec>first.tv_sec) goto nxdomain;
+	if (now.tv_sec>first.tv_sec && duh[0].fd==-1) goto nxdomain;
 	if (duh[0].fd==-1 && duh[1].fd==-1) goto nxdomain;
 	duh[0].revents=0;
 	if (poll(duh[0].fd==-1?duh+1:duh,duh[0].fd==-1?1:2,1000) > 0) {
