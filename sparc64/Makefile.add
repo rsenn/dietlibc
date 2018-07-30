@@ -1,0 +1,2 @@
+CFLAGS+=-m64 -Os
+VPATH:=sparc64:syscalls.s:$(VPATH)
