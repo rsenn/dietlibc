@@ -121,6 +121,20 @@ void sincos(double x, double *sin, double *cos);
 void sincosf(float x, float *sin, float *cos);
 void sincosl(long double x, long double *sin, long double *cos);
 
+float ceilf(float x) __THROW __attribute__((__const__));
+float cosf(float x) __THROW __attribute__((__const__));
+float floorf(float x) __THROW __attribute__((__const__));
+float hypotf(float x, float y) __THROW __attribute__((__const__));
+long double hypotl(long double x, long double y) __THROW __attribute__((__const__));
+float ldexpf(float x, int n) __THROW __attribute__((__const__));
+long double ldexpl(long double x, int n) __THROW __attribute__((__const__));
+float log2f(float x) __THROW __attribute__((__const__));
+float powf(float x, float y) __THROW __attribute__((__const__));
+long double powl(long double x, long double y) __THROW __attribute__((__const__));
+double scalbn(double x, int n) __THROW __attribute__((__const__));
+float truncf(float x) __THROW __attribute__((__const__));
+double __poly(double x, size_t n, const double *c) __THROW __attribute__((__const__));
+
 __END_DECLS
 
 #endif
