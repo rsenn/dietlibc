@@ -22,7 +22,7 @@ TESTS = $(patsubst %.c,%,$(sort $(wildcard test-*.c)))
 #include ../$(ARCH)/Makefile.add
 
 ifeq ($(CFLAGS),-pipe)
-CFLAGS+= -O2 -fomit-frame-pointer
+CFLAGS+= -Os -fomit-frame-pointer
 endif
 
 CFLAGS += -W -Wall

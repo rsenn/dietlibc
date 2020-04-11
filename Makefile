@@ -212,7 +212,7 @@ endif
 
 
 ifeq ($(shell $(CC) -v 2>&1 | grep "gcc version"),gcc version 4.0.0)
-SAFE_CFLAGS=$(shell echo $(CCFLAGS)|sed 's/-Os/-O2/')
+SAFE_CFLAGS=$(shell echo $(CCFLAGS)|sed 's/-Os/-Os/')
 SAFER_CFLAGS=$(shell echo $(CCFLAGS)|sed 's/-Os/-O/')
 else
 SAFE_CFLAGS=$(CCFLAGS)

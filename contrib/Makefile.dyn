@@ -3,7 +3,7 @@ DCC       = diet gcc
 
 PDIET     = /opt/diet/lib
 
-CFLAGS    = -Wall -O2
+CFLAGS    = -Wall -Os
 
 LDFLAGS   = -nostdlib -rdynamic
 LIBS      = $(PDIET)/libdietc.so -lgcc
