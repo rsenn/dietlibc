@@ -141,7 +141,7 @@ LIBMATH=$(patsubst libm/%.c,%.o,$(sort $(wildcard libm/*.c)))
 
 LIBRPCOBJ=$(patsubst librpc/%.c,$(OBJDIR)/%.o,$(sort $(wildcard librpc/*.c)))
 LIBREGEXOBJ=$(patsubst libregex/%.c,$(OBJDIR)/%.o,$(sort $(wildcard libregex/*.c)))
-LIBTERMIOSOBJ=$(patsubst libtermios/%.c,$(OBJDIR)/%.o,$(sort $(wildcard libregex/*.c)))
+LIBTERMIOSOBJ=$(patsubst libtermios/%.c,$(OBJDIR)/%.o,$(sort $(wildcard libtermios/*.c)))
 
 LIBDLOBJ=$(patsubst libdl/%.c,$(OBJDIR)/%.o,$(sort $(wildcard libdl/*.c))) $(OBJDIR)/_dl_jump.o
 
@@ -446,7 +446,10 @@ uninstall:
 .PHONY: sparc ppc mips arm alpha i386 parisc mipsel powerpc s390 sparc64
 .PHONY: x86_64 ia64 ppc64 s390x
 
-arm sparc alpha mips parisc s390 sparc64 x86_64 ia64 ppc64 s390x:
+arm: 
+	$(MAKE) ARCH=$@ CROSS=$@-linux-gnueabihf- all
+
+sparc alpha mips parisc s390 sparc64 x86_64 ia64 ppc64 s390x:
 	$(MAKE) ARCH=$@ CROSS=$@-linux- all
 
 .PHONY: x32
