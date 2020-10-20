@@ -48,18 +48,15 @@ cosf(float x) {
   }
 
   /* cos(Inf or NaN) is NaN */
-  if(ix >= 0x7f800000) return x - x;
+  if(ix >= 0x7f800000)
+    return x - x;
 
   /* general argument reduction needed */
   n = __rem_pio2f(x, &y);
   switch(n & 3) {
-    case 0:
-      return __cosdf(y);
-    case 1:
-      return __sindf(-y);
-    case 2:
-      return -__cosdf(y);
-    default:
-      return __sindf(y);
+    case 0: return __cosdf(y);
+    case 1: return __sindf(-y);
+    case 2: return -__cosdf(y);
+    default: return __sindf(y);
   }
 }

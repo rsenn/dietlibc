@@ -1,4 +1,5 @@
 #include <float.h>
+#include "math.h"
 
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
 long double
@@ -110,27 +111,38 @@ powl(long double x, long double y) {
 
   /* make sure no invalid exception is raised by nan comparision */
   if(isnan(x)) {
-    if(!isnan(y) && y == 0.0) return 1.0;
+    if(!isnan(y) && y == 0.0)
+      return 1.0;
     return x;
   }
   if(isnan(y)) {
-    if(x == 1.0) return 1.0;
+    if(x == 1.0)
+      return 1.0;
     return y;
   }
-  if(x == 1.0) return 1.0;                  /* 1**y = 1, even if y is nan */
-  if(x == -1.0 && !isfinite(y)) return 1.0; /* -1**inf = 1 */
-  if(y == 0.0) return 1.0;                  /* x**0 = 1, even if x is nan */
-  if(y == 1.0) return x;
+  if(x == 1.0)
+    return 1.0; /* 1**y = 1, even if y is nan */
+  if(x == -1.0 && !isfinite(y))
+    return 1.0; /* -1**inf = 1 */
+  if(y == 0.0)
+    return 1.0; /* x**0 = 1, even if x is nan */
+  if(y == 1.0)
+    return x;
   if(y >= LDBL_MAX) {
-    if(x > 1.0 || x < -1.0) return INFINITY;
-    if(x != 0.0) return 0.0;
+    if(x > 1.0 || x < -1.0)
+      return INFINITY;
+    if(x != 0.0)
+      return 0.0;
   }
   if(y <= -LDBL_MAX) {
-    if(x > 1.0 || x < -1.0) return 0.0;
-    if(x != 0.0 || y == -INFINITY) return INFINITY;
+    if(x > 1.0 || x < -1.0)
+      return 0.0;
+    if(x != 0.0 || y == -INFINITY)
+      return INFINITY;
   }
   if(x >= LDBL_MAX) {
-    if(y > 0.0) return INFINITY;
+    if(y > 0.0)
+      return INFINITY;
     return 0.0;
   }
 
@@ -138,7 +150,8 @@ powl(long double x, long double y) {
 
   /* Set iyflg to 1 if y is an integer. */
   iyflg = 0;
-  if(w == y) iyflg = 1;
+  if(w == y)
+    iyflg = 1;
 
   /* Test for odd integer y. */
   yoddint = 0;
@@ -146,16 +159,19 @@ powl(long double x, long double y) {
     ya = fabsl(y);
     ya = floorl(0.5 * ya);
     yb = 0.5 * fabsl(w);
-    if(ya != yb) yoddint = 1;
+    if(ya != yb)
+      yoddint = 1;
   }
 
   if(x <= -LDBL_MAX) {
     if(y > 0.0) {
-      if(yoddint) return -INFINITY;
+      if(yoddint)
+        return -INFINITY;
       return INFINITY;
     }
     if(y < 0.0) {
-      if(yoddint) return -0.0;
+      if(yoddint)
+        return -0.0;
       return 0.0;
     }
   }
@@ -168,12 +184,15 @@ powl(long double x, long double y) {
         /* (+-0.0)**(negative) = inf, divbyzero */
         return 1.0 / 0.0;
       }
-      if(signbit(x) && yoddint) return -0.0;
+      if(signbit(x) && yoddint)
+        return -0.0;
       return 0.0;
     }
-    if(iyflg == 0) return (x - x) / (x - x); /* (x<0)**(non-int) is NaN */
+    if(iyflg == 0)
+      return (x - x) / (x - x); /* (x<0)**(non-int) is NaN */
     /* (x<0)**(integer) */
-    if(yoddint) nflg = 1; /* negate result */
+    if(yoddint)
+      nflg = 1; /* negate result */
     x = -x;
   }
   /* (+integer)**(integer)  */
@@ -188,11 +207,16 @@ powl(long double x, long double y) {
 
   /* find significand in antilog table A[] */
   i = 1;
-  if(x <= A[17]) i = 17;
-  if(x <= A[i + 8]) i += 8;
-  if(x <= A[i + 4]) i += 4;
-  if(x <= A[i + 2]) i += 2;
-  if(x >= A[1]) i = -1;
+  if(x <= A[17])
+    i = 17;
+  if(x <= A[i + 8])
+    i += 8;
+  if(x <= A[i + 4])
+    i += 4;
+  if(x <= A[i + 2])
+    i += 2;
+  if(x >= A[1])
+    i = -1;
   i += 1;
 
   /* Find (x - A[i])/A[i]
@@ -252,8 +276,10 @@ powl(long double x, long double y) {
   w = (Ga + Ha) * NXT;
 
   /* Test the power of 2 for overflow */
-  if(w > MEXP) return huge * huge;            /* overflow */
-  if(w < MNEXP) return twom10000 * twom10000; /* underflow */
+  if(w > MEXP)
+    return huge * huge; /* overflow */
+  if(w < MNEXP)
+    return twom10000 * twom10000; /* underflow */
 
   e = w;
   Hb = H - Ha;
@@ -284,7 +310,8 @@ powl(long double x, long double y) {
   z = z + w;
   z = scalbnl(z, i); /* multiply by integer power of 2 */
 
-  if(nflg) z = -z;
+  if(nflg)
+    z = -z;
   return z;
 }
 
@@ -337,7 +364,8 @@ powil(long double x, int nn) {
   long double s;
   int n, e, sign, lx;
 
-  if(nn == 0) return 1.0;
+  if(nn == 0)
+    return 1.0;
 
   if(nn < 0) {
     sign = -1;
@@ -360,9 +388,11 @@ powil(long double x, int nn) {
     s = LOGE2L * e;
   }
 
-  if(s > MAXLOGL) return huge * huge; /* overflow */
+  if(s > MAXLOGL)
+    return huge * huge; /* overflow */
 
-  if(s < MINLOGL) return twom10000 * twom10000; /* underflow */
+  if(s < MINLOGL)
+    return twom10000 * twom10000; /* underflow */
   /* Handle tiny denormal answer, but with less accuracy
    * since roundoff error in 1.0/x will be amplified.
    * The precise demarcation should be the gradual underflow threshold.
@@ -387,7 +417,8 @@ powil(long double x, int nn) {
     n >>= 1;
   }
 
-  if(sign < 0) y = 1.0 / y;
+  if(sign < 0)
+    y = 1.0 / y;
   return y;
 }
 #elif LDBL_MANT_DIG == 113 && LDBL_MAX_EXP == 16384

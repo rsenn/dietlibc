@@ -1,3 +1,4 @@
+#include "math.h"
 #include <float.h>
 
 double
@@ -26,8 +27,10 @@ pow(double mant, double expo) {
     ret = 1.;
 
     while(1) {
-      if(e & 1) ret *= mant;
-      if((e >>= 1) == 0) break;
+      if(e & 1)
+        ret *= mant;
+      if((e >>= 1) == 0)
+        break;
       mant *= mant;
     }
     return ret;

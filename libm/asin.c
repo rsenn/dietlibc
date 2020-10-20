@@ -1,5 +1,6 @@
 #include <float.h>
 #include <stdint.h>
+#include "libm.h"
 
 static const double pio2_hi = 1.57079632679489655800e+00, /* 0x3FF921FB, 0x54442D18 */
     pio2_lo = 6.12323399573676603587e-17,                 /* 0x3C91A626, 0x33145C07 */
@@ -34,14 +35,15 @@ asin(double x) {
   if(ix >= 0x3ff00000) {
     uint32_t lx;
     GET_LOW_WORD(lx, x);
-    if((ix - 0x3ff00000 | lx) == 0) /* asin(1) = +-pi/2 with inexact */
+    if(((ix - 0x3ff00000) | lx) == 0) /* asin(1) = +-pi/2 with inexact */
       return x * pio2_hi + 0x1p-120f;
     return 0 / (x - x);
   }
   /* |x| < 0.5 */
   if(ix < 0x3fe00000) {
     /* if 0x1p-1022 <= |x| < 0x1p-26, avoid raising underflow */
-    if(ix < 0x3e500000 && ix >= 0x00100000) return x;
+    if(ix < 0x3e500000 && ix >= 0x00100000)
+      return x;
     return x + x * R(x * x);
   }
   /* 1 > |x| >= 0.5 */
@@ -58,6 +60,7 @@ asin(double x) {
     c = (z - f * f) / (s + f);
     x = 0.5 * pio2_hi - (2 * s * r - (pio2_lo - 2 * c) - (0.5 * pio2_hi - 2 * f));
   }
-  if(hx >> 31) return -x;
+  if(hx >> 31)
+    return -x;
   return x;
 }

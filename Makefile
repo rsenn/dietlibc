@@ -162,6 +162,7 @@ CFLAGS = -g $(EXTRACFLAGS)
 STRIP = :
 endif
 CFLAGS += -W -Wall -Wextra -Wchar-subscripts -Wmissing-prototypes -Wmissing-declarations -Wno-switch -Wno-unused -Wredundant-decls -Wshadow
+CFLAGS += -Werror -Wno-error=missing-attributes -Wno-error=implicit-fallthrough -Wno-error=cast-function-type -Wno-error=array-bounds -Wno-error=stringop-overflow -Wno-error=missing-prototypes
 
 ASM_CFLAGS = -Wa,--noexecstack
 ifneq ($(subst clang,fnord,$(CC)),$(CC))

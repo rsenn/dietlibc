@@ -1,6 +1,6 @@
-#include <math.h>
+#include "math.h"
 
-float ldexpf(float x, int n)
-{
-	return scalbnf(x, n);
+float
+ldexpf(float x, int n) {
+  return scalbnf(x, n);
 }

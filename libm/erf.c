@@ -1,4 +1,5 @@
 #include <float.h>
+#include "../dietlibm.h"
 
 /*--------------------------------------------------------------------------*
                                      z
@@ -186,9 +187,12 @@ gauss(double x) {
   unsigned int i = (unsigned int)(x + 0.5);
   double y = x * x;
 
-  if(i > 150) return 0.;
-  if(i > 10) return M_1_SQRT2PI * exp(-0.5 * y) / x * __poly(1. / y, 7, tab3);
-  if(i > 0) return -__poly((x - i), 31, tab2[i - 1]);
+  if(i > 150)
+    return 0.;
+  if(i > 10)
+    return M_1_SQRT2PI * exp(-0.5 * y) / x * __poly(1. / y, 7, tab3);
+  if(i > 0)
+    return -__poly((x - i), 31, tab2[i - 1]);
   return 0.5 - x * __poly(y, 9, tab1);
 }
 

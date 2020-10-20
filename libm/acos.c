@@ -1,5 +1,6 @@
 #include <float.h>
 #include <stdint.h>
+#include "libm.h"
 
 static const double pio2_hi = 1.57079632679489655800e+00, /* 0x3FF921FB, 0x54442D18 */
     pio2_lo = 6.12323399573676603587e-17,                 /* 0x3C91A626, 0x33145C07 */
@@ -34,9 +35,10 @@ acos(double x) {
     uint32_t lx;
 
     GET_LOW_WORD(lx, x);
-    if((ix - 0x3ff00000 | lx) == 0) {
+    if(((ix - 0x3ff00000) | lx) == 0) {
       /* acos(1)=0, acos(-1)=pi */
-      if(hx >> 31) return 2 * pio2_hi + 0x1p-120f;
+      if(hx >> 31)
+        return 2 * pio2_hi + 0x1p-120f;
       return 0;
     }
     return 0 / (x - x);

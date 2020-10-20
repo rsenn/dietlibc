@@ -734,6 +734,8 @@ int mkfifoat(int dirfd, const char *pathname, mode_t mode) __THROW;
 int utimensat(int dirfd, const char *pathname, struct timespec* t,int flags) __THROW;
 #endif
 
+int futimens(int fd, const struct timespec *);
+
 __END_DECLS
 
 #endif

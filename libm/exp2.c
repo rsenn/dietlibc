@@ -153,8 +153,10 @@ exp2(double x) {
       return -1 / x;
     if(u.i >> 63) { /* x <= -1022 */
       /* underflow */
-      if(x <= -1075 || x - 0x1p52 + 0x1p52 != x) FORCE_EVAL((float)(-0x1p-149 / x));
-      if(x <= -1075) return 0;
+      if(x <= -1075 || x - 0x1p52 + 0x1p52 != x)
+        FORCE_EVAL((float)(-0x1p-149 / x));
+      if(x <= -1075)
+        return 0;
     }
   } else if(ix < 0x3c900000) { /* |x| < 0x1p-54 */
     return 1.0 + x;

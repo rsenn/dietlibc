@@ -14,8 +14,10 @@ roundf(float x) {
   int e = u.i >> 23 & 0xff;
   float y;
 
-  if(e >= 0x7f + 23) return x;
-  if(u.i >> 31) x = -x;
+  if(e >= 0x7f + 23)
+    return x;
+  if(u.i >> 31)
+    x = -x;
   if(e < 0x7f - 1) {
     FORCE_EVAL(x + toint);
     return 0 * u.f;
@@ -27,6 +29,7 @@ roundf(float x) {
     y = y + x + 1;
   else
     y = y + x;
-  if(u.i >> 31) y = -y;
+  if(u.i >> 31)
+    y = -y;
   return y;
 }

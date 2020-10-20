@@ -23,7 +23,8 @@ exp(double x) {
 
   /* special cases */
   if(hx >= 0x4086232b) { /* if |x| >= 708.39... */
-    if(isnan(x)) return x;
+    if(isnan(x))
+      return x;
     if(x > 709.782712893383973096) {
       /* overflow if x!=inf */
       x *= 0x1p1023;
@@ -32,7 +33,8 @@ exp(double x) {
     if(x < -708.39641853226410622) {
       /* underflow if x!=-inf */
       FORCE_EVAL((float)(-0x1p-149 / x));
-      if(x < -745.13321910194110842) return 0;
+      if(x < -745.13321910194110842)
+        return 0;
     }
   }
 
@@ -59,6 +61,7 @@ exp(double x) {
   xx = x * x;
   c = x - xx * (P1 + xx * (P2 + xx * (P3 + xx * (P4 + xx * P5))));
   y = 1 + (x * c / (2 - c) - lo + hi);
-  if(k == 0) return y;
+  if(k == 0)
+    return y;
   return scalbn(y, k);
 }

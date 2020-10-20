@@ -1,4 +1,6 @@
-#include <math.h>
+#define _XOPEN_SOURCE
+#include "math.h"
+#include "../dietlibm.h"
 
 /*--------------------------------------------------------------------------*
 
@@ -89,22 +91,18 @@ lgamma(double x) {
 
   signgam = 0;
 
-  if(k >= 7) return logfact(x - 1);
+  if(k >= 7)
+    return logfact(x - 1);
 
-  if(k == x) switch(k) {
+  if(k == x)
+    switch(k) {
       case 1:
-      case 2:
-        return 0.000000000000000000000000000l;
-      case 3:
-        return 0.693147180559945309432805516l;
-      case 4:
-        return 1.791759469228055000858148560l;
-      case 5:
-        return 3.178053830347945619723759592l;
-      case 6:
-        return 4.787491742782045994244981560l;
-      default:
-        return 1. / 0.; /* ignore the gcc warning, this is intentional */
+      case 2: return 0.000000000000000000000000000l;
+      case 3: return 0.693147180559945309432805516l;
+      case 4: return 1.791759469228055000858148560l;
+      case 5: return 3.178053830347945619723759592l;
+      case 6: return 4.787491742782045994244981560l;
+      default: return 1. / 0.; /* ignore the gcc warning, this is intentional */
     }
 
   z = logfact(y = x - k + 7.0 - 1);
