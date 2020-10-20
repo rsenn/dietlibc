@@ -3,8 +3,8 @@
 
 #include <linux/types.h>
 
-#define SI_LOAD_SHIFT	16
-struct sysinfo {
+#define __KERNEL_SI_LOAD_SHIFT	16
+struct __kernel_sysinfo {
 	__kernel_long_t uptime;		/* Seconds since boot */
 	__kernel_ulong_t loads[3];	/* 1, 5, and 15 minute load averages */
 	__kernel_ulong_t totalram;	/* Total usable main memory size */
