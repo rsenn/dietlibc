@@ -1,3 +1,4 @@
+#if !defined(__i386__) && !defined(__x86_64__)
 /* origin: FreeBSD /usr/src/lib/msun/src/e_log10.c */
 /*
  * ====================================================
@@ -101,3 +102,4 @@ log10(double x) {
 
   return val_lo + val_hi;
 }
+#endif /* !defined(__i386__) && !defined(__x86_64__) */

@@ -1,3 +1,4 @@
+#if !defined(__i386__) && !defined(__x86_64__)
 #include <float.h>
 #include "libm.h"
 #include <stdint.h>
@@ -35,3 +36,4 @@ sin(double x) {
     default: return -__cos(y[0], y[1]);
   }
 }
+#endif /* !defined(__i386__) && !defined(__x86_64__) */

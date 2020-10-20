@@ -1,3 +1,4 @@
+#if !defined(__i386__) && !defined(__x86_64__)
 /* origin: FreeBSD /usr/src/lib/msun/src/s_log1p.c */
 /*
  * ====================================================
@@ -122,3 +123,4 @@ log1p(double x) {
   dk = k;
   return s * (hfsq + R) + (dk * ln2_lo + c) - hfsq + f + dk * ln2_hi;
 }
+#endif /* !defined(__i386__) && !defined(__x86_64__) */

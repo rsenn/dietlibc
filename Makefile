@@ -120,6 +120,10 @@ DEFAULTCFLAGS=-pipe -nostdinc -D_REENTRANT $(EXTRACFLAGS)
 CFLAGS=$(DEFAULTCFLAGS)
 CROSS=
 
+ifneq ($(DEBUG),)
+	CFLAGS+=-g3 -ggdb
+endif
+
 CC=gcc
 CCC=$(CROSS)$(CC)
 STRIP=$(COMMENT) $(CROSS)strip
@@ -158,11 +162,15 @@ CFLAGS+=-O -fomit-frame-pointer
 endif
 
 ifneq ($(DEBUG),)
-CFLAGS = -g $(EXTRACFLAGS)
+CFLAGS = -g3 -ggdb $(EXTRACFLAGS)
 STRIP = :
 endif
+ifeq ($(NOWARN),)
 CFLAGS += -W -Wall -Wextra -Wchar-subscripts -Wmissing-prototypes -Wmissing-declarations -Wno-switch -Wno-unused -Wredundant-decls -Wshadow
+endif
+ifneq ($(WERROR),)
 CFLAGS += -Werror -Wno-error=missing-attributes -Wno-error=implicit-fallthrough -Wno-error=cast-function-type -Wno-error=array-bounds -Wno-error=stringop-overflow -Wno-error=missing-prototypes
+endif
 
 ASM_CFLAGS = -Wa,--noexecstack
 ifneq ($(subst clang,fnord,$(CC)),$(CC))
@@ -224,6 +232,9 @@ endif
 CC+=-D__dietlibc__
 
 $(OBJDIR)/start-pie.o: start.S | $(OBJDIR)
+	$(CCC) $(INC) $(CCFLAGS) $(EXTRACFLAGS) -c $< $(ASM_CFLAGS) -fpie -o $@
+
+pic-$(ARCH)/start-pie.o: start.S | $(OBJDIR)
 	$(CCC) $(INC) $(CCFLAGS) $(EXTRACFLAGS) -c $< $(ASM_CFLAGS) -fpie -o $@
 
 $(OBJDIR)/start.o: start.S | $(OBJDIR)
@@ -292,18 +303,18 @@ $(PICODIR)/%.o: %.S $(ARCH)/syscalls.h | $(PICODIR)
 
 $(PICODIR)/pthread_%.o: libpthread/pthread_%.c | $(PICODIR)
 	$(CCC) $(INC) $(CCFLAGS) $(EXTRACFLAGS) -fPIC -D__DYN_LIB -c $< -o $@
-	$(STRIP) -x -R .comment -R .note $@
+	@$(STRIP) -x -R .comment -R .note $@
 
 $(PICODIR)/%.o: %.c | $(PICODIR)
 	$(CCC) $(INC) $(CCFLAGS) $(EXTRACFLAGS) -fPIC -D__DYN_LIB -c $< -o $@
-	$(STRIP) -x -R .comment -R .note $@
+	@$(STRIP) -x -R .comment -R .note $@
 
 $(PICODIR)/dstart.o: start.S | $(PICODIR)
 	$(CCC) $(INC) $(CCFLAGS) $(EXTRACFLAGS) -fPIC -D__DYN_LIB $(ASM_CFLAGS) -c $< -o $@
 
 $(PICODIR)/dyn_so_start.o: dyn_start.c | $(PICODIR)
 	$(CCC) $(INC) $(CCFLAGS) $(EXTRACFLAGS) -fPIC -D__DYN_LIB -D__DYN_LIB_SHARED -c $< -o $@
-	$(STRIP) -x -R .comment -R .note $@
+	@$(STRIP) -x -R .comment -R .note $@
 
 DYN_LIBC_PIC = $(LIBOBJ) $(LIBSTDIOOBJ) $(LIBUGLYOBJ) \
 $(LIBCRUFTOBJ) $(LIBCRYPTOBJ) $(LIBSHELLOBJ) $(LIBREGEXOBJ) $(LIBTERMIOSOBJ)
@@ -317,13 +328,13 @@ DYN_LIBDL_OBJS = $(patsubst $(OBJDIR)/%.o,$(PICODIR)/%.o,$(LIBDLOBJ))
 
 DYN_LIBCOMPAT_OBJS = $(patsubst $(OBJDIR)/%.o,$(PICODIR)/%.o,$(LIBCOMPATOBJ))
 
-DYN_LIBMATH_OBJS = $(patsubst $(OBJDIR)/%.o,$(PICODIR)/%.o,$(LIBMATHOBJ))
+DYN_LIBMATH_OBJS = $(filter-out  %/acosf.o %/acosl.o %/asinf.o %/asinl.o %/atan2f.o %/atan2l.o %/atanf.o %/atanl.o %/ceilf.o %/ceill.o %/expf.o %/expl.o %/fabsf.o %/fabsl.o %/ffsl.o %/floorf.o %/floorl.o %/fmodf.o %/fmodl.o %/hypotf.o %/ldexpf.o %/ldexpl.o %/log10f.o %/log10l.o %/log1pf.o %/log1pl.o %/logf.o %/logl.o %/remquof.o %/remquol.o %/rintf.o %/rintl.o %/sqrtf.o %/sqrtl.o %/libm2.o %/scalbn.o, $(patsubst $(OBJDIR)/%.o,$(PICODIR)/%.o,$(LIBMATHOBJ)))
 
 $(PICODIR)/libc.so: $(PICODIR) $(DYN_LIBC_OBJ)
 	$(LD_UNSET) $(CCC) -nostdlib -shared -o $@ $(CCFLAGS) -fPIC $(DYN_LIBC_OBJ) -lgcc -Wl,-soname=libc.so
 
 $(PICODIR)/libpthread.so: $(DYN_PTHREAD_OBJS) dietfeatures.h $(PICODIR)/libc.so
-	$(LD_UNSET) $(CCC) -nostdlib -shared -o $@ $(CCFLAGS) -fPIC $(DYN_PTHREAD_OBJS) -L$(PICODIR) -lc -Wl,-soname=libpthread.so
+	$(LD_UNSET) $(CCC) -nostdlib -shared -o $@ $(CCFLAGS) -fPIC $(DYN_PTHREAD_OBJS) $(PICODIR)/stack_smash_handler3.o -L$(PICODIR) -lc -Wl,-soname=libpthread.so
 
 $(PICODIR)/libdl.so: libdl/_dl_main.c dietfeatures.h $(PICODIR)/libc.so
 	$(LD_UNSET) $(CCC) -D__OD_CLEAN_ROOM -DNODIETREF -fPIC -nostdlib -shared -Bsymbolic -Wl,-Bsymbolic \
@@ -336,10 +347,10 @@ $(OBJDIR)/pthread_internal.o $(PICODIR)/pthread_internal.o: dietfeatures.h
 #	$(CCC) -nostdlib -shared -o $@ $(CCFLAGS) -fPIC $(DYN_LIBDL_OBJS) -L$(PICODIR) -ldietc -Wl,-soname=libdl.so
 
 $(PICODIR)/libcompat.so: $(DYN_LIBCOMPAT_OBJS) dietfeatures.h $(PICODIR)/libc.so
-	$(LD_UNSET) $(CCC) -nostdlib -shared -o $@ $(CCFLAGS) -fPIC $(DYN_LIBCOMPAT_OBJS) -L$(PICODIR) -lc -Wl,-soname=libcompat.so
+	$(LD_UNSET) $(CCC) -nostdlib -shared -o $@ $(CCFLAGS) -fPIC $(DYN_LIBCOMPAT_OBJS)  $(PICODIR)/stack_smash_handler3.o  -L$(PICODIR) -lc -Wl,-soname=libcompat.so
 
 $(PICODIR)/libm.so: $(DYN_LIBMATH_OBJS) dietfeatures.h $(PICODIR)/libc.so
-	$(LD_UNSET) $(CCC) -nostdlib -shared -o $@ $(CCFLAGS) -fPIC $(DYN_LIBMATH_OBJS) -L$(PICODIR) -lc -Wl,-soname=libm.so
+	$(LD_UNSET) $(CCC) -nostdlib -shared -o $@ $(CCFLAGS) -fPIC $(sort $(DYN_LIBMATH_OBJS))  $(PICODIR)/stack_smash_handler3.o   -L$(PICODIR) -lc -Wl,-soname=libm.so
 
 
 $(SYSCALLOBJ): syscalls.h
@@ -355,19 +366,19 @@ CURNAME=$(notdir $(shell pwd))
 
 $(OBJDIR)/diet: $(OBJDIR)/start.o $(OBJDIR)/dyn_start.o diet.c $(OBJDIR)/dietlibc.a $(OBJDIR)/dyn_stop.o
 	$(CCC) -isystem include $(CFLAGS) -nostdlib -o $@ $^ -DDIETHOME=\"$(DIETHOME)\" -DVERSION=\"$(VERSION)\" -lgcc
-	$(STRIP) -R .comment -R .note $@
+	@$(STRIP) -R .comment -R .note $@
 
 $(OBJDIR)/diet-i: $(OBJDIR)/start.o $(OBJDIR)/dyn_start.o diet.c $(OBJDIR)/dietlibc.a $(OBJDIR)/dyn_stop.o
 	$(CCC) -isystem include $(CFLAGS) -nostdlib -o $@ $^ -DDIETHOME=\"$(prefix)\" -DVERSION=\"$(VERSION)\" -DINSTALLVERSION -lgcc
-	$(STRIP) -R .comment -R .note $@
+	@$(STRIP) -R .comment -R .note $@
 
-$(PICODIR)/diet-dyn: $(PICODIR)/start.o $(PICODIR)/dyn_start.o diet.c
+$(PICODIR)/diet-dyn: $(PICODIR)/start.o $(PICODIR)/dyn_start.o $(PICODIR)/write12.o  diet.c
 	$(LD_UNSET) $(CCC) -isystem include $(CFLAGS) -fPIC -nostdlib -o $@ $^ -DDIETHOME=\"$(DIETHOME)\" -D__DYN_LIB -DVERSION=\"$(VERSION)\" -L$(PICODIR) -lc -lgcc $(PICODIR)/dyn_stop.o -Wl,-dynamic-linker=$(DIETHOME)/$(PICODIR)/libdl.so
-	$(STRIP) -R .command -R .note $@
+	@$(STRIP) -R .command -R .note $@
 
-$(PICODIR)/diet-dyn-i: $(PICODIR)/start.o $(PICODIR)/dyn_start.o diet.c
+$(PICODIR)/diet-dyn-i: $(PICODIR)/start.o $(PICODIR)/dyn_start.o $(PICODIR)/write12.o diet.c
 	$(LD_UNSET) $(CCC) -isystem include $(CFLAGS) -fPIC -nostdlib -o $@ $^ -DDIETHOME=\"$(prefix)\" -D__DYN_LIB -DVERSION=\"$(VERSION)\" -L$(PICODIR) -lc -lgcc $(PICODIR)/dyn_stop.o -Wl,-dynamic-linker=$(ILIBDIR)/libdl.so -DINSTALLVERSION
-	$(STRIP) -R .command -R .note $@
+	@$(STRIP) -R .command -R .note $@
 
 $(OBJDIR)/djb: $(OBJDIR)/compile $(OBJDIR)/load
 
@@ -466,6 +477,12 @@ ifeq ($(MYARCH),x86_64)
 	$(MAKE) ARCH=$@ CC="$(CC) -m32" all
 else
 	$(MAKE) ARCH=$@ CROSS=$@-linux- all
+endif
+dyn-i386:
+ifeq ($(MYARCH),x86_64)
+	$(MAKE) ARCH=$(@:dyn-%=%) CC="$(CC) -m32" dyn
+else
+	$(MAKE) ARCH=$(@:dyn-%=%) CROSS=$(@:dyn-%:%)-linux- dyn
 endif
 
 ppc:

@@ -1,3 +1,4 @@
+#if !defined(__i386__) && !defined(__x86_64__)
 #include <math.h>
 #include <stdint.h>
 
@@ -32,3 +33,4 @@ scalbn(double x, int n) {
   x = y * u.f;
   return x;
 }
+#endif /* !defined(__i386__) && !defined(__x86_64__) */

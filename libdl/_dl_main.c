@@ -21,7 +21,7 @@
 
 void _start(void);	/* entry of lib... */
 
-static void (*fini_entry)(void)=0;
+/*static*/ void (*fini_entry)(void)=0;
 static char **_dl_environ=0;
 static unsigned long loadaddr=0;
 static unsigned long prog_entry=0;

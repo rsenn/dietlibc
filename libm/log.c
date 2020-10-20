@@ -1,3 +1,4 @@
+#if !defined(__i386__) && !defined(__x86_64__)
 /* origin: FreeBSD /usr/src/lib/msun/src/e_log.c */
 /*
  * ====================================================
@@ -118,3 +119,4 @@ log(double x) {
   dk = k;
   return s * (hfsq + R) + dk * ln2_lo - hfsq + f + dk * ln2_hi;
 }
+#endif /* !defined(__i386__) && !defined(__x86_64__) */

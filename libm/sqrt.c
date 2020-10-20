@@ -1,3 +1,4 @@
+#if !defined(__i386__) && !defined(__x86_64__)
 /* origin: FreeBSD /usr/src/lib/msun/src/e_sqrt.c */
 /*
  * ====================================================
@@ -181,3 +182,4 @@ sqrt(double x) {
   INSERT_WORDS(z, ix0 + ((uint32_t)m << 20), ix1);
   return z;
 }
+#endif /* !defined(__i386__) && !defined(__x86_64__) */

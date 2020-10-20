@@ -1,3 +1,4 @@
+#if !defined(__i386__) && !defined(__x86_64__)
 #include <float.h>
 #include "libm.h"
 #include <stdint.h>
@@ -29,3 +30,4 @@ tan(double x) {
   n = __rem_pio2(x, y);
   return __tan(y[0], y[1], n & 1);
 }
+#endif /* !defined(__i386__) && !defined(__x86_64__) */

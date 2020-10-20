@@ -57,13 +57,13 @@ write_gmon (void)
 	if (mparam.kcountsize)
 	{
 		char tag = GMON_TAG_TIME_HIST;
-		struct gmon_hist_hdr ghdr = {
+		struct gmon_hist_hdr ghdrl = {
 			mparam.lowpc, mparam.highpc,
 			(mparam.kcountsize >> 1), 100, "seconds", 's' 
 		};
 		struct iovec iov[3] = {
 			{ &tag,  sizeof (tag)  },
-			{ &ghdr, sizeof (ghdr) },
+			{ &ghdrl, sizeof (ghdrl) },
 			{ mparam.kcount, mparam.kcountsize >> 1 << 1 }
 		};
 		writev (fd, iov, 3);

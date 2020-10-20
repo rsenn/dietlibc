@@ -1,3 +1,4 @@
+#if !defined(__i386__) && !defined(__x86_64__)
 #include <float.h>
 #include "math.h"
 
@@ -428,3 +429,4 @@ powl(long double x, long double y) {
   return pow(x, y);
 }
 #endif
+#endif /* !defined(__i386__) && !defined(__x86_64__) */

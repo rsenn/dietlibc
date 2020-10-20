@@ -1,3 +1,4 @@
+#if !defined(__i386__) && !defined(__x86_64__)
 /* origin: OpenBSD /usr/src/lib/libm/src/ld80/e_expl.c */
 /*
  * Copyright (c) 2008 Stephen L. Moshier <steve@moshier.net>
@@ -124,3 +125,4 @@ expl(long double x) {
   return exp(x);
 }
 #endif
+#endif /* !defined(__i386__) && !defined(__x86_64__) */

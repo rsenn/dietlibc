@@ -1,3 +1,4 @@
+#if !defined(__i386__) && !defined(__x86_64__)
 /* origin: FreeBSD /usr/src/lib/msun/src/e_atan2l.c */
 /*
  * ====================================================
@@ -82,3 +83,4 @@ atan2l(long double y, long double x) {
   }
 }
 #endif
+#endif /* !defined(__i386__) && !defined(__x86_64__) */

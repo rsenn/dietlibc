@@ -1,3 +1,4 @@
+#if !defined(__i386__) && !defined(__x86_64__)
 #include <float.h>
 #include <stdint.h>
 #include "libm.h"
@@ -64,3 +65,4 @@ asin(double x) {
     return -x;
   return x;
 }
+#endif /* !defined(__i386__) && !defined(__x86_64__) */

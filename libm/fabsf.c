@@ -1,3 +1,4 @@
+#if !defined(__i386__) && !defined(__x86_64__)
 #include <math.h>
 #include <stdint.h>
 
@@ -10,3 +11,4 @@ fabsf(float x) {
   u.i &= 0x7fffffff;
   return u.f;
 }
+#endif /* !defined(__i386__) && !defined(__x86_64__) */

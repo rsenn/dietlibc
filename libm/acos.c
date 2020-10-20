@@ -1,3 +1,4 @@
+#if !defined(__i386__) && !defined(__x86_64__)
 #include <float.h>
 #include <stdint.h>
 #include "libm.h"
@@ -65,3 +66,4 @@ acos(double x) {
   w = R(z) * s + c;
   return 2 * (df + w);
 }
+#endif /* !defined(__i386__) && !defined(__x86_64__) */

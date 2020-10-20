@@ -1,3 +1,4 @@
+#if !defined(__i386__) && !defined(__x86_64__)
 /* origin: FreeBSD /usr/src/lib/msun/src/s_atanl.c */
 /*
  * ====================================================
@@ -178,3 +179,4 @@ atanl(long double x) {
   return sign ? -z : z;
 }
 #endif
+#endif /* !defined(__i386__) && !defined(__x86_64__) */

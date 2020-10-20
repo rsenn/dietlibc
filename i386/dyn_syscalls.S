@@ -4,9 +4,9 @@
  */
 
 #include "../syscalls.s/environ.S"
-#include "../syscalls.s/errno.S"
+//#include "../syscalls.s/errno.S"
 
-#include <dietfeatures.h>
+#include "../dietfeatures.h"
 #include "syscalls.h"
 #include "PIC.h"
 
@@ -36,7 +36,7 @@ __vsyscall:
  * Please put additional syscalls AFTER the post-u.s.c. 
  * or try to not break the savings :) */
 
-#include "select.S"
+//#include "select.S"
 
 #include "../syscalls.s/fork.S"
 #include "../syscalls.s/read.S"

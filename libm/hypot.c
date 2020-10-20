@@ -1,3 +1,4 @@
+#if !defined(__i386__) && !defined(__x86_64__)
 #include <math.h>
 #include <stdint.h>
 #include <float.h>
@@ -68,3 +69,4 @@ hypot(double x, double y) {
   sq(&hy, &ly, y);
   return z * sqrt(ly + lx + hy + hx);
 }
+#endif /* !defined(__i386__) && !defined(__x86_64__) */

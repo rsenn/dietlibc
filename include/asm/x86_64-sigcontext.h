@@ -47,3 +47,5 @@ struct sigcontext {
 	struct _fpstate *fpstate;	/* zero when no FPU context */
 	unsigned long reserved1[8];
 };
+
+#define PC(ctx) (ctx.rip)

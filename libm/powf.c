@@ -1,3 +1,4 @@
+#if !defined(__i386__) && !defined(__x86_64__)
 #include <float.h>
 #include <stdint.h>
 #include "libm.h"
@@ -254,3 +255,4 @@ powf(float x, float y) {
     SET_FLOAT_WORD(z, j);
   return sn * z;
 }
+#endif /* !defined(__i386__) && !defined(__x86_64__) */

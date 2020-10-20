@@ -2,8 +2,7 @@
 #include <sys/ioctl.h>
 #include <errno.h>
 
-int tcsetattr(int fd, int act, const struct termios *tio)
-{
+__THROW int tcsetattr(int fd, int act, struct termios *tio) {
 	if (act < 0 || act > 2) {
 		errno = EINVAL;
 		return -1;

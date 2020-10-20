@@ -1,3 +1,4 @@
+#if !defined(__i386__) && !defined(__x86_64__)
 #include "libm.h"
 #if LDBL_MANT_DIG == 53 && LDBL_MAX_EXP == 1024
 long double
@@ -13,3 +14,4 @@ fabsl(long double x) {
   return u.f;
 }
 #endif
+#endif /* !defined(__i386__) && !defined(__x86_64__) */

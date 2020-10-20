@@ -1,3 +1,4 @@
+#if !defined(__i386__) && !defined(__x86_64__)
 #include <math.h>
 #include "libm.h"
 
@@ -59,3 +60,4 @@ sincosl(long double x, long double* sin, long double* cos) {
   }
 }
 #endif
+#endif /* !defined(__i386__) && !defined(__x86_64__) */

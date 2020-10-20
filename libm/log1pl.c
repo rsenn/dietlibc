@@ -1,3 +1,4 @@
+#if !defined(__i386__) && !defined(__x86_64__)
 /* origin: OpenBSD /usr/src/lib/libm/src/ld80/s_log1pl.c */
 /*
  * Copyright (c) 2008 Stephen L. Moshier <steve@moshier.net>
@@ -175,3 +176,4 @@ log1pl(long double x) {
   return log1p(x);
 }
 #endif
+#endif /* !defined(__i386__) && !defined(__x86_64__) */

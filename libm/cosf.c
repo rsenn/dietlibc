@@ -1,3 +1,4 @@
+#if !defined(__i386__) && !defined(__x86_64__)
 #include <math.h>
 #include "libm.h"
 #include <stdint.h>
@@ -60,3 +61,4 @@ cosf(float x) {
     default: return __sindf(y);
   }
 }
+#endif /* !defined(__i386__) && !defined(__x86_64__) */

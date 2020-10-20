@@ -1,3 +1,4 @@
+#if !defined(__i386__) && !defined(__x86_64__)
 #include <float.h>
 #include "libm.h"
 #include <stdint.h>
@@ -29,3 +30,4 @@ ceil(double x) {
     return x + y + 1;
   return x + y;
 }
+#endif /* !defined(__i386__) && !defined(__x86_64__) */

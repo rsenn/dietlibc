@@ -1,3 +1,4 @@
+#if !defined(__i386__) && !defined(__x86_64__)
 #include <float.h>
 #include "libm.h"
 #include <stdint.h>
@@ -65,3 +66,4 @@ exp(double x) {
     return y;
   return scalbn(y, k);
 }
+#endif /* !defined(__i386__) && !defined(__x86_64__) */

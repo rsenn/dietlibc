@@ -1,3 +1,4 @@
+#if !defined(__i386__) && !defined(__x86_64__)
 #include <float.h>
 #include <stdint.h>
 #include "libm.h"
@@ -66,3 +67,4 @@ atan2(double y, double x) {
     default: /* case 3 */ return (z - pi_lo) - pi; /* atan(-,-) */
   }
 }
+#endif /* !defined(__i386__) && !defined(__x86_64__) */

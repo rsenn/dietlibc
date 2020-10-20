@@ -1,3 +1,4 @@
+#if !defined(__i386__) && !defined(__x86_64__)
 #include <float.h>
 #include "libm.h"
 #include <stdint.h>
@@ -83,3 +84,4 @@ atan(double x) {
   z = atanhi[id] - (x * (s1 + s2) - atanlo[id] - x);
   return sign ? -z : z;
 }
+#endif /* !defined(__i386__) && !defined(__x86_64__) */

@@ -1,3 +1,4 @@
+#if !defined(__i386__) && !defined(__x86_64__)
 /* origin: FreeBSD /usr/src/lib/msun/src/e_sqrtf.c */
 /*
  * Conversion to float by Ian Lance Taylor, Cygnus Support, ian@cygnus.com.
@@ -80,3 +81,4 @@ sqrtf(float x) {
   SET_FLOAT_WORD(z, ix + ((uint32_t)m << 23));
   return z;
 }
+#endif /* !defined(__i386__) && !defined(__x86_64__) */

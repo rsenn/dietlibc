@@ -1,3 +1,4 @@
+#if !defined(__i386__) && !defined(__x86_64__)
 #include <math.h>
 #include <stdint.h>
 
@@ -72,3 +73,4 @@ fmod(double x, double y) {
   ux.i = uxi;
   return ux.f;
 }
+#endif /* !defined(__i386__) && !defined(__x86_64__) */

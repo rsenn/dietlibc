@@ -1,3 +1,4 @@
+#if !defined(__i386__) && !defined(__x86_64__)
 #include <float.h>
 #include "libm.h"
 #include <stdint.h>
@@ -56,3 +57,4 @@ sincos(double x, double* sin, double* cos) {
       break;
   }
 }
+#endif /* !defined(__i386__) && !defined(__x86_64__) */

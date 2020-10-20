@@ -1,3 +1,4 @@
+#if !defined(__i386__) && !defined(__x86_64__)
 #include "math.h"
 #include <stdint.h>
 
@@ -36,3 +37,4 @@ hypotf(float x, float y) {
   }
   return z * sqrtf((double)x * x + (double)y * y);
 }
+#endif /* !defined(__i386__) && !defined(__x86_64__) */
