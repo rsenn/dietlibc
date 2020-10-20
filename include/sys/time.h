@@ -76,6 +76,7 @@ struct tm {
 #endif
 
 int utimes(const char * filename, struct timeval * tvp) __THROW;
+int futimens(int fd, const struct timespec [2]);
 
 __END_DECLS
 
