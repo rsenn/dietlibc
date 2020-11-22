@@ -328,7 +328,7 @@ DYN_LIBDL_OBJS = $(patsubst $(OBJDIR)/%.o,$(PICODIR)/%.o,$(LIBDLOBJ))
 
 DYN_LIBCOMPAT_OBJS = $(patsubst $(OBJDIR)/%.o,$(PICODIR)/%.o,$(LIBCOMPATOBJ))
 
-DYN_LIBMATH_OBJS = $(filter-out  %/acosf.o %/acosl.o %/asinf.o %/asinl.o %/atan2f.o %/atan2l.o %/atanf.o %/atanl.o %/ceilf.o %/ceill.o %/expf.o %/expl.o %/fabsf.o %/fabsl.o %/ffsl.o %/floorf.o %/floorl.o %/fmodf.o %/fmodl.o %/hypotf.o %/ldexpf.o %/ldexpl.o %/log10f.o %/log10l.o %/log1pf.o %/log1pl.o %/logf.o %/logl.o %/remquof.o %/remquol.o %/rintf.o %/rintl.o %/sqrtf.o %/sqrtl.o %/libm2.o %/scalbn.o, $(patsubst $(OBJDIR)/%.o,$(PICODIR)/%.o,$(LIBMATHOBJ)))
+DYN_LIBMATH_OBJS = $(filter-out  %/acosf.o %/acosl.o %/asinf.o %/asinl.o %/atan2f.o %/atan2l.o %/atanf.o %/atanl.o %/ceilf.o %/ceill.o %/expf.o %/expl.o %/fabsf.o %/fabsl.o %/ffsl.o %/floorf.o %/floorl.o %/fmodf.o %/fmodl.o %/hypotf.o %/ldexpf.o %/ldexp.o %/ldexpl.o %/log10f.o %/log10l.o %/log1pf.o %/log1pl.o %/logf.o %/logl.o %/remquof.o %/remquol.o %/rintf.o %/rintl.o %/sqrtf.o %/sqrtl.o %/libm2.o %/scalbn.o, $(patsubst $(OBJDIR)/%.o,$(PICODIR)/%.o,$(LIBMATHOBJ)))
 
 $(PICODIR)/libc.so: $(PICODIR) $(DYN_LIBC_OBJ)
 	$(LD_UNSET) $(CCC) -nostdlib -shared -o $@ $(CCFLAGS) -fPIC $(DYN_LIBC_OBJ) -lgcc -Wl,-soname=libc.so

@@ -7,7 +7,7 @@
 __BEGIN_DECLS
 
 #if !defined(__sparc__) && !defined(__sparc64__)
-typedef struct sigcontext mcontext_t;
+//typedef struct sigcontext mcontext_t;
 #endif
 
 #if defined(__i386__) || defined(__x86_64__) || defined(__arm__) || defined(__mips__) || defined(__mips64__) || defined(__powerpc__) || defined(__powerpc64__) || defined(__hppa__)
@@ -83,6 +83,7 @@ typedef struct {
   mc_greg_t	mc_i7;
   mc_fpu_t	mc_fpregs;
 } mcontext_t;
+#define gregs mc_gregs
 
 struct ucontext {
   struct ucontext         *uc_link;
@@ -123,7 +124,7 @@ struct ucontext {
 #error NEED TO PORT <sys/sigcontext.h>!
 #endif
 
-typedef struct ucontext ucontext_t;
+//typedef struct ucontext ucontext_t;
 
 __END_DECLS
 
