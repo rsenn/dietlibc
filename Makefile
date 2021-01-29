@@ -110,7 +110,8 @@ WHAT=	$(OBJDIR) $(OBJDIR)/start.o $(OBJDIR)/dyn_start.o $(OBJDIR)/dyn_stop.o \
 	$(OBJDIR)/librpc.a $(OBJDIR)/libpthread.a \
 	$(OBJDIR)/libcrypt.a \
 	$(OBJDIR)/diet $(OBJDIR)/diet-i $(OBJDIR)/elftrunc \
-	$(OBJDIR)/dnsd
+	$(OBJDIR)/dnsd \
+	$(OBJDIR)/libspawn.a
 
 all: $(WHAT)
 
@@ -130,7 +131,7 @@ STRIP=$(COMMENT) $(CROSS)strip
 INC=-I. -isystem include
 #INC=-I. -Iinclude
 
-VPATH=lib:libstdio:libugly:libcruft:libcrypt:libshell:liblatin1:libcompat:libdl:librpc:libregex:libtermios:libm:profiling
+VPATH=lib:libstdio:libugly:libcruft:libcrypt:libshell:liblatin1:libcompat:libdl:librpc:libregex:libtermios:libm:profiling:libspawn
 
 SYSCALLOBJ=$(patsubst syscalls.s/%.S,$(OBJDIR)/%.o,$(sort $(wildcard syscalls.s/*.S)))
 
@@ -141,6 +142,7 @@ LIBCRUFTOBJ=$(patsubst libcruft/%.c,$(OBJDIR)/%.o,$(sort $(wildcard libcruft/*.c
 LIBCRYPTOBJ=$(patsubst libcrypt/%.c,$(OBJDIR)/%.o,$(sort $(wildcard libcrypt/*.c)))
 LIBSHELLOBJ=$(patsubst libshell/%.c,$(OBJDIR)/%.o,$(sort $(wildcard libshell/*.c)))
 LIBCOMPATOBJ=$(patsubst libcompat/%.c,$(OBJDIR)/%.o,$(sort $(wildcard libcompat/*.c))) $(OBJDIR)/syscall.o
+LIBSPAWNOBJ=$(patsubst libspawn/%.c,$(OBJDIR)/%.o,$(sort $(wildcard libspawn/*.c)))
 LIBMATH=$(patsubst libm/%.c,%.o,$(sort $(wildcard libm/*.c)))
 
 LIBRPCOBJ=$(patsubst librpc/%.c,$(OBJDIR)/%.o,$(sort $(wildcard librpc/*.c)))
@@ -277,6 +279,9 @@ $(OBJDIR)/libpthread.a: $(LIBPTHREAD_OBJS) dietfeatures.h
 $(OBJDIR)/libcompat.a: $(LIBCOMPATOBJ)
 	$(CROSS)ar cru $@ $(LIBCOMPATOBJ)
 
+$(OBJDIR)/libspawn.a: $(LIBSPAWNOBJ)
+	$(CROSS)ar cru $@ $(LIBSPAWNOBJ)
+
 $(OBJDIR)/libm.a: $(LIBMATHOBJ)
 	$(CROSS)ar cru $@ $(LIBMATHOBJ)
 
@@ -328,6 +333,8 @@ DYN_LIBDL_OBJS = $(patsubst $(OBJDIR)/%.o,$(PICODIR)/%.o,$(LIBDLOBJ))
 
 DYN_LIBCOMPAT_OBJS = $(patsubst $(OBJDIR)/%.o,$(PICODIR)/%.o,$(LIBCOMPATOBJ))
 
+DYN_LIBSPAWN_OBJS = $(patsubst $(OBJDIR)/%.o,$(PICODIR)/%.o,$(LIBSPAWNOBJ))
+
 DYN_LIBMATH_OBJS = $(filter-out  %/acosf.o %/acosl.o %/asinf.o %/asinl.o %/atan2f.o %/atan2l.o %/atanf.o %/atanl.o %/ceilf.o %/ceill.o %/expf.o %/expl.o %/fabsf.o %/fabsl.o %/ffsl.o %/floorf.o %/floorl.o %/fmodf.o %/fmodl.o %/hypotf.o %/ldexpf.o %/ldexp.o %/ldexpl.o %/log10f.o %/log10l.o %/log1pf.o %/log1pl.o %/logf.o %/logl.o %/remquof.o %/remquol.o %/rintf.o %/rintl.o %/sqrtf.o %/sqrtl.o %/libm2.o %/scalbn.o, $(patsubst $(OBJDIR)/%.o,$(PICODIR)/%.o,$(LIBMATHOBJ)))
 
 $(PICODIR)/libc.so: $(PICODIR) $(DYN_LIBC_OBJ)
@@ -348,6 +355,9 @@ $(OBJDIR)/pthread_internal.o $(PICODIR)/pthread_internal.o: dietfeatures.h
 
 $(PICODIR)/libcompat.so: $(DYN_LIBCOMPAT_OBJS) dietfeatures.h $(PICODIR)/libc.so
 	$(LD_UNSET) $(CCC) -nostdlib -shared -o $@ $(CCFLAGS) -fPIC $(DYN_LIBCOMPAT_OBJS)  $(PICODIR)/stack_smash_handler3.o  -L$(PICODIR) -lc -Wl,-soname=libcompat.so
+
+$(PICODIR)/libspawn.so: $(DYN_LIBSPAWN_OBJS) dietfeatures.h $(PICODIR)/libc.so
+	$(LD_UNSET) $(CCC) -nostdlib -shared -o $@ $(CCFLAGS) -fPIC $(DYN_LIBSPAWN_OBJS)  $(PICODIR)/stack_smash_handler3.o  -L$(PICODIR) -lc -Wl,-soname=libspawn.so
 
 $(PICODIR)/libm.so: $(DYN_LIBMATH_OBJS) dietfeatures.h $(PICODIR)/libc.so
 	$(LD_UNSET) $(CCC) -nostdlib -shared -o $@ $(CCFLAGS) -fPIC $(sort $(DYN_LIBMATH_OBJS))  $(PICODIR)/stack_smash_handler3.o   -L$(PICODIR) -lc -Wl,-soname=libm.so
