@@ -5,8 +5,8 @@
 
 static unsigned int utf8bounds[]={0x7f,0x7ff,0xffff,0x1fffff,0x3ffffff,0x7fffffff};
 
-size_t iconv(iconv_t cd, char* * inbuf, size_t *
-		    inbytesleft, char* * outbuf, size_t * outbytesleft) {
+size_t iconv(iconv_t cd, char** inbuf, size_t *
+		    inbytesleft, char** outbuf, size_t * outbytesleft) {
   size_t result=0,i,j,k;
   int bits;
   unsigned char* in,* out;

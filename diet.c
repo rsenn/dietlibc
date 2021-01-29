@@ -3,7 +3,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <write12.h>
+#include "include/write12.h"
 
 #include "dietfeatures.h"
 
@@ -19,8 +19,12 @@
  * "sparc-linux-gcc -nostdlib -static -o t t.o /path/to/dietlibc/bin-sparc/start.o /path/to/dietlibc/bin-sparc/dietlibc.a"
 */
 
+static void write2(const char *s) {
+  write(2, s, strlen(s));
+}
+
 static void error(const char *message) {
-  __write2(message);
+  write2(message);
   exit(1);
 }
 
@@ -48,7 +52,7 @@ static const char* Os[] = {
   0};
 
 static void usage(void) {
-  __write2(
+  const char* s = (
 #ifdef __DYN_LIB
 	   "dyn-"
 #endif
@@ -57,6 +61,7 @@ static void usage(void) {
 	   " (non-install version in source tree)"
 #endif
 	   "\n\n");
+  write(2, s, strlen(s));
   error("usage: diet [-v] [-Os] gcc command line\n"
 	"e.g.   diet -Os gcc -c t.c\n"
 	"or     diet sparc-linux-gcc -o foo foo.c bar.o\n");
@@ -453,10 +458,10 @@ incorporated:
       *dest=0;
       if (verbose) {
 	for (i=0; newargv[i]; i++) {
-	  __write2(newargv[i]);
-	  __write2(" ");
+	  write2(newargv[i]);
+	  write2(" ");
 	}
-	__write2("\n");
+	write2("\n");
       }
       execvp(newargv[0],newargv);
       goto error;

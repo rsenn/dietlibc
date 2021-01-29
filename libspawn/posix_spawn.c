@@ -187,7 +187,7 @@ posix_spawn(pid_t* restrict res,
     goto fail;
   }
 
-  pid = __clone(child, stack + sizeof stack, CLONE_VM | CLONE_VFORK | SIGCHLD, &args);
+  pid = clone(child, stack + sizeof stack, CLONE_VM | CLONE_VFORK | SIGCHLD, &args);
   close(args.p[1]);
   // UNLOCK(__abort_lock);
 

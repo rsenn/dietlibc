@@ -135,7 +135,7 @@ VPATH=lib:libstdio:libugly:libcruft:libcrypt:libshell:liblatin1:libcompat:libdl:
 
 SYSCALLOBJ=$(patsubst syscalls.s/%.S,$(OBJDIR)/%.o,$(sort $(wildcard syscalls.s/*.S)))
 
-LIBOBJ=$(patsubst lib/%.c,$(OBJDIR)/%.o,$(sort $(wildcard lib/*.c)))
+LIBOBJ:=$(patsubst lib/%.c,$(OBJDIR)/%.o,$(sort $(wildcard lib/*.c)))
 LIBUGLYOBJ=$(patsubst libugly/%.c,$(OBJDIR)/%.o,$(sort $(wildcard libugly/*.c)))
 LIBSTDIOOBJ=$(patsubst libstdio/%.c,$(OBJDIR)/%.o,$(sort $(wildcard libstdio/*.c)))
 LIBCRUFTOBJ=$(patsubst libcruft/%.c,$(OBJDIR)/%.o,$(sort $(wildcard libcruft/*.c)))
@@ -251,6 +251,12 @@ $(SYSCALLOBJ) $(LIBOBJ) $(LIBSTDIOOBJ) $(LIBUGLYOBJ) \
 $(LIBCRUFTOBJ) $(LIBCRYPTOBJ) $(LIBSHELLOBJ) $(LIBREGEXOBJ) $(LIBTERMIOSOBJ) \
 $(OBJDIR)/__longjmp.o $(OBJDIR)/setjmp.o \
 $(OBJDIR)/clone.o
+
+define DUMP
+  $(foreach VAR,$(1),$(info Dump $(VAR): $($(VAR))))
+endef
+
+#$(call DUMP,SYSCALLOBJ LIBOBJ LIBSTDIOOBJ LIBUGLYOBJ LIBCRUFTOBJ LIBCRYPTOBJ LIBSHELLOBJ LIBREGEXOBJ LIBTERMIOSOBJ)
 
 $(OBJDIR)/dietlibc.a: $(DIETLIBC_OBJ) $(OBJDIR)/start.o
 	$(CROSS)ar cru $@ $(DIETLIBC_OBJ)
@@ -374,7 +380,7 @@ $(OBJDIR)/dnsd: $(OBJDIR)/diet contrib/dnsd.c
 VERSION=dietlibc-$(shell head -n 1 CHANGES|sed 's/://')
 CURNAME=$(notdir $(shell pwd))
 
-$(OBJDIR)/diet: $(OBJDIR)/start.o $(OBJDIR)/dyn_start.o diet.c $(OBJDIR)/dietlibc.a $(OBJDIR)/dyn_stop.o
+$(OBJDIR)/diet: diet.c $(OBJDIR)/dietlibc.a 
 	$(CCC) -isystem include $(CFLAGS) -nostdlib -o $@ $^ -DDIETHOME=\"$(DIETHOME)\" -DVERSION=\"$(VERSION)\" -lgcc
 	@$(STRIP) -R .comment -R .note $@
 
