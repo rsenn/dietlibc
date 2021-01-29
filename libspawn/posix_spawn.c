@@ -8,7 +8,11 @@
 #include "syscall.h"
 //#include "lock.h"
 #include <pthread.h>
+#include <errno.h>
+#include <limits.h>
 #include "fdop.h"
+
+#define SIGALL_SET ((sigset_t *)(const unsigned long long [2]){ -1,-1 })
 
 struct args {
 	int p[2];
@@ -18,15 +22,6 @@ struct args {
 	const posix_spawnattr_t *restrict attr;
 	char *const *argv, *const *envp;
 };
-
-static int __sys_dup2(int old, int new)
-{
-#ifdef __NR_dup2
-	return __syscall(__NR_dup2, old, new);
-#else
-	return __syscall(__NR_dup3, old, new, 0);
-#endif
-}
 
 static int child(void *args_vp)
 {
@@ -46,7 +41,7 @@ static int child(void *args_vp)
 	 * memory, with unpredictable and dangerous results. To
 	 * reduce overhead, sigaction has tracked for us which signals
 	 * potentially have a signal handler. */
-	__get_handler_set(&hset);
+	//__get_handler_set(&hset);
 	for (i=1; i<_NSIG; i++) {
 		if ((attr->__flags & POSIX_SPAWN_SETSIGDEF)
 		     && sigismember(&attr->__def, i)) {
@@ -55,30 +50,30 @@ static int child(void *args_vp)
 			if (i-32<3U) {
 				sa.sa_handler = SIG_IGN;
 			} else {
-				__libc_sigaction(i, 0, &sa);
+				sigaction(i, 0, &sa);
 				if (sa.sa_handler==SIG_IGN) continue;
 				sa.sa_handler = SIG_DFL;
 			}
 		} else {
 			continue;
 		}
-		__libc_sigaction(i, &sa, 0);
+		sigaction(i, &sa, 0);
 	}
 
 	if (attr->__flags & POSIX_SPAWN_SETSID)
-		if ((ret=__syscall(__NR_setsid)) < 0)
+		if ((ret=setsid()) < 0)
 			goto fail;
 
 	if (attr->__flags & POSIX_SPAWN_SETPGROUP)
-		if ((ret=__syscall(__NR_setpgid, 0, attr->__pgrp)))
+		if ((ret=setpgid(0,attr->__pgrp)))
 			goto fail;
 
 	/* Use syscalls directly because the library functions attempt
 	 * to do a multi-threaded synchronized id-change, which would
 	 * trash the parent's state. */
 	if (attr->__flags & POSIX_SPAWN_RESETIDS)
-		if ((ret=__syscall(__NR_setgid, __syscall(__NR_getgid))) ||
-		    (ret=__syscall(__NR_setuid, __syscall(__NR_getuid))) )
+		if ((ret=setgid(getgid())) ||
+		    (ret=setuid(getuid())) )
 			goto fail;
 
 	if (fa && fa->__actions) {
@@ -91,14 +86,14 @@ static int child(void *args_vp)
 			 * parent. To avoid that, we dup the pipe onto
 			 * an unoccupied fd. */
 			if (op->fd == p) {
-				ret = __syscall(__NR_dup, p);
+				ret = dup(p);
 				if (ret < 0) goto fail;
-				__syscall(__NR_close, p);
+				close(p);
 				p = ret;
 			}
 			switch(op->cmd) {
 			case FDOP_CLOSE:
-				__syscall(__NR_close, op->fd);
+				close(op->fd);
 				break;
 			case FDOP_DUP2:
 				fd = op->srcfd;
@@ -107,31 +102,30 @@ static int child(void *args_vp)
 					goto fail;
 				}
 				if (fd != op->fd) {
-					if ((ret=__sys_dup2(fd, op->fd))<0)
+					if ((ret=dup2(fd, op->fd))<0)
 						goto fail;
 				} else {
-					ret = __syscall(__NR_fcntl, fd, F_GETFD);
-					ret = __syscall(__NR_fcntl, fd, F_SETFD,
-					                ret & ~FD_CLOEXEC);
+					ret = fcntl(fd, F_GETFD);
+					ret = fcntl(fd, F_SETFD, ret & ~FD_CLOEXEC);
 					if (ret<0)
 						goto fail;
 				}
 				break;
 			case FDOP_OPEN:
-				fd = __sys_open(op->path, op->oflag, op->mode);
+				fd = open(op->path, op->oflag, op->mode);
 				if ((ret=fd) < 0) goto fail;
 				if (fd != op->fd) {
-					if ((ret=__sys_dup2(fd, op->fd))<0)
+					if ((ret=dup2(fd, op->fd))<0)
 						goto fail;
-					__syscall(__NR_close, fd);
+					close(fd);
 				}
 				break;
 			case FDOP_CHDIR:
-				ret = __syscall(__NR_chdir, op->path);
+				ret = chdir(op->path);
 				if (ret<0) goto fail;
 				break;
 			case FDOP_FCHDIR:
-				ret = __syscall(__NR_fchdir, op->fd);
+				ret = fchdir(op->fd);
 				if (ret<0) goto fail;
 				break;
 			}
@@ -142,7 +136,7 @@ static int child(void *args_vp)
 	 * to a different fd. We don't use F_DUPFD_CLOEXEC above because
 	 * it would fail on older kernels and atomicity is not needed --
 	 * in this process there are no threads or signal handlers. */
-	__syscall(__NR_fcntl, p, F_SETFD, FD_CLOEXEC);
+	fcntl(p, F_SETFD, FD_CLOEXEC);
 
 	pthread_sigmask(SIG_SETMASK, (attr->__flags & POSIX_SPAWN_SETSIGMASK)
 		? &attr->__mask : &args->oldmask, 0);
@@ -156,7 +150,7 @@ static int child(void *args_vp)
 fail:
 	/* Since sizeof errno < PIPE_BUF, the write is atomic. */
 	ret = -ret;
-	if (ret) while (__syscall(__NR_write, p, &ret, sizeof ret) < 0);
+	if (ret) while (write(p, &ret, sizeof ret) < 0);
 	_exit(127);
 }
 
@@ -182,10 +176,10 @@ int posix_spawn(pid_t *restrict res, const char *restrict path,
 
 	/* The lock guards both against seeing a SIGABRT disposition change
 	 * by abort and against leaking the pipe fd to fork-without-exec. */
-	LOCK(__abort_lock);
+	//LOCK(__abort_lock);
 
 	if (pipe2(args.p, O_CLOEXEC)) {
-		UNLOCK(__abort_lock);
+		//UNLOCK(__abort_lock);
 		ec = errno;
 		goto fail;
 	}
@@ -193,7 +187,7 @@ int posix_spawn(pid_t *restrict res, const char *restrict path,
 	pid = __clone(child, stack+sizeof stack,
 		CLONE_VM|CLONE_VFORK|SIGCHLD, &args);
 	close(args.p[1]);
-	UNLOCK(__abort_lock);
+	//UNLOCK(__abort_lock);
 
 	if (pid > 0) {
 		if (read(args.p[0], &ec, sizeof ec) != sizeof ec) ec = 0;
