@@ -1,5 +1,5 @@
-#if defined(_POSIX_SOURCE) || defined(_POSIX_C_SOURCE) \
- || defined(_XOPEN_SOURCE) || defined(_GNU_SOURCE) || defined(_BSD_SOURCE)
+#ifndef _BITS_SIGNAL_H
+#define _BITS_SIGNAL_H
 
 #if defined(_XOPEN_SOURCE) || defined(_GNU_SOURCE) || defined(_BSD_SOURCE)
 #define MINSIGSTKSZ 2048
@@ -55,7 +55,6 @@ enum { REG_CR2 = 22 };
 #define REG_CR2 REG_CR2
 #endif
 
-#if defined(_GNU_SOURCE) || defined(_BSD_SOURCE)
 typedef long long greg_t, gregset_t[23];
 typedef struct _fpstate /*{
 	unsigned short cwd, swd, ftw, fop;
@@ -82,7 +81,6 @@ typedef struct {
 	fpregset_t fpregs;
 	unsigned long long __reserved1[8];
 } mcontext_t;
-#endif
 
 typedef struct __ucontext {
 	unsigned long uc_flags;
@@ -101,8 +99,6 @@ typedef struct __ucontext {
 #define SA_NODEFER    0x40000000
 #define SA_RESETHAND  0x80000000
 #define SA_RESTORER   0x04000000
-
-#endif
 
 #define SIGHUP    1
 #define SIGINT    2
@@ -141,3 +137,4 @@ typedef struct __ucontext {
 
 #define _NSIG 65
 
+#endif
