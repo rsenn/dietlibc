@@ -4,8 +4,9 @@
 #include "thread_internal.h"
 
 #include <termios.h>
+#include <sys/ioctl.h>
 
 int tcdrain(int fd) {
   __TEST_CANCEL();
-  return __libc_tcdrain(fd);
+	return ioctl(fd, TCSBRK, 1);
 }
