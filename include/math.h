@@ -142,6 +142,13 @@ long double log1pl(long double) __THROW __attribute__((__const__));
 double trunc(double) __THROW __attribute__((__const__));
 long double truncl(long double) __THROW __attribute__((__const__));
 
+long long llrint(double) __THROW __attribute__((__const__));
+long long llrintf(float) __THROW __attribute__((__const__));
+long long llrintl(long double) __THROW __attribute__((__const__));
+long lrint(double) __THROW __attribute__((__const__));
+long lrintf(float) __THROW __attribute__((__const__));
+long lrintl(long double) __THROW __attribute__((__const__));
+
 __END_DECLS
 
 #endif
