@@ -33,6 +33,14 @@ __BEGIN_DECLS
 #define M_SQRT2l	1.4142135623730950488016887242096981L  /* sqrt(2) */
 #define M_SQRT1_2l	0.7071067811865475244008443621048490L  /* 1/sqrt(2) */
 
+#if 100*__GNUC__+__GNUC_MINOR__ >= 303
+#define NAN       __builtin_nanf("")
+#define INFINITY  __builtin_inff()
+#else
+#define NAN       (0.0f/0.0f)
+#define INFINITY  1e5000f
+#endif
+
 double sin(double d) __THROW __attribute__((__const__));
 double cos(double d) __THROW __attribute__((__const__));
 double tan(double d) __THROW __attribute__((__const__));
@@ -148,6 +156,13 @@ long long llrintl(long double) __THROW __attribute__((__const__));
 long lrint(double) __THROW __attribute__((__const__));
 long lrintf(float) __THROW __attribute__((__const__));
 long lrintl(long double) __THROW __attribute__((__const__));
+
+double fmax(double, double) __THROW __attribute__((__const__));
+float fmaxf(float, float) __THROW __attribute__((__const__));
+long double fmaxl(long double, long double) __THROW __attribute__((__const__));
+double fmin(double, double) __THROW __attribute__((__const__));
+float fminf(float, float) __THROW __attribute__((__const__));
+long double fminl(long double, long double) __THROW __attribute__((__const__));
 
 __END_DECLS
 
