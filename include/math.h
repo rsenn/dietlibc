@@ -133,6 +133,14 @@ float powf(float x, float y) __THROW __attribute__((__const__));
 long double powl(long double x, long double y) __THROW __attribute__((__const__));
 double scalbn(double x, int n) __THROW __attribute__((__const__));
 float truncf(float x) __THROW __attribute__((__const__));
+double cbrt(double) __THROW __attribute__((__const__));
+float cbrtf(float) __THROW __attribute__((__const__));
+long double cbrtl(long double) __THROW __attribute__((__const__));
+double log1p(double) __THROW __attribute__((__const__));
+float log1pf(float) __THROW __attribute__((__const__));
+long double log1pl(long double) __THROW __attribute__((__const__));
+double trunc(double) __THROW __attribute__((__const__));
+long double truncl(long double) __THROW __attribute__((__const__));
 
 __END_DECLS
 
