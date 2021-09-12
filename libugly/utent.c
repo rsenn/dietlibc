@@ -88,6 +88,20 @@ struct utmp *getutline(struct utmp *ut) {
   return tmp;
 }
 
+int getutline_r(struct utmp *ut, struct utmp *ubuf, struct utmp **ubufp) {
+  struct utmp *tmp;
+
+  while ((tmp = getutent())) {
+    if ((tmp->ut_type == USER_PROCESS) || (tmp->ut_type == LOGIN_PROCESS)) {
+      if (!strncmp(ut->ut_line,tmp->ut_line,UT_LINESIZE)) break;
+    }
+  }
+  
+  if(!(*ubufp = tmp))
+    return -1;
+  return 0;
+}
+
 void pututline(struct utmp *ut) {
   struct utmp *tmp;
 

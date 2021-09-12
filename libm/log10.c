@@ -1,4 +1,4 @@
-#if !defined(__i386__) && !defined(__x86_64__)
+#if !defined(__i386__)
 /* origin: FreeBSD /usr/src/lib/msun/src/e_log10.c */
 /*
  * ====================================================

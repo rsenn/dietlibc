@@ -9,7 +9,7 @@ enum charset {
   UTF_16
 };
 
-#define ic_from(x)	(((ptrdiff_t)(x)) & 0xffff)
-#define ic_to(x)	(((ptrdiff_t)(x)>>16) & 0xffff)
+#define ic_from(x)	(((uintptr_t)(x)    )&0xffff)
+#define ic_to(x)	(((uintptr_t)(x)>>16)&0xffff)
 
 #include <iconv.h>

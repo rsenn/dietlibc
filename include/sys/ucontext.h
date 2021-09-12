@@ -124,7 +124,7 @@ struct ucontext {
 #error NEED TO PORT <sys/sigcontext.h>!
 #endif
 
-//typedef struct ucontext ucontext_t;
+typedef struct ucontext ucontext_t;
 
 __END_DECLS
 

@@ -93,6 +93,7 @@ struct utmp
 struct utmp *getutent(void) __THROW;
 struct utmp *getutid(struct utmp *ut) __THROW;
 struct utmp *getutline(struct utmp *ut) __THROW;
+int getutline_r(struct utmp *ut, struct utmp *ubuf, struct utmp **ubufp) __THROW;
 
 void pututline(struct utmp *ut) __THROW;
 
