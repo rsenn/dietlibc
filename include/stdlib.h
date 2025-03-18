@@ -13,6 +13,7 @@ void *calloc(size_t nmemb, size_t size) __THROW __attribute_malloc__;
 void *malloc(size_t size)  __THROW __attribute_malloc__;
 void free(void *ptr) __THROW;
 void *realloc(void *ptr, size_t size) __THROW __attribute_malloc__;
+size_t malloc_usable_size(void *ptr);
 
 /* useful OpenBSD extension: */
 void* reallocarray(void* ptr, size_t nmemb, size_t size) __THROW __attribute_malloc__ __attribute_alloc2__(2,3);

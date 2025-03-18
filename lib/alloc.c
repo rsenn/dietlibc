@@ -141,8 +141,19 @@ static void _alloc_libc_free(void *ptr) {
     }
   }
 }
+
 void __libc_free(void *ptr) __attribute__((alias("_alloc_libc_free")));
 void free(void *ptr) __attribute__((weak,alias("_alloc_libc_free")));
+
+static size_t _alloc_libc_malloc_usable_size(void *ptr) {
+  register size_t size=0;
+  if (ptr) 
+    size=((__alloc_t*)BLOCK_START(ptr))->size;
+  return size;
+}
+
+size_t __libc_malloc_usable_size(void *ptr) __attribute__((alias("_alloc_libc_malloc_usable_size")));
+size_t malloc_usable_size(void *ptr) __attribute__((weak,alias("_alloc_libc_malloc_usable_size")));
 
 #ifdef WANT_MALLOC_ZERO
 static __alloc_t zeromem[2];
